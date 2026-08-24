@@ -1,0 +1,166 @@
+<resources>
+    <string name="app_name">MuslimVN</string>
+
+    <!-- Navigation -->
+    <string name="nav_home">Trang chủ</string>
+    <string name="nav_news">Tin tức</string>
+    <string name="nav_community">Cộng đồng</string>
+    <string name="nav_ai">AI</string>
+    <string name="nav_settings">Cài đặt</string>
+    <string name="nav_quran">Quran</string>
+    <string name="nav_qibla">Qibla</string>
+    <string name="nav_surah_detail">Chi tiết Surah</string>
+
+    <!-- HomeScreen -->
+    <string name="utilities_title">Tiện ích</string>
+    <string name="prayer_times_error">Không thể tải thời gian cầu nguyện</string>
+    <string name="utility_quran">Quran</string>
+    <string name="utility_qibla">Qibla</string>
+    <string name="utility_prayer">Cầu nguyện</string>
+    <string name="utility_schedule">Lịch Hijri</string>
+    <string name="utility_99_names">99 Danh xưng</string>
+    <string name="utility_tasbih">Chuỗi hạt</string>
+    <string name="utility_doa">Lời cầu nguyện</string>
+    <string name="utility_zakat">Zakat</string>
+    <string name="utility_hadith">Hadith</string>
+    <string name="utility_library">Thư viện</string>
+    <string name="utility_study">Học tập</string>
+    <string name="utility_podcast">Podcast</string>
+    <string name="utility_mosque">Nhà thờ</string>
+    <string name="next_prayer_label">Cầu nguyện tiếp theo: %1$s</string>
+    <string name="prayer_fajr">Fajr</string>
+    <string name="prayer_sunrise">Mặt trời mọc</string>
+    <string name="prayer_dhuhr">Dhuhr</string>
+    <string name="prayer_asr">Asr</string>
+    <string name="prayer_maghrib">Maghrib</string>
+    <string name="prayer_isha">Isha</string>
+    <string name="toggle_adhan">Bật/Tắt Adhan</string>
+
+    <!-- QiblaScreen -->
+    <string name="qibla_title">LA BÀN QIBLA</string>
+    <string name="loading_location">Đang tải vị trí...</string>
+    <string name="distance_mecca">Mecca cách đây %1$.1f km</string>
+    <string name="location_coordinates">Vĩ độ: %1$.4f, Kinh độ: %2$.4f</string>
+    <string name="facing_qibla">ĐANG HƯỚNG VỀ QIBLA</string>
+    <string name="rotate_find_qibla">XOAY ĐỂ TÌM HƯỚNG QIBLA</string>
+
+    <!-- QuranScreen -->
+    <string name="search_surah_placeholder">Tìm kiếm Surah...</string>
+    <string name="ayahs_revelation">%1$d Ayah • %2$s</string>
+
+    <!-- Names of Allah (Asmaul Husna) -->
+    <string name="nav_names_of_allah">99 Danh xưng Allah</string>
+    <string name="names_of_allah_search_hint">Tìm theo tên, phiên âm hoặc ý nghĩa…</string>
+    <string name="names_of_allah_count">%1$d / 99 danh xưng</string>
+    <string name="names_of_allah_number_badge">Danh xưng số %1$d</string>
+    <string name="names_of_allah_pronunciation">Phát âm</string>
+    <string name="names_of_allah_meaning">Ý nghĩa</string>
+    <string name="names_of_allah_about_title">Về Asmaul Husna</string>
+    <string name="names_of_allah_about_body">Asmaul Husna là 99 Danh Hiệu Thánh Thiện tuyệt vời nhất của Allah (SWT). Thánh Prophet (SAW) đã dạy: “Quả thật, Allah có 99 Danh Hiệu; ai học thuộc và sống theo ý nghĩa của chúng sẽ được vào Thiên Đàng.” (Bukhari &amp; Muslim)</string>
+    <string name="names_of_allah_load_error">Không thể tải danh sách danh xưng</string>
+    <string name="names_of_allah_search_no_results_hint">Thử từ khoá khác, ví dụ “Ar-Rahman” hoặc “Đấng Từ Bi”</string>
+    <string name="action_clear_search">Xoá từ khoá tìm kiếm</string>
+
+    <!-- SurahDetailScreen -->
+    <string name="play_all">Phát tất cả</string>
+    <string name="playing_ayah">Đang phát Ayah %1$s</string>
+    <string name="buffering">Đang tải...</string>
+    <string name="pause">Tạm dừng</string>
+    <string name="play">Phát</string>
+    <string name="stop">Dừng</string>
+    <string name="bookmark">Đánh dấu</string>
+    <string name="share">Chia sẻ</string>
+    <string name="back">Quay lại</string>
+
+    <!-- Settings -->
+    <string name="settings_placeholder">Đang phát triển</string>
+
+    <!-- Hijri Calendar -->
+    <string name="nav_hijri_calendar">Lịch Hijri</string>
+    <string name="hijri_calendar_title">Lịch Hồi Giáo (Hijri)</string>
+    <string name="hijri_prev_month">Tháng trước</string>
+    <string name="hijri_next_month">Tháng sau</string>
+    <string name="hijri_month_year">%1$s %2$d AH</string>
+    <string name="hijri_gregorian_subtitle">Tháng %1$d năm %2$d</string>
+    <string name="hijri_loading">Đang tải lịch…</string>
+    <string name="hijri_empty_events">Không có sự kiện</string>
+    <string name="hijri_fallback_hint">Đang dùng lịch tính cục bộ (ngoại tuyến)</string>
+
+    <!-- Hijri offset adjustment dialog -->
+    <string name="hijri_offset_title">Điều chỉnh ngày Hijri</string>
+    <string name="hijri_offset_message">Theo quan sát mặt trăng tại Việt Nam, ngày Hijri có thể lệch 1–2 ngày so với lịch chuẩn. Chọn mức điều chỉnh phù hợp để lịch hiển thị đúng với cộng đồng.</string>
+    <string name="hijri_offset_none">Không điều chỉnh</string>
+    <string name="hijri_offset_days">Lệch %1$+d ngày</string>
+    <string name="hijri_offset_close">Đóng</string>
+
+    <!-- Hijri events section -->
+    <string name="hijri_events_title">Sự kiện Hồi Giáo</string>
+    <string name="hijri_event_today">Hôm nay</string>
+    <string name="hijri_event_in">Còn %1$d ngày</string>
+    <string name="hijri_event_passed">Đã qua %1$d ngày</string>
+
+    <!-- Islamic event names -->
+    <string name="event_islamic_new_year">Năm mới Hồi giáo</string>
+    <string name="event_ashura">Lễ Ashura</string>
+    <string name="event_mawlid">Mawlid (Sinh nhật Nabi)</string>
+    <string name="event_isra_miraj">Isra và Mi\'raj</string>
+    <string name="event_nisf_shaban">Đêm Nisf Sha\'ban</string>
+    <string name="event_ramadan_start">Bắt đầu tháng Ramadan</string>
+    <string name="event_laylatul_qadr">Đêm Laylatul Qadr</string>
+    <string name="event_eid_alfitr">Eid al-Fitr (Lễ chấm dứt nhịn chay)</string>
+    <string name="event_arafah">Ngày Arafah</string>
+    <string name="event_eid_aladha">Eid al-Adha (Lễ hiến sinh)</string>
+
+    <!-- Common UI states -->
+    <string name="retry">Thử lại</string>
+    <string name="loading_please_wait">Đang tải, vui lòng đợi…</string>
+    <string name="search_no_results">Không tìm thấy kết quả phù hợp</string>
+    <string name="search_no_results_hint">Thử từ khóa khác, ví dụ “Al-Fatihah” hoặc số thứ tự surah</string>
+    <string name="coming_soon_title">Sắp ra mắt</string>
+    <string name="coming_soon_description">Tính năng đang được phát triển và sẽ sớm có mặt trong bản cập nhật tiếp theo.</string>
+    <string name="feature_coming_soon">“%1$s” sắp ra mắt</string>
+
+    <!-- Permissions (Trang chủ) -->
+    <string name="permission_location_title">Giờ cầu nguyện chính xác hơn</string>
+    <string name="permission_location_rationale">Cấp quyền vị trí để app tính giờ Fajr, Dhuhr, Asr… theo đúng nơi bạn đang ở. Nếu không cấp, app sẽ dùng giờ của vị trí mặc định (Châu Đốc).</string>
+    <string name="permission_location_denied">Bạn đã từ chối quyền vị trí. Hãy bật lại trong Cài đặt → Quyền để nhận giờ cầu nguyện chính xác.</string>
+    <string name="action_grant_permission">Cấp quyền</string>
+    <string name="action_open_settings">Mở cài đặt</string>
+    <string name="action_later">Để sau</string>
+    <string name="countdown_hint">giờ : phút : giây</string>
+
+    <!-- Weekday short labels (Monday first) -->
+    <string-array name="hijri_weekdays_short">
+        <item>T2</item>
+        <item>T3</item>
+        <item>T4</item>
+        <item>T5</item>
+        <item>T6</item>
+        <item>T7</item>
+        <item>CN</item>
+    </string-array>
+
+    <!-- Adhan notifications -->
+    <string name="adhan_notification_title">Đến giờ cầu nguyện %1$s</string>
+    <string name="adhan_notification_content">Đã đến giờ thực hiện lễ nguyện %1$s.</string>
+    <string name="adhan_channel_name">Thông báo Adhan</string>
+    <string name="adhan_channel_description">Kênh thông báo giờ cầu nguyện</string>
+
+    <!-- Podcast học giả Islam -->
+    <string name="nav_podcast">Podcast</string>
+    <string name="podcast_title">Podcast Học Giả Islam</string>
+    <string name="podcast_featured_scholars">Học giả nổi bật</string>
+    <string name="podcast_all_scholars">Tất cả học giả</string>
+    <string name="podcast_category_all">Tất cả</string>
+    <string name="podcast_episodes_title">Các tập phát</string>
+    <string name="podcast_total_episodes">%1$d tập</string>
+    <string name="podcast_resume_from">Tiếp tục %1$s</string>
+    <string name="podcast_load_error">Không thể tải danh sách học giả</string>
+    <string name="podcast_error_offline">Không thể cập nhật tập mới. Kiểm tra kết nối mạng.</string>
+    <string name="podcast_empty_episodes">Chưa có tập phát nào</string>
+    <string name="podcast_empty_episodes_hint">Thử lại khi có kết nối mạng để tải danh sách tập từ feed RSS</string>
+    <string name="podcast_empty_player">Chưa có tập nào đang phát</string>
+    <string name="skip_back_10s">Lùi lại 10 giây</string>
+    <string name="skip_forward_10s">Tiến tới 10 giây</string>
+    <string name="player_close">Đóng trình phát</string>
+</resources>

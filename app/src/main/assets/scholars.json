@@ -1,0 +1,237 @@
+{
+  "categories": [
+    {
+      "id": "tafsir",
+      "name": "Giải Thích Qur'an"
+    },
+    {
+      "id": "fiqh",
+      "name": "Luật Học Islam"
+    },
+    {
+      "id": "aqidah",
+      "name": "Thần Học & Tín Ngưỡng"
+    },
+    {
+      "id": "tazkiyah",
+      "name": "Tâm Linh & Đạo Đức"
+    },
+    {
+      "id": "contemporary",
+      "name": "Vấn Đề Đương Đại"
+    },
+    {
+      "id": "inspiration",
+      "name": "Truyền Cảm Hứng"
+    }
+  ],
+  "featuredScholarIds": [
+    "mufti-menk",
+    "nouman-ali-khan",
+    "omar-suleiman",
+    "yasir-qadhi",
+    "hamza-yusuf"
+  ],
+  "scholars": [
+    {
+      "id": "mufti-menk",
+      "name": "Mufti Menk",
+      "title": "Đại Mufti của Zimbabwe",
+      "bio": "Học giả truyền cảm hứng nổi tiếng với những lời dạy về đạo đức và lời khuyên thực tế.",
+      "avatar": "images/podcast/mufti-menk.webp",
+      "rssUrl": "https://feeds.acast.com/public/shows/669f8f9582b4e4eb3d88ad2e",
+      "tags": [
+        "fiqh"
+      ]
+    },
+    {
+      "id": "nouman-ali-khan",
+      "name": "Nouman Ali Khan",
+      "title": "Giảng Viên Tiếng Ả Rập Qur'an",
+      "bio": "Người sáng lập Viện Bayyinah, chuyên về việc giải thích Qur'an dễ hiểu.",
+      "avatar": "images/podcast/nouman-ali-khan.webp",
+      "rssUrl": "https://rss.muslimcentral.com/nouman-ali-khan.rss",
+      "tags": [
+        "tafsir"
+      ]
+    },
+    {
+      "id": "omar-suleiman",
+      "name": "Omar Suleiman",
+      "title": "Học Giả Islam & Nhà Hoạt Động",
+      "bio": "Chuyên gia về thần học và các vấn đề xã hội đương đại của người Muslim.",
+      "avatar": "images/podcast/omar-suleiman.webp",
+      "rssUrl": "https://rss.muslimcentral.com/omar-suleiman.rss",
+      "tags": [
+        "contemporary"
+      ]
+    },
+    {
+      "id": "yasir-qadhi",
+      "name": "Yasir Qadhi",
+      "title": "Nhà Thần Học Islam",
+      "bio": "Chuyên gia về Aqidah và lịch sử Islam cổ điển với những bài giảng sâu sắc.",
+      "avatar": "images/podcast/yasir-qadhi.webp",
+      "rssUrl": "https://rss.muslimcentral.com/yasir-qadhi.rss",
+      "tags": [
+        "fiqh"
+      ]
+    },
+    {
+      "id": "bilal-philips",
+      "name": "Bilal Philips",
+      "title": "Tiến Sĩ & Giáo Sư Quốc Tế",
+      "bio": "Người sáng lập Đại học Islam Trực tuyến, chuyên về Aqidah và giáo dục.",
+      "avatar": "images/podcast/bilal-philips.webp",
+      "rssUrl": "https://muslimcentral.com/audio/bilal-philips/feed/",
+      "tags": [
+        "fiqh"
+      ]
+    },
+    {
+      "id": "hamza-yusuf",
+      "name": "Hamza Yusuf",
+      "title": "Học Giả Islam & Triết Gia",
+      "bio": "Đồng sáng lập Trường Đại học Zaytuna, nổi tiếng với tư duy triết học sâu sắc.",
+      "avatar": "images/podcast/hamza-yusuf.webp",
+      "rssUrl": "https://muslimcentral.com/audio/hamza-yusuf/feed/",
+      "tags": [
+        "aqidah",
+        "tazkiyah"
+      ]
+    },
+    {
+      "id": "abdul-nasir-jangda",
+      "name": "Abdul Nasir Jangda",
+      "title": "Giám Đốc Viện Qalam",
+      "bio": "Chuyên về Tafsir, Fiqh và đào tạo giảng viên Islam thực tế.",
+      "avatar": "images/podcast/abdul-nasir-jangda.webp",
+      "rssUrl": "https://muslimcentral.com/audio/abdul-nasir-jangda/feed/",
+      "tags": [
+        "tafsir"
+      ]
+    },
+    {
+      "id": "wahaj-tarin",
+      "name": "Wahaj Tarin",
+      "title": "Diễn Giả & Nhà Giáo Dục Islam",
+      "bio": "Giảng dạy thực tế với logic mạnh mẽ, truyền cảm hứng cho thanh niên.",
+      "avatar": "images/podcast/wahaj-tarin.webp",
+      "rssUrl": "https://muslimcentral.com/audio/wahaj-tarin/feed/",
+      "tags": [
+        "contemporary"
+      ]
+    },
+    {
+      "id": "mohamed-hoblos",
+      "name": "Mohamed Hoblos",
+      "title": "Diễn Giả Truyền Cảm Hứng",
+      "bio": "Phong cách đầy cảm xúc, truyền tải thông điệp Islam sâu sắc.",
+      "avatar": "images/podcast/mohamed-hoblos.webp",
+      "rssUrl": "https://muslimcentral.com/audio/muhammad-hoblos/feed/",
+      "tags": [
+        "inspiration"
+      ]
+    },
+    {
+      "id": "haifaa-younis",
+      "name": "Haifaa Younis",
+      "title": "Tiến Sĩ & Giảng Viên Islam",
+      "bio": "Chuyên về tâm lý học, Tazkiyah và vai trò phụ nữ Muslim hiện đại.",
+      "avatar": "images/podcast/haifaa-younis.webp",
+      "rssUrl": "https://rss.muslimcentral.com/haifaa-younis.rss",
+      "tags": [
+        "tazkiyah"
+      ]
+    },
+    {
+      "id": "abdulbary-yahya",
+      "name": "AbdulBary Yahya",
+      "title": "Học Giả & Diễn Giả tại Mỹ",
+      "bio": "Giảng dạy dễ hiểu, thực tế, thu hút thanh niên Muslim phương Tây.",
+      "avatar": "images/podcast/abdulbary-yahya.webp",
+      "rssUrl": "https://rss.muslimcentral.com/abdulbary-yahya.rss",
+      "tags": [
+        "inspiration"
+      ]
+    },
+    {
+      "id": "zahir-mahmood",
+      "name": "Zahir Mahmood",
+      "title": "Sử Gia & Nhà Tư Tưởng Islam",
+      "bio": "Phong cách hùng hồn, kể chuyện sinh động về lịch sử Sahaba.",
+      "avatar": "images/podcast/zahir-mahmood.webp",
+      "rssUrl": "https://rss.muslimcentral.com/zahir-mahmood.rss",
+      "tags": [
+        "inspiration"
+      ]
+    },
+    {
+      "id": "taimiyyah-zubair",
+      "name": "Taimiyyah Zubair",
+      "title": "Giảng Viên Qur'an & Tafsir",
+      "bio": "Phong cách học thuật, tỉ mỉ, nổi bật trong số các học giả nữ.",
+      "avatar": "images/podcast/taimiyyah-zubair.webp",
+      "rssUrl": "https://rss.muslimcentral.com/taimiyyah-zubair.rss",
+      "tags": [
+        "tafsir",
+        "tazkiyah"
+      ]
+    },
+    {
+      "id": "hasan-ali",
+      "name": "Hasan Ali",
+      "title": "Giảng Viên Tazkiyah & Cảm Xúc",
+      "bio": "Phong cách đầy cảm xúc, giúp kết nối lại với Allah từ bên trong.",
+      "avatar": "images/podcast/hasan-ali.webp",
+      "rssUrl": "https://rss.muslimcentral.com/hasan-ali.rss",
+      "tags": [
+        "tazkiyah"
+      ]
+    },
+    {
+      "id": "shady-alsuleiman",
+      "name": "Shady Alsuleiman",
+      "title": "Học Giả Aqidah & Seerah",
+      "bio": "Phong cách mạnh mẽ, chuyên về cuộc đời Tiên tri và tín ngưỡng.",
+      "avatar": "images/podcast/shady-alsuleiman.webp",
+      "rssUrl": "https://rss.muslimcentral.com/shady-alsuleiman.rss",
+      "tags": [
+        "aqidah"
+      ]
+    },
+    {
+      "id": "moutasem-al-hameedy",
+      "name": "Moutasem Al-Hameedy",
+      "title": "Diễn Giả về Logic & Tư Duy Phản Biện",
+      "bio": "Phong cách logic, mạch lạc dựa trên Qur'an & Sunnah.",
+      "avatar": "images/podcast/moutasem-al-hameedy.webp",
+      "rssUrl": "https://rss.muslimcentral.com/moutasem-al-hameedy.rss",
+      "tags": [
+        "contemporary"
+      ]
+    },
+    {
+      "id": "muhammad-west",
+      "name": "Muhammad West",
+      "title": "Học Giả Fiqh Đương Đại",
+      "bio": "Chuyên về các chủ đề Fiqh ứng dụng, Hajj và Umrah.",
+      "avatar": "images/podcast/muhammad-west.webp",
+      "rssUrl": "https://rss.muslimcentral.com/muhammad-west.rss",
+      "tags": [
+        "fiqh"
+      ]
+    },
+    {
+      "id": "muiz-bukhary",
+      "name": "Muiz Bukhary",
+      "title": "Giảng Viên Qur'an & Hadith",
+      "bio": "Giọng nói ấm áp, phong cách đơn giản cho người mới tiếp cận.",
+      "avatar": "images/podcast/muiz-bukhary.webp",
+      "rssUrl": "https://rss.muslimcentral.com/muiz-bukhary.rss",
+      "tags": [
+        "tazkiyah"
+      ]
+    }
+  ]
+}

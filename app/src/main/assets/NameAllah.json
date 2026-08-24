@@ -1,0 +1,600 @@
+{
+  "title": "Asma ul-Husna",
+  "description": "99 Danh Hiệu Thánh Thiện Tuyệt Vời Nhất của Allah (SWT)",
+  "names": [
+    {
+      "number": 1,
+      "arabic": "الرحمن",
+      "transliteration": "Ar-Rahman",
+      "vietnamese": "Đấng Từ Bi Vô Hạn"
+    },
+    {
+      "number": 2,
+      "arabic": "الرحيم",
+      "transliteration": "Ar-Rahim",
+      "vietnamese": "Đấng Thương Xót Vô Cùng"
+    },
+    {
+      "number": 3,
+      "arabic": "الملك",
+      "transliteration": "Al-Malik",
+      "vietnamese": "Đấng Vua Chúa"
+    },
+    {
+      "number": 4,
+      "arabic": "القدوس",
+      "transliteration": "Al-Quddus",
+      "vietnamese": "Đấng Cực Thánh"
+    },
+    {
+      "number": 5,
+      "arabic": "السلام",
+      "transliteration": "As-Salam",
+      "vietnamese": "Nguồn Của Hòa Bình"
+    },
+    {
+      "number": 6,
+      "arabic": "المؤمن",
+      "transliteration": "Al-Mu'min",
+      "vietnamese": "Đấng Ban Cho An Toàn"
+    },
+    {
+      "number": 7,
+      "arabic": "المهيمن",
+      "transliteration": "Al-Muhaymin",
+      "vietnamese": "Đấng Bảo Vệ"
+    },
+    {
+      "number": 8,
+      "arabic": "العزيز",
+      "transliteration": "Al-Aziz",
+      "vietnamese": "Đấng Toàn Năng"
+    },
+    {
+      "number": 9,
+      "arabic": "الجبار",
+      "transliteration": "Al-Jabbar",
+      "vietnamese": "Đấng Cưỡng Chế"
+    },
+    {
+      "number": 10,
+      "arabic": "المتكبر",
+      "transliteration": "Al-Mutakabbir",
+      "vietnamese": "Đấng Tối Cao"
+    },
+    {
+      "number": 11,
+      "arabic": "الخالق",
+      "transliteration": "Al-Khaliq",
+      "vietnamese": "Đấng Tạo Hóa"
+    },
+    {
+      "number": 12,
+      "arabic": "البارئ",
+      "transliteration": "Al-Bari'",
+      "vietnamese": "Đấng Tạo Tác"
+    },
+    {
+      "number": 13,
+      "arabic": "المصور",
+      "transliteration": "Al-Musawwir",
+      "vietnamese": "Đấng Tạo Hình"
+    },
+    {
+      "number": 14,
+      "arabic": "الغفار",
+      "transliteration": "Al-Ghafar",
+      "vietnamese": "Đấng Tha Thứ"
+    },
+    {
+      "number": 15,
+      "arabic": "القهار",
+      "transliteration": "Al-Qahhar",
+      "vietnamese": "Đấng Chinh Phục"
+    },
+    {
+      "number": 16,
+      "arabic": "الوهاب",
+      "transliteration": "Al-Wahhab",
+      "vietnamese": "Đấng Ban Phát"
+    },
+    {
+      "number": 17,
+      "arabic": "الرزاق",
+      "transliteration": "Ar-Razzaq",
+      "vietnamese": "Đấng Cung Cấp"
+    },
+    {
+      "number": 18,
+      "arabic": "الفتاح",
+      "transliteration": "Al-Fattah",
+      "vietnamese": "Đấng Mở Ra"
+    },
+    {
+      "number": 19,
+      "arabic": "العليم",
+      "transliteration": "Al-Alim",
+      "vietnamese": "Đấng Toàn Tri"
+    },
+    {
+      "number": 20,
+      "arabic": "القابض",
+      "transliteration": "Al-Qabid",
+      "vietnamese": "Đấng Kiềm Chế"
+    },
+    {
+      "number": 21,
+      "arabic": "الباسط",
+      "transliteration": "Al-Basit",
+      "vietnamese": "Đấng Mở Rộng"
+    },
+    {
+      "number": 22,
+      "arabic": "الخافض",
+      "transliteration": "Al-Khafid",
+      "vietnamese": "Đấng Hạ Thấp"
+    },
+    {
+      "number": 23,
+      "arabic": "الرافع",
+      "transliteration": "Al-Rafi'",
+      "vietnamese": "Đấng Nâng Cao"
+    },
+    {
+      "number": 24,
+      "arabic": "المعز",
+      "transliteration": "Al-Mu'izz",
+      "vietnamese": "Đấng Tôn Vinh"
+    },
+    {
+      "number": 25,
+      "arabic": "المذل",
+      "transliteration": "Al-Mudhill",
+      "vietnamese": "Đấng Hạ Nhục"
+    },
+    {
+      "number": 26,
+      "arabic": "السميع",
+      "transliteration": "As-Sami'",
+      "vietnamese": "Đấng Toàn Thính"
+    },
+    {
+      "number": 27,
+      "arabic": "البصير",
+      "transliteration": "Al-Basir",
+      "vietnamese": "Đấng Toàn Thị"
+    },
+    {
+      "number": 28,
+      "arabic": "الحكم",
+      "transliteration": "Al-Hakam",
+      "vietnamese": "Đấng Thẩm Phán"
+    },
+    {
+      "number": 29,
+      "arabic": "العدل",
+      "transliteration": "Al-Adl",
+      "vietnamese": "Đấng Công Chính"
+    },
+    {
+      "number": 30,
+      "arabic": "اللطيف",
+      "transliteration": "Al-Latif",
+      "vietnamese": "Đấng Tinh Tế"
+    },
+    {
+      "number": 31,
+      "arabic": "الخبير",
+      "transliteration": "Al-Khabir",
+      "vietnamese": "Đấng Toàn Hiểu"
+    },
+    {
+      "number": 32,
+      "arabic": "الحليم",
+      "transliteration": "Al-Halim",
+      "vietnamese": "Đấng Khoan Dung"
+    },
+    {
+      "number": 33,
+      "arabic": "العظيم",
+      "transliteration": "Al-Azim",
+      "vietnamese": "Đấng Vĩ Đại"
+    },
+    {
+      "number": 34,
+      "arabic": "الغفور",
+      "transliteration": "Al-Ghafur",
+      "vietnamese": "Đấng Khoan Dung Tha Thứ"
+    },
+    {
+      "number": 35,
+      "arabic": "الشكور",
+      "transliteration": "Ash-Shakur",
+      "vietnamese": "Đấng Đánh Giá Cao"
+    },
+    {
+      "number": 36,
+      "arabic": "العلي",
+      "transliteration": "Al-Ali",
+      "vietnamese": "Đấng Tối Cao Nhất"
+    },
+    {
+      "number": 37,
+      "arabic": "الكبير",
+      "transliteration": "Al-Kabir",
+      "vietnamese": "Đấng Vĩ Đại Nhất"
+    },
+    {
+      "number": 38,
+      "arabic": "الحفيظ",
+      "transliteration": "Al-Hafiz",
+      "vietnamese": "Đấng Bảo Tồn"
+    },
+    {
+      "number": 39,
+      "arabic": "المقيت",
+      "transliteration": "Al-Muqit",
+      "vietnamese": "Đấng Nuôi Dưỡng"
+    },
+    {
+      "number": 40,
+      "arabic": "الحسيب",
+      "transliteration": "Al-Hasib",
+      "vietnamese": "Đấng Tính Toán"
+    },
+    {
+      "number": 41,
+      "arabic": "الجليل",
+      "transliteration": "Al-Jalil",
+      "vietnamese": "Đấng Uy Nghi"
+    },
+    {
+      "number": 42,
+      "arabic": "الكريم",
+      "transliteration": "Al-Karim",
+      "vietnamese": "Đấng Rộng Lượng"
+    },
+    {
+      "number": 43,
+      "arabic": "الرقيب",
+      "transliteration": "Ar-Raqib",
+      "vietnamese": "Đấng Canh Giữ"
+    },
+    {
+      "number": 44,
+      "arabic": "المجيب",
+      "transliteration": "Al-Mujib",
+      "vietnamese": "Đấng Đáp Ứng"
+    },
+    {
+      "number": 45,
+      "arabic": "الواسع",
+      "transliteration": "Al-Wasi'",
+      "vietnamese": "Đấng Bao Trùm Khắp Nơi"
+    },
+    {
+      "number": 46,
+      "arabic": "الحكيم",
+      "transliteration": "Al-Hakim",
+      "vietnamese": "Đấng Khôn Ngoan"
+    },
+    {
+      "number": 47,
+      "arabic": "الودود",
+      "transliteration": "Al-Wadud",
+      "vietnamese": "Đấng Yêu Thương"
+    },
+    {
+      "number": 48,
+      "arabic": "المجيد",
+      "transliteration": "Al-Majid",
+      "vietnamese": "Đấng Vinh Quang"
+    },
+    {
+      "number": 49,
+      "arabic": "الباعث",
+      "transliteration": "Al-Ba'ith",
+      "vietnamese": "Đấng Phục Sinh"
+    },
+    {
+      "number": 50,
+      "arabic": "الشهيد",
+      "transliteration": "Ash-Shahid",
+      "vietnamese": "Đấng Chứng Kiến"
+    },
+    {
+      "number": 51,
+      "arabic": "الحق",
+      "transliteration": "Al-Haqq",
+      "vietnamese": "Đấng Chân Lý"
+    },
+    {
+      "number": 52,
+      "arabic": "الوكيل",
+      "transliteration": "Al-Wakil",
+      "vietnamese": "Đấng Đáng Tin Cậy"
+    },
+    {
+      "number": 53,
+      "arabic": "القوي",
+      "transliteration": "Al-Qawi",
+      "vietnamese": "Đấng Mạnh Mẽ"
+    },
+    {
+      "number": 54,
+      "arabic": "المتين",
+      "transliteration": "Al-Matin",
+      "vietnamese": "Đấng Vững Chắc"
+    },
+    {
+      "number": 55,
+      "arabic": "الولي",
+      "transliteration": "Al-Wali",
+      "vietnamese": "Đấng Bảo Hộ"
+    },
+    {
+      "number": 56,
+      "arabic": "الحميد",
+      "transliteration": "Al-Hamid",
+      "vietnamese": "Đấng Đáng Ca Ngợi"
+    },
+    {
+      "number": 57,
+      "arabic": "المحصي",
+      "transliteration": "Al-Muhsi",
+      "vietnamese": "Đấng Kế Toán"
+    },
+    {
+      "number": 58,
+      "arabic": "المبدئ",
+      "transliteration": "Al-Mubdi'",
+      "vietnamese": "Đấng Khởi Nguyên"
+    },
+    {
+      "number": 59,
+      "arabic": "المعيد",
+      "transliteration": "Al-Mu'id",
+      "vietnamese": "Đấng Phục Hồi"
+    },
+    {
+      "number": 60,
+      "arabic": "المحيي",
+      "transliteration": "Al-Muhyi",
+      "vietnamese": "Đấng Ban Sự Sống"
+    },
+    {
+      "number": 61,
+      "arabic": "المميت",
+      "transliteration": "Al-Mumit",
+      "vietnamese": "Đấng Thu Hồi Sự Sống"
+    },
+    {
+      "number": 62,
+      "arabic": "الحي",
+      "transliteration": "Al-Hayy",
+      "vietnamese": "Đấng Hằng Sống"
+    },
+    {
+      "number": 63,
+      "arabic": "القيوم",
+      "transliteration": "Al-Qayyum",
+      "vietnamese": "Đấng Tự Lập Vĩnh Cửu"
+    },
+    {
+      "number": 64,
+      "arabic": "الواجد",
+      "transliteration": "Al-Wajid",
+      "vietnamese": "Đấng Tìm Thấy"
+    },
+    {
+      "number": 65,
+      "arabic": "الماجد",
+      "transliteration": "Al-Majid",
+      "vietnamese": "Đấng Cao Quý"
+    },
+    {
+      "number": 66,
+      "arabic": "الواحد",
+      "transliteration": "Al-Wahid",
+      "vietnamese": "Đấng Duy Nhất"
+    },
+    {
+      "number": 67,
+      "arabic": "الأحد",
+      "transliteration": "Al-Ahad",
+      "vietnamese": "Đấng Một"
+    },
+    {
+      "number": 68,
+      "arabic": "الصمد",
+      "transliteration": "As-Samad",
+      "vietnamese": "Đấng Vĩnh Hằng"
+    },
+    {
+      "number": 69,
+      "arabic": "القادر",
+      "transliteration": "Al-Qadir",
+      "vietnamese": "Đấng Có Quyền Năng"
+    },
+    {
+      "number": 70,
+      "arabic": "المقتدر",
+      "transliteration": "Al-Muqtadir",
+      "vietnamese": "Đấng Toàn Quyền"
+    },
+    {
+      "number": 71,
+      "arabic": "المقدم",
+      "transliteration": "Al-Muqaddim",
+      "vietnamese": "Đấng Đẩy Nhanh"
+    },
+    {
+      "number": 72,
+      "arabic": "المؤخر",
+      "transliteration": "Al-Mu'akhkhir",
+      "vietnamese": "Đấng Trì Hoãn"
+    },
+    {
+      "number": 73,
+      "arabic": "الأول",
+      "transliteration": "Al-Awwal",
+      "vietnamese": "Đấng Đầu Tiên"
+    },
+    {
+      "number": 74,
+      "arabic": "الآخر",
+      "transliteration": "Al-Akhir",
+      "vietnamese": "Đấng Cuối Cùng"
+    },
+    {
+      "number": 75,
+      "arabic": "الظاهر",
+      "transliteration": "Az-Zahir",
+      "vietnamese": "Đấng Hiển Hiện"
+    },
+    {
+      "number": 76,
+      "arabic": "الباطن",
+      "transliteration": "Al-Batin",
+      "vietnamese": "Đấng Ẩn Giấu"
+    },
+    {
+      "number": 77,
+      "arabic": "الوالي",
+      "transliteration": "Al-Wali",
+      "vietnamese": "Đấng Cai Trị"
+    },
+    {
+      "number": 78,
+      "arabic": "المتعالي",
+      "transliteration": "Al-Muta'ali",
+      "vietnamese": "Đấng Tôn Cao Nhất"
+    },
+    {
+      "number": 79,
+      "arabic": "البر",
+      "transliteration": "Al-Barr",
+      "vietnamese": "Nguồn Của Lòng Tốt"
+    },
+    {
+      "number": 80,
+      "arabic": "التواب",
+      "transliteration": "At-Tawwab",
+      "vietnamese": "Đấng Chấp Nhận Sự Ăn Năn"
+    },
+    {
+      "number": 81,
+      "arabic": "المنتقم",
+      "transliteration": "Al-Muntaqim",
+      "vietnamese": "Đấng Báo Thù"
+    },
+    {
+      "number": 82,
+      "arabic": "العفو",
+      "transliteration": "Al-Afuw",
+      "vietnamese": "Đấng Tha Thứ"
+    },
+    {
+      "number": 83,
+      "arabic": "الرؤوف",
+      "transliteration": "Ar-Ra'uf",
+      "vietnamese": "Đấng Thương Hại"
+    },
+    {
+      "number": 84,
+      "arabic": "مالك الملك",
+      "transliteration": "Malik al-Mulk",
+      "vietnamese": "Chủ Nhân Của Vương Quyền"
+    },
+    {
+      "number": 85,
+      "arabic": "ذو الجلال والإكرام",
+      "transliteration": "Dhu al-Jalali wa al-Ikram",
+      "vietnamese": "Đấng Sở Hữu Uy Nghi Và Danh Dự"
+    },
+    {
+      "number": 86,
+      "arabic": "المقسط",
+      "transliteration": "Al-Muqsit",
+      "vietnamese": "Đấng Công Bằng"
+    },
+    {
+      "number": 87,
+      "arabic": "الجامع",
+      "transliteration": "Al-Jami'",
+      "vietnamese": "Đấng Tập Hợp"
+    },
+    {
+      "number": 88,
+      "arabic": "الغني",
+      "transliteration": "Al-Ghani",
+      "vietnamese": "Đấng Tự Túc"
+    },
+    {
+      "number": 89,
+      "arabic": "المغني",
+      "transliteration": "Al-Mughni",
+      "vietnamese": "Đấng Làm Giàu Có"
+    },
+    {
+      "number": 90,
+      "arabic": "المانع",
+      "transliteration": "Al-Mani'",
+      "vietnamese": "Đấng Ngăn Chặn"
+    },
+    {
+      "number": 91,
+      "arabic": "الضار",
+      "transliteration": "Ad-Darr",
+      "vietnamese": "Đấng Gây Khổ Đau"
+    },
+    {
+      "number": 92,
+      "arabic": "النافع",
+      "transliteration": "An-Nafi'",
+      "vietnamese": "Đấng Mang Lại Lợi Ích"
+    },
+    {
+      "number": 93,
+      "arabic": "النور",
+      "transliteration": "An-Nur",
+      "vietnamese": "Đấng Ánh Sáng"
+    },
+    {
+      "number": 94,
+      "arabic": "الهادي",
+      "transliteration": "Al-Hadi",
+      "vietnamese": "Đấng Dẫn Dắt"
+    },
+    {
+      "number": 95,
+      "arabic": "البديع",
+      "transliteration": "Al-Badi'",
+      "vietnamese": "Đấng Không So Sánh Được"
+    },
+    {
+      "number": 96,
+      "arabic": "الباقي",
+      "transliteration": "Al-Baqi",
+      "vietnamese": "Đấng Vĩnh Cửu"
+    },
+    {
+      "number": 97,
+      "arabic": "الوارث",
+      "transliteration": "Al-Warith",
+      "vietnamese": "Đấng Thừa Kế"
+    },
+    {
+      "number": 98,
+      "arabic": "الرشيد",
+      "transliteration": "Ar-Rashid",
+      "vietnamese": "Đấng Thầy Giáo Đức Hạnh"
+    },
+    {
+      "number": 99,
+      "arabic": "الصبور",
+      "transliteration": "As-Sabur",
+      "vietnamese": "Đấng Kiên Nhẫn"
+    }
+  ]
+}
