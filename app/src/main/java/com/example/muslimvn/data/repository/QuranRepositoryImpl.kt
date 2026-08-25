@@ -3,10 +3,13 @@ package com.example.muslimvn.data.repository
 import com.example.muslimvn.data.local.dao.QuranDao
 import com.example.muslimvn.data.local.entities.AyahEntity
 import com.example.muslimvn.data.local.entities.SurahEntity
+import com.example.muslimvn.data.local.entities.VerseTimingEntity
+import com.example.muslimvn.data.remote.QuranApiService
 import com.example.muslimvn.data.util.QuranJsonParser
-import com.example.muslimvn.domain.models.Ayah
-import com.example.muslimvn.domain.models.Surah
+import com.example.muslimvn.domain.models.*
 import com.example.muslimvn.domain.repository.QuranRepository
+import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
@@ -14,7 +17,9 @@ import javax.inject.Inject
 
 class QuranRepositoryImpl @Inject constructor(
     private val dao: QuranDao,
-    private val jsonParser: QuranJsonParser
+    private val apiService: QuranApiService,
+    private val jsonParser: QuranJsonParser,
+    private val gson: Gson
 ) : QuranRepository {
 
     override fun getSurahs(query: String): Flow<List<Surah>> {
@@ -43,6 +48,50 @@ class QuranRepositoryImpl @Inject constructor(
 
     override fun searchAyahs(query: String): Flow<List<Ayah>> {
         return dao.searchAyahs(query).map { entities -> entities.map { it.toDomain() } }
+    }
+
+    override suspend fun getVerseTiming(verseKey: String, recitationId: Int): VerseTiming? {
+        // 1. Check local cache first
+        val cached = dao.getVerseTiming(verseKey, recitationId)
+        if (cached != null) {
+            val type = object : TypeToken<List<WordSegment>>() {}.type
+            val segments: List<WordSegment> = gson.fromJson(cached.segmentsJson, type)
+            return VerseTiming(verseKey, segments)
+        }
+
+        // 2. Fetch from remote if not cached
+        return try {
+            val response = apiService.getVerseWithAudio(verseKey = verseKey, recitationId = recitationId)
+            val segments = response.verse.audio.segments.map { segment ->
+                WordSegment(
+                    wordIndex = segment[0].toInt(),
+                    startTimeMs = segment[2].toLong(),
+                    endTimeMs = segment[3].toLong()
+                )
+            }
+            // 3. Save to cache
+            val entity = VerseTimingEntity(
+                verseKey = verseKey,
+                reciterId = recitationId,
+                segmentsJson = gson.toJson(segments)
+            )
+            dao.insertVerseTiming(entity)
+            
+            VerseTiming(verseKey, segments)
+        } catch (e: Exception) {
+            null
+        }
+    }
+
+    override suspend fun prefetchSurahTiming(surahNumber: Int, recitationId: Int, onProgress: (Float) -> Unit) {
+        val surah = getSurahByNumber(surahNumber) ?: return
+        val totalAyahs = surah.totalAyahs
+        
+        for (i in 1..totalAyahs) {
+            val verseKey = "$surahNumber:$i"
+            getVerseTiming(verseKey, recitationId)
+            onProgress(i.toFloat() / totalAyahs)
+        }
     }
 
     override suspend fun initializeData() {

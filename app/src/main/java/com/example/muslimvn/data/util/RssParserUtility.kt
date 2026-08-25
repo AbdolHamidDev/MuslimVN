@@ -18,37 +18,30 @@ import javax.inject.Singleton
 
 /**
  * Fetch + parse RSS podcast feed bằng OkHttp và XmlPullParser (streaming, không DOM).
- *
- * Chỉ quan tâm các thẻ bên trong <item>:
- *  - <title>, <description>
- *  - <enclosure url="..." type="audio/...">  -> link MP3
- *  - <itunes:duration>                          -> "3600" giây | "MM:SS" | "HH:MM:SS"
- *  - <pubDate>                                  -> RFC-822, ví dụ "Wed, 21 Aug 2024 09:00:00 +0000"
- *
- * Mọi lỗi mạng/parse được bọc trong Result để caller (repository) xử lý offline-first.
+ * Hỗ trợ trích xuất ảnh từ nhiều nguồn phổ biến: itunes:image, media:content, image tag.
  */
 @Singleton
 class RssParserUtility @Inject constructor(
     private val okHttpClient: OkHttpClient
 ) {
 
-    /** Kết quả parse tối thiểu cho một tập phát. */
     data class RssEpisode(
         val id: String,
         val title: String,
         val description: String,
         val audioUrl: String,
+        val artworkUrl: String?,
         val durationMs: Long,
         val pubDateMs: Long
     )
 
-    private enum class TextTarget { TITLE, DESCRIPTION, DURATION, PUB_DATE }
+    private enum class TextTarget { TITLE, DESCRIPTION, DURATION, PUB_DATE, IMAGE_URL }
 
-    /** Bộ đệm tạm cho item đang parse. */
     private class ParsedItem {
         var title = ""
         var description = ""
         var audioUrl = ""
+        var artworkUrl: String? = null
         var durationRaw = ""
         var pubDateRaw = ""
     }
@@ -72,8 +65,6 @@ class RssParserUtility @Inject constructor(
             }
         }
 
-    // ── Parse XML stream ────────────────────────────────────────────────────────
-
     private fun parse(inputStream: InputStream): List<RssEpisode> {
         val parser = Xml.newPullParser().apply {
             setFeature(XmlPullParser.FEATURE_PROCESS_NAMESPACES, true)
@@ -81,19 +72,56 @@ class RssParserUtility @Inject constructor(
         }
 
         val episodes = mutableListOf<RssEpisode>()
+        var channelImageUrl: String? = null
         var currentItem: ParsedItem? = null
         var textTarget: TextTarget? = null
         val textBuffer = StringBuilder()
+        
+        // Cờ đánh dấu đang ở trong thẻ <image> của channel (để lấy <url>)
+        var isInChannelImage = false
 
         var event = parser.eventType
         while (event != XmlPullParser.END_DOCUMENT) {
+            val tagName = parser.name?.lowercase(Locale.US)
             when (event) {
-                XmlPullParser.START_TAG -> when (parser.name.lowercase(Locale.US)) {
+                XmlPullParser.START_TAG -> when (tagName) {
                     "item" -> currentItem = ParsedItem()
-                    "title" -> beginText(currentItem, TextTarget.TITLE, textBuffer).let { textTarget = it }
-                    "description" -> beginText(currentItem, TextTarget.DESCRIPTION, textBuffer).let { textTarget = it }
-                    "duration" -> beginText(currentItem, TextTarget.DURATION, textBuffer).let { textTarget = it }
-                    "pubdate" -> beginText(currentItem, TextTarget.PUB_DATE, textBuffer).let { textTarget = it }
+                    "title" -> textTarget = beginText(currentItem, TextTarget.TITLE, textBuffer)
+                    "description" -> textTarget = beginText(currentItem, TextTarget.DESCRIPTION, textBuffer)
+                    "duration" -> textTarget = beginText(currentItem, TextTarget.DURATION, textBuffer)
+                    "pubdate" -> textTarget = beginText(currentItem, TextTarget.PUB_DATE, textBuffer)
+                    
+                    "image" -> {
+                        // Trường hợp 1: itunes:image hoặc image có thuộc tính href
+                        val href = parser.getAttributeValue(null, "href")
+                        if (href != null) {
+                            if (currentItem != null) currentItem.artworkUrl = href
+                            else channelImageUrl = href
+                        } else if (currentItem == null) {
+                            // Trường hợp 2: Thẻ <image> của RSS chuẩn (chứa <url> bên trong)
+                            isInChannelImage = true
+                        }
+                    }
+                    
+                    "url" -> {
+                        if (isInChannelImage) {
+                            textTarget = TextTarget.IMAGE_URL
+                            textBuffer.setLength(0)
+                        }
+                    }
+                    
+                    "content", "thumbnail" -> {
+                        // media:content hoặc media:thumbnail
+                        val url = parser.getAttributeValue(null, "url")
+                        val type = parser.getAttributeValue(null, "type")
+                        if (url != null && currentItem != null) {
+                            // Nếu là media:content, check type để chắc chắn là ảnh
+                            if (tagName == "thumbnail" || type?.contains("image") == true) {
+                                if (currentItem.artworkUrl == null) currentItem.artworkUrl = url
+                            }
+                        }
+                    }
+
                     "enclosure" -> currentItem?.let { item ->
                         if (item.audioUrl.isEmpty() && isAudioEnclosure(parser)) {
                             item.audioUrl = parser.getAttributeValue(null, "url").orEmpty().trim()
@@ -101,22 +129,31 @@ class RssParserUtility @Inject constructor(
                     }
                 }
 
-                XmlPullParser.TEXT -> if (textTarget != null && currentItem != null) {
+                XmlPullParser.TEXT -> if (textTarget != null) {
                     textBuffer.append(parser.text)
                 }
 
-                XmlPullParser.END_TAG -> when (parser.name.lowercase(Locale.US)) {
+                XmlPullParser.END_TAG -> when (tagName) {
                     "item" -> {
+                        if (currentItem?.artworkUrl == null) currentItem?.artworkUrl = channelImageUrl
                         currentItem?.toRssEpisode()?.let(episodes::add)
                         currentItem = null
                         textTarget = null
-                        textBuffer.setLength(0)
+                    }
+                    "image" -> {
+                        isInChannelImage = false
+                    }
+                    "url" -> {
+                        if (isInChannelImage && textTarget == TextTarget.IMAGE_URL) {
+                            channelImageUrl = textBuffer.toString().trim()
+                            textTarget = null
+                        }
                     }
                     else -> {
-                        // Đóng thẻ trường văn bản -> commit nội dung đã gom vào item.
-                        commitText(currentItem, textTarget, textBuffer)
-                        textTarget = null
-                        textBuffer.setLength(0)
+                        if (textTarget != null && currentItem != null) {
+                            commitText(currentItem, textTarget, textBuffer)
+                            textTarget = null
+                        }
                     }
                 }
             }
@@ -125,14 +162,9 @@ class RssParserUtility @Inject constructor(
         return episodes
     }
 
-    /** Bắt đầu gom text nếu đang ở trong <item>; trả về target đang hiệu lực (hoặc null). */
-    private fun beginText(
-        item: ParsedItem?,
-        target: TextTarget,
-        buffer: StringBuilder
-    ): TextTarget? {
+    private fun beginText(item: ParsedItem?, target: TextTarget, buffer: StringBuilder): TextTarget? {
         buffer.setLength(0)
-        return if (item != null) target else null
+        return if (item != null || target == TextTarget.IMAGE_URL || target == TextTarget.TITLE) target else null
     }
 
     private fun commitText(item: ParsedItem?, target: TextTarget?, buffer: StringBuilder) {
@@ -144,6 +176,7 @@ class RssParserUtility @Inject constructor(
             TextTarget.DESCRIPTION -> if (item.description.isEmpty()) item.description = value
             TextTarget.DURATION -> item.durationRaw = value
             TextTarget.PUB_DATE -> item.pubDateRaw = value
+            else -> {}
         }
     }
 
@@ -154,12 +187,13 @@ class RssParserUtility @Inject constructor(
     }
 
     private fun ParsedItem.toRssEpisode(): RssEpisode? {
-        if (title.isEmpty() && audioUrl.isEmpty()) return null // item lỗi/rác
+        if (title.isEmpty() && audioUrl.isEmpty()) return null
         return RssEpisode(
             id = stableId(audioUrl.ifEmpty { title }),
             title = title,
             description = description,
             audioUrl = audioUrl,
+            artworkUrl = artworkUrl,
             durationMs = parseDurationToMs(durationRaw),
             pubDateMs = parsePubDateToMs(pubDateRaw)
         )
@@ -169,13 +203,11 @@ class RssParserUtility @Inject constructor(
         private const val TAG = "RssParserUtility"
         private const val USER_AGENT = "MuslimVN/1.0 (Android; Podcast)"
 
-        /** ID ổn định từ URL (MD5 hex) để các lần refresh map về đúng dòng trong Room. */
         fun stableId(source: String): String =
             MessageDigest.getInstance("MD5")
                 .digest(source.toByteArray(Charsets.UTF_8))
                 .joinToString("") { "%02x".format(it) }
 
-        /** "3600" (giây) | "MM:SS" | "HH:MM:SS" -> millisecond. Trả 0 nếu không hiểu. */
         fun parseDurationToMs(raw: String): Long {
             val parts = raw.trim().split(':').map { it.trim().toLongOrNull() ?: return 0L }
             var multiplier = 1000L
@@ -197,7 +229,6 @@ class RssParserUtility @Inject constructor(
             "yyyy-MM-dd"
         )
 
-        /** RFC-822 / ISO-8601 -> epoch ms; trả 0 khi không parse được (không ném exception). */
         fun parsePubDateToMs(raw: String): Long {
             val trimmed = raw.trim()
             if (trimmed.isEmpty()) return 0L
@@ -208,11 +239,8 @@ class RssParserUtility @Inject constructor(
                         timeZone = TimeZone.getTimeZone("UTC")
                     }
                     format.parse(trimmed)?.time?.let { return it }
-                } catch (_: Exception) {
-                    // Thử pattern kế tiếp.
-                }
+                } catch (_: Exception) { }
             }
-            Log.w(TAG, "Không parse được pubDate: '$trimmed'")
             return 0L
         }
     }

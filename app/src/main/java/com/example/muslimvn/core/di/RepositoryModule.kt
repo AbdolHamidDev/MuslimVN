@@ -6,12 +6,14 @@ import com.example.muslimvn.data.repository.NameAllahRepositoryImpl
 import com.example.muslimvn.data.repository.PodcastRepositoryImpl
 import com.example.muslimvn.data.repository.PrayerRepositoryImpl
 import com.example.muslimvn.data.repository.QuranRepositoryImpl
+import com.example.muslimvn.data.repository.ZakatRepositoryImpl
 import com.example.muslimvn.domain.repository.HijriCalendarRepository
 import com.example.muslimvn.domain.repository.LocationRepository
 import com.example.muslimvn.domain.repository.NameAllahRepository
 import com.example.muslimvn.domain.repository.PodcastRepository
 import com.example.muslimvn.domain.repository.PrayerRepository
 import com.example.muslimvn.domain.repository.QuranRepository
+import com.example.muslimvn.domain.repository.ZakatRepository
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -57,4 +59,10 @@ abstract class RepositoryModule {
     abstract fun bindPodcastRepository(
         podcastRepositoryImpl: PodcastRepositoryImpl
     ): PodcastRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindZakatRepository(
+        zakatRepositoryImpl: ZakatRepositoryImpl
+    ): ZakatRepository
 }

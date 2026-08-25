@@ -105,6 +105,7 @@ fun ScholarDetailScreen(
             PodcastPlayerBarState(playerViewModel) { active ->
                 AnimatedVisibility(visible = active != null) {
                     if (active != null) {
+                        val playlist by playerViewModel.playlist.collectAsState()
                         MiniPlayerBar(
                             title = active.title,
                             subtitle = active.subtitle,
@@ -117,7 +118,10 @@ fun ScholarDetailScreen(
                             onPlayPauseClick = playerViewModel::togglePlayPause,
                             onSeekTo = playerViewModel::seekTo,
                             onCycleSpeed = playerViewModel::cyclePlaybackSpeed,
-                            onOpenFullPlayer = onOpenFullPlayer
+                            onOpenFullPlayer = onOpenFullPlayer,
+                            currentMediaId = active.id,
+                            playlist = playlist,
+                            onPlayEpisode = playerViewModel::playEpisode
                         )
                     }
                 }

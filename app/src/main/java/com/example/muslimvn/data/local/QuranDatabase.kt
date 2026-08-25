@@ -5,8 +5,9 @@ import androidx.room.RoomDatabase
 import com.example.muslimvn.data.local.dao.QuranDao
 import com.example.muslimvn.data.local.entities.AyahEntity
 import com.example.muslimvn.data.local.entities.SurahEntity
+import com.example.muslimvn.data.local.entities.VerseTimingEntity
 
-@Database(entities = [SurahEntity::class, AyahEntity::class], version = 1, exportSchema = false)
+@Database(entities = [SurahEntity::class, AyahEntity::class, VerseTimingEntity::class], version = 2, exportSchema = false)
 abstract class QuranDatabase : RoomDatabase() {
     abstract val quranDao: QuranDao
 

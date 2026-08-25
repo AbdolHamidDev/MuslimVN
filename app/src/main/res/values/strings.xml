@@ -13,6 +13,8 @@
 
     <!-- HomeScreen -->
     <string name="utilities_title">Tiện ích</string>
+    <string name="view_all">Xem tất cả</string>
+    <string name="all_utilities_title">Tất cả tiện ích</string>
     <string name="prayer_times_error">Không thể tải thời gian cầu nguyện</string>
     <string name="utility_quran">Quran</string>
     <string name="utility_qibla">Qibla</string>
@@ -55,11 +57,13 @@
     <string name="names_of_allah_number_badge">Danh xưng số %1$d</string>
     <string name="names_of_allah_pronunciation">Phát âm</string>
     <string name="names_of_allah_meaning">Ý nghĩa</string>
+    <string name="names_of_allah_description">Giải nghĩa chi tiết</string>
     <string name="names_of_allah_about_title">Về Asmaul Husna</string>
     <string name="names_of_allah_about_body">Asmaul Husna là 99 Danh Hiệu Thánh Thiện tuyệt vời nhất của Allah (SWT). Thánh Prophet (SAW) đã dạy: “Quả thật, Allah có 99 Danh Hiệu; ai học thuộc và sống theo ý nghĩa của chúng sẽ được vào Thiên Đàng.” (Bukhari &amp; Muslim)</string>
     <string name="names_of_allah_load_error">Không thể tải danh sách danh xưng</string>
     <string name="names_of_allah_search_no_results_hint">Thử từ khoá khác, ví dụ “Ar-Rahman” hoặc “Đấng Từ Bi”</string>
     <string name="action_clear_search">Xoá từ khoá tìm kiếm</string>
+    <string name="action_view_detail">Xem chi tiết</string>
 
     <!-- SurahDetailScreen -->
     <string name="play_all">Phát tất cả</string>
@@ -163,4 +167,64 @@
     <string name="skip_back_10s">Lùi lại 10 giây</string>
     <string name="skip_forward_10s">Tiến tới 10 giây</string>
     <string name="player_close">Đóng trình phát</string>
+
+    <!-- Zakat Utility -->
+    <string name="zakat_title">Công cụ tính Zakat</string>
+    <string name="zakat_overview_desc">Tính toán Zakat al-Mal dựa trên tài sản của bạn theo các quy tắc Shariah.</string>
+    <string name="zakat_start_calc">Bắt đầu tính</string>
+    <string name="zakat_section_money">Tiền mặt và tiền gửi</string>
+    <string name="zakat_cash_in_hand">Tiền mặt (VND)</string>
+    <string name="zakat_bank_balance">Tài khoản ngân hàng</string>
+    <string name="zakat_receivables">Các khoản nợ cho người khác vay</string>
+    <string name="zakat_section_gold_silver">Vàng và Bạc</string>
+    <string name="zakat_gold_grams">Khối lượng Vàng (gram)</string>
+    <string name="zakat_silver_grams">Khối lượng Bạc (gram)</string>
+    <string name="zakat_gold_price_label">Giá vàng hiện tại: %1$s / gram</string>
+    <string name="zakat_section_investments">Đầu tư và Kinh doanh</string>
+    <string name="zakat_investments">Cổ phiếu / Quỹ đầu tư</string>
+    <string name="zakat_business_assets">Tài sản kinh doanh / Hàng tồn kho</string>
+    <string name="zakat_section_liabilities">Các khoản khấu trừ (Nợ)</string>
+    <string name="zakat_debts_label">Các khoản nợ đến hạn cần trả</string>
+    <string name="zakat_section_rules">Phương pháp tính</string>
+    <string name="zakat_nisab_method">Nisab dựa trên:</string>
+    <string name="zakat_nisab_gold">Vàng (85g)</string>
+    <string name="zakat_nisab_silver">Bạc (595g)</string>
+    <string name="zakat_result_title">Kết quả Zakat</string>
+    <string name="zakat_due_amount">Zakat phải trả</string>
+    <string name="zakat_eligible">Bạn đủ điều kiện đóng Zakat</string>
+    <string name="zakat_not_eligible">Tài sản chưa đạt ngưỡng Nisab</string>
+    <string name="zakat_breakdown">Chi tiết cách tính</string>
+    <string name="zakat_total_assets">Tổng tài sản Zakatable</string>
+    <string name="zakat_total_liabilities">Tổng nợ khấu trừ</string>
+    <string name="zakat_net_wealth">Tài sản ròng</string>
+    <string name="zakat_nisab_threshold">Ngưỡng Nisab</string>
+    <string name="zakat_rate">Tỷ lệ (Năm âm lịch)</string>
+    <string name="zakat_disclaimer">Kết quả mang tính chất tham khảo dựa trên phương pháp đã chọn. Vui lòng tham khảo thêm các học giả nếu có thắc mắc chi tiết.</string>
+    <string name="zakat_q_money">Bạn hiện có tiền hoặc khoản tiết kiệm không?</string>
+    <string name="zakat_q_gold">Bạn có vàng hoặc bạc không?</string>
+    <string name="zakat_q_investment">Bạn có tài sản đầu tư không?</string>
+    <string name="zakat_q_business">Bạn có tài sản kinh doanh không?</string>
+    <string name="zakat_q_receivable">Có ai đang nợ tiền bạn không?</string>
+    <string name="zakat_q_liability">Bạn hiện có khoản nợ hoặc nghĩa vụ tài chính nào không?</string>
+    <string name="yes">Có</string>
+    <string name="no">Không</string>
+    <string name="action_continue">Tiếp tục</string>
+    <string name="zakat_unit_gram">Gram</string>
+    <string name="zakat_unit_chi">Chỉ</string>
+    <string name="zakat_unit_luong">Lượng</string>
+    <string name="zakat_purity_24k">24K (99.9%)</string>
+    <string name="zakat_purity_22k">22K (91.6%)</string>
+    <string name="zakat_purity_18k">18K (75%)</string>
+    <string name="zakat_purity_14k">14K (58.3%)</string>
+    <string name="zakat_q_hawl">Bạn đã có tài sản đạt mức Nisab từ bao lâu?</string>
+    <string name="zakat_q_remember_date">Bạn có nhớ ngày tài sản đạt mức Nisab không?</string>
+    <string name="zakat_hawl_guidance_title">Cách xác định ngày Zakat</string>
+    <string name="zakat_hawl_guidance_body">Nếu bạn không nhớ chính xác, hãy chọn một ngày quan trọng gần nhất khi bạn biết chắc mình có đủ tài sản (ví dụ: ngày nhận lương thưởng lớn, hoặc ngày 1 tháng Ramadan năm ngoái).</string>
+    <string name="zakat_i_dont_remember">Tôi không nhớ</string>
+    <string name="zakat_hawl_start">Ngày bắt đầu Hawl</string>
+    <string name="zakat_due_date">Ngày đến hạn Zakat (Hijri)</string>
+    <string name="zakat_days_left">Còn lại %1$d ngày</string>
+    <string name="zakat_overdue">Đã quá hạn %1$d ngày</string>
+    <string name="edit">Sửa</string>
+    <string name="zakat_liabilities_info">Lưu ý: Chỉ các khoản nợ phục vụ nhu cầu thiết yếu hoặc nợ đến hạn mới được khấu trừ tùy theo quan điểm Madhhab.</string>
 </resources>

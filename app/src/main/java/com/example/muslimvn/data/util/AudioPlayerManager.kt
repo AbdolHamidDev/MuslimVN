@@ -23,6 +23,14 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 import javax.inject.Singleton
 
+data class AudioPlayItem(
+    val url: String,
+    val mediaId: String,
+    val title: String? = null,
+    val artist: String? = null,
+    val artworkPath: String? = null
+)
+
 /**
  * Trình phát audio dùng chung toàn app (Media3 ExoPlayer), phục vụ cả:
  *  - Quran: [play] giữ nguyên API cũ (url + mediaId + callback kết thúc để nối ayah).
@@ -84,19 +92,61 @@ class AudioPlayerManager @Inject constructor(
         startTicker()
     }
 
-    // ── Public API: Quran (giữ nguyên hành vi cũ) ───────────────────────────────
+    // ── Public API: Quran (giữ nguyên hành vi cũ nhưng bổ sung metadata) ───────────────────────────────
 
-    fun play(url: String, mediaId: String, onFinished: (() -> Unit)? = null) {
+    fun play(
+        url: String,
+        mediaId: String,
+        title: String? = null,
+        artist: String? = null,
+        onFinished: (() -> Unit)? = null
+    ) {
         startPlayback(
             url = url,
             mediaId = mediaId,
             startPositionMs = 0L,
-            title = null,
-            artist = null,
-            artworkPath = null,
+            title = title,
+            artist = artist,
+            artworkPath = "icon/quran.png",
             isPodcast = false,
             onFinished = onFinished
         )
+    }
+
+    /** Phát danh sách nhiều mục (vd: toàn bộ Surah) để đạt Gapless Playback. */
+    fun playList(
+        items: List<AudioPlayItem>,
+        startIndex: Int = 0,
+        isPodcast: Boolean = false
+    ) {
+        initializePlayer()
+        if (isPodcastSession && _currentMediaId.value != null) persistProgressNow()
+
+        isPodcastSession = isPodcast
+        val mediaItems = items.map { item ->
+            val artworkUri = item.artworkPath?.let { path ->
+                if (path.startsWith("http")) Uri.parse(path)
+                else Uri.parse("file:///android_asset/${path.trimStart('/')}")
+            }
+            val metadata = MediaMetadata.Builder()
+                .setTitle(item.title)
+                .setArtist(item.artist)
+                .setArtworkUri(artworkUri)
+                .build()
+            
+            MediaItem.Builder()
+                .setMediaId(item.mediaId)
+                .setUri(item.url)
+                .setMediaMetadata(metadata)
+                .build()
+        }
+
+        exoPlayer?.apply {
+            setMediaItems(mediaItems, startIndex, 0L)
+            setPlaybackSpeed(_playbackSpeed.value)
+            prepare()
+            playWhenReady = true
+        }
     }
 
     // ── Public API: Podcast ─────────────────────────────────────────────────────
@@ -203,10 +253,14 @@ class AudioPlayerManager @Inject constructor(
         _nowPlayingArtworkPath.value = artworkPath
 
         exoPlayer?.apply {
+            val artworkUri = artworkPath?.let { path ->
+                if (path.startsWith("http")) Uri.parse(path)
+                else Uri.parse("file:///android_asset/${path.trimStart('/')}")
+            }
             val metadata = MediaMetadata.Builder()
                 .setTitle(title)
                 .setArtist(artist)
-                .setArtworkUri(artworkPath?.let { Uri.parse("file:///android_asset/$it") })
+                .setArtworkUri(artworkUri)
                 .build()
             setMediaItem(
                 MediaItem.Builder()
@@ -226,6 +280,13 @@ class AudioPlayerManager @Inject constructor(
         if (exoPlayer == null) {
             exoPlayer = ExoPlayer.Builder(context).build().apply {
                 addListener(object : Player.Listener {
+                    override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
+                        _currentMediaId.value = mediaItem?.mediaId
+                        _nowPlayingTitle.value = mediaItem?.mediaMetadata?.title?.toString()
+                        _nowPlayingArtist.value = mediaItem?.mediaMetadata?.artist?.toString()
+                        // Lưu ý: artworkUri là Uri, cần quản lý StateFlow cẩn thận nếu muốn hiển thị
+                    }
+
                     override fun onIsPlayingChanged(isPlaying: Boolean) {
                         _isPlaying.value = isPlaying
                         if (!isPlaying && isPodcastSession) persistProgressNow()
@@ -260,16 +321,24 @@ class AudioPlayerManager @Inject constructor(
                 val player = exoPlayer ?: continue
                 if (_currentMediaId.value == null) continue
 
-                val duration = player.duration
-                if (duration > 0) _durationMs.value = duration
-                _positionMs.value = player.currentPosition
+                try {
+                    // Kiểm tra trạng thái player trước khi truy cập các thuộc tính nhạy cảm
+                    if (player.playbackState != Player.STATE_IDLE) {
+                        val duration = player.duration
+                        if (duration > 0) _durationMs.value = duration
+                        _positionMs.value = player.currentPosition
 
-                if (isPodcastSession && _isPlaying.value) {
-                    val now = SystemClock.elapsedRealtime()
-                    if (now - lastProgressSaveElapsedMs >= PROGRESS_SAVE_INTERVAL_MS) {
-                        lastProgressSaveElapsedMs = now
-                        persistProgressNow()
+                        if (isPodcastSession && _isPlaying.value) {
+                            val now = SystemClock.elapsedRealtime()
+                            if (now - lastProgressSaveElapsedMs >= PROGRESS_SAVE_INTERVAL_MS) {
+                                lastProgressSaveElapsedMs = now
+                                persistProgressNow()
+                            }
+                        }
                     }
+                } catch (e: Exception) {
+                    // Có thể player đã bị release hoặc đang trong trạng thái lỗi
+                    Log.w(TAG, "Ticker error: ${e.message}")
                 }
             }
         }

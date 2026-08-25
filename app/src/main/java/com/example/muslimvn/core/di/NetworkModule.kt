@@ -2,6 +2,7 @@ package com.example.muslimvn.core.di
 
 import com.example.muslimvn.BuildConfig
 import com.example.muslimvn.data.remote.AladhanApiService
+import com.example.muslimvn.data.remote.QuranApiService
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import dagger.Module
@@ -13,13 +14,23 @@ import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import java.util.concurrent.TimeUnit
+import javax.inject.Qualifier
 import javax.inject.Singleton
+
+@Qualifier
+@Retention(AnnotationRetention.BINARY)
+annotation class AladhanRetrofit
+
+@Qualifier
+@Retention(AnnotationRetention.BINARY)
+annotation class QuranRetrofit
 
 @Module
 @InstallIn(SingletonComponent::class)
 object NetworkModule {
 
-    private const val BASE_URL = "https://api.aladhan.com/"
+    private const val ALADHAN_BASE_URL = "https://api.aladhan.com/"
+    private const val QURAN_COM_BASE_URL = "https://api.quran.com/api/v4/"
 
     @Provides
     @Singleton
@@ -45,15 +56,31 @@ object NetworkModule {
 
     @Provides
     @Singleton
-    fun provideRetrofit(client: OkHttpClient, gson: Gson): Retrofit =
+    @AladhanRetrofit
+    fun provideAladhanRetrofit(client: OkHttpClient, gson: Gson): Retrofit =
         Retrofit.Builder()
-            .baseUrl(BASE_URL)
+            .baseUrl(ALADHAN_BASE_URL)
             .client(client)
             .addConverterFactory(GsonConverterFactory.create(gson))
             .build()
 
     @Provides
     @Singleton
-    fun provideAladhanApiService(retrofit: Retrofit): AladhanApiService =
+    @QuranRetrofit
+    fun provideQuranRetrofit(client: OkHttpClient, gson: Gson): Retrofit =
+        Retrofit.Builder()
+            .baseUrl(QURAN_COM_BASE_URL)
+            .client(client)
+            .addConverterFactory(GsonConverterFactory.create(gson))
+            .build()
+
+    @Provides
+    @Singleton
+    fun provideAladhanApiService(@AladhanRetrofit retrofit: Retrofit): AladhanApiService =
         retrofit.create(AladhanApiService::class.java)
+
+    @Provides
+    @Singleton
+    fun provideQuranApiService(@QuranRetrofit retrofit: Retrofit): QuranApiService =
+        retrofit.create(QuranApiService::class.java)
 }

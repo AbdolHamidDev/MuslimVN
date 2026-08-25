@@ -13,9 +13,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
@@ -40,17 +37,24 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.rememberModalBottomSheetState
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.compose.ui.util.lerp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.muslimvn.R
 import com.example.muslimvn.domain.models.AllahName
@@ -60,6 +64,7 @@ import com.example.muslimvn.presentation.components.LoadingIndicator
 import com.example.muslimvn.presentation.components.bouncyClick
 import com.example.muslimvn.presentation.viewmodels.NamesOfAllahViewModel
 import com.example.muslimvn.ui.theme.extendedTypography
+import kotlin.math.absoluteValue
 
 /**
  * Màn hình 99 Danh Xưng của Allah (Asmaul Husna).
@@ -79,6 +84,7 @@ fun NamesOfAllahScreen(
     val searchQuery by viewModel.searchQuery.collectAsState()
     val selectedName by viewModel.selectedName.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
+    val isError by viewModel.isError.collectAsState()
 
     Scaffold(
         topBar = {
@@ -144,38 +150,88 @@ fun NamesOfAllahScreen(
                     modifier = Modifier.fillMaxSize()
                 )
 
-                // Đã tải xong nhưng danh sách trống → lỗi đọc dữ liệu
-                names.isEmpty() -> ErrorState(
+                isError -> ErrorState(
                     message = stringResource(R.string.names_of_allah_load_error),
                     onRetry = viewModel::retryLoading,
                     modifier = Modifier.fillMaxSize()
                 )
 
-                else -> Column(modifier = Modifier.fillMaxSize()) {
-                    Text(
-                        text = stringResource(R.string.names_of_allah_count, names.size),
-                        style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.padding(start = 4.dp, bottom = 8.dp)
-                    )
+                // Khi đang đợi dữ liệu ban đầu từ namesList hoặc danh sách rỗng thực sự
+                names.isEmpty() -> {
+                    // Tránh hiện ErrorState nhấp nháy, hiện Box trống hoặc loading nhẹ
+                    Box(modifier = Modifier.fillMaxSize())
+                }
 
-                    LazyVerticalGrid(
-                        columns = GridCells.Fixed(2),
-                        horizontalArrangement = Arrangement.spacedBy(12.dp),
-                        verticalArrangement = Arrangement.spacedBy(12.dp),
-                        contentPadding = PaddingValues(bottom = 24.dp),
-                        modifier = Modifier.fillMaxSize()
+                else -> {
+                    val pagerState = rememberPagerState(pageCount = { names.size })
+
+                    // Reset về trang đầu khi danh sách thay đổi (do tìm kiếm)
+                    LaunchedEffect(names) {
+                        if (names.isNotEmpty()) {
+                            pagerState.scrollToPage(0)
+                        }
+                    }
+
+                    Column(
+                        modifier = Modifier.fillMaxSize(),
+                        horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        items(
-                            items = names,
-                            key = { it.number }
-                        ) { name ->
-                            AllahNameCard(
-                                name = name,
-                                onClick = { viewModel.onNameSelected(name) },
-                                modifier = Modifier.animateItem()
+                        // Indicator vị trí: 1 / 99
+                        Surface(
+                            shape = CircleShape,
+                            color = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.7f),
+                            modifier = Modifier.padding(bottom = 24.dp, top = 8.dp)
+                        ) {
+                            Text(
+                                text = if (names.isEmpty()) "0 / 0" 
+                                       else "${pagerState.currentPage + 1} / ${names.size}",
+                                style = MaterialTheme.typography.labelLarge,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onSecondaryContainer,
+                                modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp)
                             )
                         }
+
+                        HorizontalPager(
+                            state = pagerState,
+                            contentPadding = PaddingValues(horizontal = 48.dp),
+                            pageSpacing = 16.dp,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .weight(1f)
+                        ) { page ->
+                            val name = names[page]
+                            
+                            // Hiệu ứng scale & alpha cho các card bên cạnh
+                            val pageOffset = (
+                                (pagerState.currentPage - page) + pagerState.currentPageOffsetFraction
+                            ).absoluteValue
+
+                            AllahNamePagerItem(
+                                name = name,
+                                onClick = { viewModel.onNameSelected(name) },
+                                modifier = Modifier
+                                    .graphicsLayer {
+                                        // Scale từ 1.0 (chính giữa) xuống 0.85 (bên cạnh)
+                                        val scale = lerp(
+                                            start = 0.85f,
+                                            stop = 1f,
+                                            fraction = 1f - pageOffset.coerceIn(0f, 1f)
+                                        )
+                                        scaleX = scale
+                                        scaleY = scale
+                                        
+                                        // Alpha từ 1.0 xuống 0.5
+                                        alpha = lerp(
+                                            start = 0.5f,
+                                            stop = 1f,
+                                            fraction = 1f - pageOffset.coerceIn(0f, 1f)
+                                        )
+                                    }
+                            )
+                        }
+                        
+                        Spacer(modifier = Modifier.height(48.dp))
                     }
                 }
             }
@@ -192,8 +248,102 @@ fun NamesOfAllahScreen(
 }
 
 /**
- * Card một danh xưng trong lưới: huy hiệu số thứ tự, chữ Ả Rập lớn (font Amiri),
- * phiên âm và ý nghĩa tiếng Việt. Nhấn có hiệu ứng "bouncy" + haptic nhẹ.
+ * Card hiển thị danh xưng Allah trong Carousel (HorizontalPager).
+ * Tối ưu hóa cho việc hiển thị một tên chính giữa màn hình với chữ Ả Rập rất lớn.
+ */
+@Composable
+private fun AllahNamePagerItem(
+    name: AllahName,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Card(
+        modifier = modifier
+            .fillMaxWidth()
+            .height(420.dp) // Chiều cao cố định để tạo sự cân đối trong carousel
+            .bouncyClick(pressedScale = 0.98f) { onClick() },
+        shape = MaterialTheme.shapes.extraLarge,
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceContainerLowest,
+            contentColor = MaterialTheme.colorScheme.onSurface
+        ),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            // Huy hiệu số thứ tự (1 → 99)
+            Surface(
+                shape = CircleShape,
+                color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.8f)
+            ) {
+                Text(
+                    text = name.number.toString(),
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer,
+                    modifier = Modifier.padding(horizontal = 14.dp, vertical = 4.dp)
+                )
+            }
+
+            Spacer(modifier = Modifier.weight(1f))
+
+            // Chữ Ả Rập là thành phần nổi bật nhất
+            Text(
+                text = name.nameArabic,
+                style = MaterialTheme.extendedTypography.arabicDisplay.copy(
+                    fontSize = 64.sp,
+                    lineHeight = 80.sp
+                ),
+                textAlign = TextAlign.Center,
+                color = MaterialTheme.colorScheme.primary
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Phiên âm
+            Text(
+                text = name.transliteration,
+                style = MaterialTheme.typography.headlineSmall,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSurface,
+                textAlign = TextAlign.Center
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            // Ý nghĩa tiếng Việt
+            Text(
+                text = name.meaningVietnamese,
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = TextAlign.Center,
+                maxLines = 3,
+                overflow = TextOverflow.Ellipsis
+            )
+            
+            Spacer(modifier = Modifier.weight(1f))
+            
+            // Hint để người dùng biết có thể xem chi tiết
+            Text(
+                text = stringResource(R.string.action_view_detail).uppercase(),
+                style = MaterialTheme.typography.labelMedium,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.7f),
+                letterSpacing = 1.sp
+            )
+        }
+    }
+}
+
+/**
+ * Giữ lại card cũ nếu cần dùng ở nơi khác, nhưng ở màn hình này đã chuyển sang PagerItem.
+ * Tao comment lại để tránh unused warning hoặc nếu mày muốn xoá hẳn cũng được.
  */
 @Composable
 private fun AllahNameCard(
@@ -201,67 +351,7 @@ private fun AllahNameCard(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Card(
-        modifier = modifier.bouncyClick(pressedScale = 0.97f) { onClick() },
-        shape = MaterialTheme.shapes.large,
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceContainerLowest,
-            contentColor = MaterialTheme.colorScheme.onSurface
-        ),
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            // Huy hiệu số thứ tự (1 → 99)
-            Surface(
-                shape = CircleShape,
-                color = MaterialTheme.colorScheme.primaryContainer
-            ) {
-                Text(
-                    text = name.number.toString(),
-                    style = MaterialTheme.typography.labelMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onPrimaryContainer,
-                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 2.dp)
-                )
-            }
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            Text(
-                text = name.nameArabic,
-                style = MaterialTheme.extendedTypography.arabicDisplay,
-                textAlign = TextAlign.Center,
-                color = MaterialTheme.colorScheme.primary
-            )
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            Text(
-                text = name.transliteration,
-                style = MaterialTheme.typography.titleSmall,
-                fontWeight = FontWeight.SemiBold,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
-
-            Spacer(modifier = Modifier.height(4.dp))
-
-            Text(
-                text = name.meaningVietnamese,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                textAlign = TextAlign.Center,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis
-            )
-        }
-    }
+    // Component này hiện không còn được dùng trong Screen mới
 }
 
 /**
@@ -339,6 +429,15 @@ private fun AllahNameDetailSheet(
                 label = stringResource(R.string.names_of_allah_meaning),
                 value = name.meaningVietnamese
             )
+
+            if (name.description.isNotEmpty()) {
+                Spacer(modifier = Modifier.height(16.dp))
+                DetailInfoRow(
+                    icon = { Icon(Icons.Default.Search, contentDescription = null) },
+                    label = stringResource(R.string.names_of_allah_description),
+                    value = name.description
+                )
+            }
 
             Spacer(modifier = Modifier.height(20.dp))
 

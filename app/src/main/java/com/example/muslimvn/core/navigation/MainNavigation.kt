@@ -22,9 +22,11 @@ import com.example.muslimvn.presentation.screens.PodcastHomeScreen
 import com.example.muslimvn.presentation.screens.PodcastPlayerScreen
 import com.example.muslimvn.presentation.screens.QiblaScreen
 import com.example.muslimvn.presentation.screens.QuranScreen
+import com.example.muslimvn.presentation.screens.QuranSettingsScreen
 import com.example.muslimvn.presentation.screens.ScholarDetailScreen
 import com.example.muslimvn.presentation.screens.SettingsScreen
 import com.example.muslimvn.presentation.screens.SurahDetailScreen
+import com.example.muslimvn.presentation.screens.zakat.ZakatScreen
 
 @Composable
 fun MainNavigation(navController: NavHostController, modifier: Modifier = Modifier) {
@@ -49,7 +51,9 @@ fun MainNavigation(navController: NavHostController, modifier: Modifier = Modifi
                 onQiblaClick = { navController.navigate(Screen.Qibla.route) },
                 onHijriCalendarClick = { navController.navigate(Screen.HijriCalendar.route) },
                 onNamesOfAllahClick = { navController.navigate(Screen.NamesOfAllah.route) },
+                onZakatClick = { navController.navigate(Screen.Zakat.route) },
                 onPodcastClick = { navController.navigate(Screen.PodcastHome.route) },
+                onOpenFullPlayer = { navController.navigate(Screen.PodcastPlayer.route) },
                 onSettingsClick = { navController.navigate(Screen.Settings.route) }
             )
         }
@@ -67,8 +71,13 @@ fun MainNavigation(navController: NavHostController, modifier: Modifier = Modifi
                 onBackClick = { navController.popBackStack() },
                 onSurahClick = { surahNumber ->
                     navController.navigate(Screen.SurahDetail.createRoute(surahNumber))
-                }
+                },
+                onSettingsClick = { navController.navigate(Screen.QuranSettings.route) },
+                onOpenFullPlayer = { navController.navigate(Screen.PodcastPlayer.route) }
             )
+        }
+        composable(Screen.QuranSettings.route) {
+            QuranSettingsScreen(onBackClick = { navController.popBackStack() })
         }
         composable(Screen.Qibla.route) {
             QiblaScreen(onBackClick = { navController.popBackStack() })
@@ -79,12 +88,19 @@ fun MainNavigation(navController: NavHostController, modifier: Modifier = Modifi
         composable(Screen.NamesOfAllah.route) {
             NamesOfAllahScreen(onBackClick = { navController.popBackStack() })
         }
+        composable(Screen.Zakat.route) {
+            ZakatScreen(onBackClick = { navController.popBackStack() })
+        }
         composable(Screen.Settings.route) { SettingsScreen() }
         composable(
             route = Screen.SurahDetail.route,
             arguments = listOf(navArgument("surahNumber") { type = NavType.IntType })
         ) {
-            SurahDetailScreen(onBackClick = { navController.popBackStack() })
+            SurahDetailScreen(
+                onBackClick = { navController.popBackStack() },
+                onSettingsClick = { navController.navigate(Screen.QuranSettings.route) },
+                onOpenFullPlayer = { navController.navigate(Screen.PodcastPlayer.route) }
+            )
         }
 
         // ── Podcast học giả ─────────────────────────────────────────────────────

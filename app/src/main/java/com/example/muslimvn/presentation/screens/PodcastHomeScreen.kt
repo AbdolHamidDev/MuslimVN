@@ -20,6 +20,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -39,6 +40,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -95,6 +97,7 @@ fun PodcastHomeScreen(
             PodcastPlayerBarState(playerViewModel) { active ->
                 AnimatedVisibility(visible = active != null) {
                     if (active != null) {
+                        val playlist by playerViewModel.playlist.collectAsState()
                         MiniPlayerBar(
                             title = active.title,
                             subtitle = active.subtitle,
@@ -107,7 +110,10 @@ fun PodcastHomeScreen(
                             onPlayPauseClick = playerViewModel::togglePlayPause,
                             onSeekTo = playerViewModel::seekTo,
                             onCycleSpeed = playerViewModel::cyclePlaybackSpeed,
-                            onOpenFullPlayer = onOpenFullPlayer
+                            onOpenFullPlayer = onOpenFullPlayer,
+                            currentMediaId = active.id,
+                            playlist = playlist,
+                            onPlayEpisode = playerViewModel::playEpisode
                         )
                     }
                 }
@@ -205,7 +211,6 @@ private fun SectionTitle(text: String) {
     )
 }
 
-/** Carousel ngang học giả nổi bật: avatar tròn lớn + tên. */
 @Composable
 private fun FeaturedScholarsRow(
     scholars: List<Scholar>,
@@ -213,28 +218,41 @@ private fun FeaturedScholarsRow(
 ) {
     LazyRow(
         contentPadding = PaddingValues(horizontal = 16.dp),
-        horizontalArrangement = Arrangement.spacedBy(16.dp)
+        horizontalArrangement = Arrangement.spacedBy(20.dp)
     ) {
         items(scholars, key = { it.id }) { scholar ->
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 modifier = Modifier
-                    .width(96.dp)
+                    .width(110.dp)
                     .bouncyClick { onScholarClick(scholar.id) }
             ) {
-                AsyncImage(
-                    model = scholar.avatarPath.toAndroidAssetUri(),
-                    contentDescription = scholar.name,
-                    contentScale = ContentScale.Crop,
-                    modifier = Modifier
-                        .size(88.dp)
-                        .clip(CircleShape)
-                        .background(MaterialTheme.colorScheme.surfaceVariant)
-                )
-                Spacer(modifier = Modifier.height(8.dp))
+                Surface(
+                    shape = CircleShape,
+                    tonalElevation = 4.dp,
+                    shadowElevation = 2.dp,
+                    modifier = Modifier.size(100.dp)
+                ) {
+                    AsyncImage(
+                        model = scholar.avatarPath.toAndroidAssetUri(),
+                        contentDescription = scholar.name,
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier.fillMaxSize()
+                    )
+                }
+                Spacer(modifier = Modifier.height(10.dp))
                 Text(
                     text = scholar.name,
                     style = MaterialTheme.typography.labelLarge,
+                    fontWeight = FontWeight.Bold,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                )
+                Text(
+                    text = scholar.title,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                     textAlign = androidx.compose.ui.text.style.TextAlign.Center
@@ -244,68 +262,62 @@ private fun FeaturedScholarsRow(
     }
 }
 
-/** Hàng học giả trong danh sách chính: avatar, tên, chức danh và tối đa 3 thẻ phân loại. */
+/** Hàng học giả trong danh sách chính: Thiết kế phẳng, hiện đại kiểu YT Music. */
 @Composable
 private fun ScholarListRow(scholar: Scholar, onClick: () -> Unit) {
-    Card(
+    Surface(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp)
             .bouncyClick(onClick = onClick),
-        shape = MaterialTheme.shapes.medium,
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceContainerLowest
-        ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+        color = Color.Transparent
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.padding(12.dp)
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
         ) {
             AsyncImage(
                 model = scholar.avatarPath.toAndroidAssetUri(),
                 contentDescription = scholar.name,
                 contentScale = ContentScale.Crop,
                 modifier = Modifier
-                    .size(56.dp)
+                    .size(60.dp)
                     .clip(CircleShape)
                     .background(MaterialTheme.colorScheme.surfaceVariant)
             )
-            Spacer(modifier = Modifier.width(14.dp))
+            Spacer(modifier = Modifier.width(16.dp))
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = scholar.name,
                     style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.SemiBold,
+                    fontWeight = FontWeight.Bold,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
                 Text(
                     text = scholar.title,
-                    style = MaterialTheme.typography.bodySmall,
+                    style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
-                Spacer(modifier = Modifier.height(6.dp))
-                Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                    scholar.tags.take(MAX_VISIBLE_TAGS).forEach { tag ->
-                        Surface(
-                            shape = CircleShape,
-                            color = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.7f)
-                        ) {
-                            Text(
-                                text = tag.replaceFirstChar { it.uppercase() },
-                                style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.onSecondaryContainer,
-                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
-                            )
-                        }
-                    }
+                if (scholar.tags.isNotEmpty()) {
+                    Text(
+                        text = scholar.tags.joinToString(" • ") { it.replaceFirstChar { c -> c.uppercase() } },
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.primary,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.padding(top = 2.dp)
+                    )
                 }
             }
+            Icon(
+                imageVector = Icons.Default.MoreVert,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.size(20.dp)
+            )
         }
     }
 }
 
-private const val MAX_VISIBLE_TAGS = 3

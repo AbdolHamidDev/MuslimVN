@@ -5,10 +5,12 @@ import androidx.room.Room
 import com.example.muslimvn.data.local.HijriCalendarDatabase
 import com.example.muslimvn.data.local.PodcastDatabase
 import com.example.muslimvn.data.local.QuranDatabase
+import com.example.muslimvn.data.local.ZakatDatabase
 import com.example.muslimvn.data.local.dao.HijriCalendarDao
 import com.example.muslimvn.data.local.dao.PodcastEpisodeDao
 import com.example.muslimvn.data.local.dao.QuranDao
 import com.example.muslimvn.data.local.dao.ScholarDao
+import com.example.muslimvn.data.local.dao.ZakatDao
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -29,7 +31,9 @@ object DatabaseModule {
             context,
             QuranDatabase::class.java,
             QuranDatabase.DATABASE_NAME
-        ).build()
+        )
+            .fallbackToDestructiveMigration()
+            .build()
     }
 
     @Provides
@@ -65,7 +69,9 @@ object DatabaseModule {
             context,
             PodcastDatabase::class.java,
             PodcastDatabase.DATABASE_NAME
-        ).build()
+        )
+            .fallbackToDestructiveMigration()
+            .build()
     }
 
     @Provides
@@ -74,4 +80,22 @@ object DatabaseModule {
     @Provides
     fun providePodcastEpisodeDao(database: PodcastDatabase): PodcastEpisodeDao =
         database.podcastEpisodeDao
+
+    @Provides
+    @Singleton
+    fun provideZakatDatabase(
+        @ApplicationContext context: Context
+    ): ZakatDatabase {
+        return Room.databaseBuilder(
+            context,
+            ZakatDatabase::class.java,
+            ZakatDatabase.DATABASE_NAME
+        ).build()
+    }
+
+    @Provides
+    @Singleton
+    fun provideZakatDao(database: ZakatDatabase): ZakatDao {
+        return database.zakatDao
+    }
 }

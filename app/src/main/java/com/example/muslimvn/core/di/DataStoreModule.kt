@@ -9,13 +9,19 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
+import javax.inject.Qualifier
 import javax.inject.Singleton
 
-private const val HIJRI_PREFERENCES_NAME = "hijri_preferences"
+@Qualifier
+@Retention(AnnotationRetention.BINARY)
+annotation class HijriDataStore
 
-private val Context.hijriPreferencesDataStore: DataStore<Preferences> by preferencesDataStore(
-    name = HIJRI_PREFERENCES_NAME
-)
+@Qualifier
+@Retention(AnnotationRetention.BINARY)
+annotation class QuranDataStore
+
+private val Context.hijriDataStore: DataStore<Preferences> by preferencesDataStore(name = "hijri_preferences")
+private val Context.quranDataStore: DataStore<Preferences> by preferencesDataStore(name = "quran_settings")
 
 @Module
 @InstallIn(SingletonComponent::class)
@@ -23,7 +29,11 @@ object DataStoreModule {
 
     @Provides
     @Singleton
-    fun provideHijriPreferencesDataStore(
-        @ApplicationContext context: Context
-    ): DataStore<Preferences> = context.hijriPreferencesDataStore
+    @HijriDataStore
+    fun provideHijriDataStore(@ApplicationContext context: Context): DataStore<Preferences> = context.hijriDataStore
+
+    @Provides
+    @Singleton
+    @QuranDataStore
+    fun provideQuranDataStore(@ApplicationContext context: Context): DataStore<Preferences> = context.quranDataStore
 }

@@ -5,6 +5,7 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.emptyPreferences
 import androidx.datastore.preferences.core.intPreferencesKey
+import com.example.muslimvn.core.di.HijriDataStore
 import com.example.muslimvn.domain.repository.HijriCalendarRepository.Companion.DEFAULT_OFFSET_DAYS
 import com.example.muslimvn.domain.repository.HijriCalendarRepository.Companion.MAX_OFFSET_DAYS
 import com.example.muslimvn.domain.repository.HijriCalendarRepository.Companion.MIN_OFFSET_DAYS
@@ -23,7 +24,7 @@ import javax.inject.Singleton
  */
 @Singleton
 class HijriPreferences @Inject constructor(
-    private val dataStore: DataStore<Preferences>
+    @HijriDataStore private val dataStore: DataStore<Preferences>
 ) {
 
     val offsetDays: Flow<Int> = dataStore.data

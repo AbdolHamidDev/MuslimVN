@@ -52,7 +52,8 @@ class NameAllahRepositoryImpl @Inject constructor(
                             number = dto.number,
                             nameArabic = dto.arabic,
                             transliteration = dto.transliteration,
-                            meaningVietnamese = dto.vietnamese
+                            meaningVietnamese = dto.vietnamese,
+                            description = dto.description
                         )
                     }
             }
@@ -80,10 +81,11 @@ private data class NameAllahFileDto(
     val names: List<NameAllahEntryDto> = emptyList()
 )
 
-/** Một mục danh xưng: { "number", "arabic", "transliteration", "vietnamese" } */
+/** Một mục danh xưng: { "number", "arabic", "transliteration", "vietnamese", "description" } */
 private data class NameAllahEntryDto(
     val number: Int = 0,
     @SerializedName("arabic") val arabic: String = "",
     val transliteration: String = "",
-    @SerializedName("vietnamese") val vietnamese: String = ""
+    @SerializedName("vietnamese") val vietnamese: String = "",
+    val description: String = ""
 )

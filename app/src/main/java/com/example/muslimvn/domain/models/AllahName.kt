@@ -12,5 +12,6 @@ data class AllahName(
     val number: Int,
     val nameArabic: String,
     val transliteration: String,
-    val meaningVietnamese: String
+    val meaningVietnamese: String,
+    val description: String = ""
 )

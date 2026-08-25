@@ -90,7 +90,7 @@ class ScholarDetailViewModel @Inject constructor(
             startPositionMs = startPosition,
             title = episode.title,
             artist = scholarName,
-            artworkPath = _uiState.value.scholar?.avatarPath
+            artworkPath = episode.artworkUrl ?: _uiState.value.scholar?.avatarPath
         )
     }
 

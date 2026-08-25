@@ -22,7 +22,7 @@ class PodcastConverters {
 
 @Database(
     entities = [ScholarEntity::class, PodcastEpisodeEntity::class],
-    version = 1,
+    version = 2,
     exportSchema = false
 )
 @TypeConverters(PodcastConverters::class)

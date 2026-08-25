@@ -107,6 +107,9 @@ dependencies {
     // Media3
     implementation(libs.androidx.media3.exoplayer)
     implementation(libs.androidx.media3.ui)
+    
+    // Palette
+    implementation(libs.androidx.palette.ktx)
 
     // Coil
     implementation(libs.coil.compose)

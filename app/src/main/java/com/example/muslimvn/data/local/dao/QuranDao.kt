@@ -3,6 +3,7 @@ package com.example.muslimvn.data.local.dao
 import androidx.room.*
 import com.example.muslimvn.data.local.entities.AyahEntity
 import com.example.muslimvn.data.local.entities.SurahEntity
+import com.example.muslimvn.data.local.entities.VerseTimingEntity
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -34,4 +35,10 @@ interface QuranDao {
     @Transaction
     @Query("SELECT * FROM ayahs WHERE textVietnamese LIKE '%' || :query || '%'")
     fun searchAyahs(query: String): Flow<List<AyahEntity>>
+
+    @Query("SELECT * FROM verse_timings WHERE verseKey = :verseKey AND reciterId = :reciterId")
+    suspend fun getVerseTiming(verseKey: String, reciterId: Int): VerseTimingEntity?
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertVerseTiming(timing: VerseTimingEntity)
 }

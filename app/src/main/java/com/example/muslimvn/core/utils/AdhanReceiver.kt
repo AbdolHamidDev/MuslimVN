@@ -2,8 +2,10 @@ package com.example.muslimvn.core.utils
 
 import android.app.NotificationManager
 import android.content.BroadcastReceiver
+import android.content.ContentResolver
 import android.content.Context
 import android.content.Intent
+import android.net.Uri
 import android.util.Log
 import androidx.core.app.NotificationCompat
 import com.example.muslimvn.R
@@ -56,12 +58,15 @@ class AdhanReceiver : BroadcastReceiver() {
     }
 
     private fun showNotification(context: Context, prayerName: String) {
+        val soundUri = Uri.parse(ContentResolver.SCHEME_ANDROID_RESOURCE + "://" + context.packageName + "/" + R.raw.muslimvn_notification)
+        
         val notification = NotificationCompat.Builder(context, NotificationModule.ADHAN_CHANNEL_ID)
             .setSmallIcon(R.mipmap.ic_launcher) // Use app icon for now
             .setContentTitle(context.getString(R.string.adhan_notification_title, prayerName))
             .setContentText(context.getString(R.string.adhan_notification_content, prayerName))
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setCategory(NotificationCompat.CATEGORY_ALARM)
+            .setSound(soundUri)
             .setAutoCancel(true)
             .build()
 

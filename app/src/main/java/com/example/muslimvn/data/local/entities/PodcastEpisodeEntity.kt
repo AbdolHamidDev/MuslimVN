@@ -23,6 +23,7 @@ data class PodcastEpisodeEntity(
     val scholarId: String,
     val title: String,
     val audioUrl: String,
+    val artworkUrl: String?,
     val duration: Long,
     val pubDate: Long,
     val description: String,

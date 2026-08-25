@@ -7,6 +7,7 @@ import com.example.muslimvn.presentation.viewmodels.PodcastPlayerViewModel
 
 /** Snapshot trạng thái phát hiện tại dùng cho mini-player; null khi không có tập nào. */
 data class ActivePlayback(
+    val id: String,
     val title: String,
     val subtitle: String?,
     val artworkPath: String?,
@@ -40,6 +41,7 @@ fun PodcastPlayerBarState(
         null
     } else {
         ActivePlayback(
+            id = currentEpisodeId.orEmpty(),
             title = title.orEmpty(),
             subtitle = artist,
             artworkPath = artworkPath,

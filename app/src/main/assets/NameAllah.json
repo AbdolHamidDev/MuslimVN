@@ -6,595 +6,694 @@
       "number": 1,
       "arabic": "الرحمن",
       "transliteration": "Ar-Rahman",
-      "vietnamese": "Đấng Từ Bi Vô Hạn"
+      "vietnamese": "Đấng Rất Mực Độ Lượng",
+      "description": "Lòng trắc ẩn bao trùm mọi tạo vật"
     },
     {
       "number": 2,
       "arabic": "الرحيم",
       "transliteration": "Ar-Rahim",
-      "vietnamese": "Đấng Thương Xót Vô Cùng"
+      "vietnamese": "Đấng Rất Mực Khoan Dung",
+      "description": "Đặc biệt thương xót những người tin tưởng"
     },
     {
       "number": 3,
       "arabic": "الملك",
       "transliteration": "Al-Malik",
-      "vietnamese": "Đấng Vua Chúa"
+      "vietnamese": "Đấng Chủ Tể",
+      "description": "Vua của vũ trụ, Đấng nắm giữ quyền lực tối cao"
     },
     {
       "number": 4,
       "arabic": "القدوس",
       "transliteration": "Al-Quddus",
-      "vietnamese": "Đấng Cực Thánh"
+      "vietnamese": "Đấng Thánh Khiết",
+      "description": "Trong sạch, không có khiếm khuyết"
     },
     {
       "number": 5,
       "arabic": "السلام",
       "transliteration": "As-Salam",
-      "vietnamese": "Nguồn Của Hòa Bình"
+      "vietnamese": "Đấng Bình An",
+      "description": "Nguồn gốc của hòa bình và sự an toàn"
     },
     {
       "number": 6,
       "arabic": "المؤمن",
       "transliteration": "Al-Mu'min",
-      "vietnamese": "Đấng Ban Cho An Toàn"
+      "vietnamese": "Đấng Ban Cấp Đức Tin",
+      "description": "Đấng bảo chứng và bảo vệ đức tin"
     },
     {
       "number": 7,
       "arabic": "المهيمن",
       "transliteration": "Al-Muhaymin",
-      "vietnamese": "Đấng Bảo Vệ"
+      "vietnamese": "Đấng Bảo Hộ",
+      "description": "Đấng giám sát và bảo vệ mọi sự"
     },
     {
       "number": 8,
       "arabic": "العزيز",
       "transliteration": "Al-Aziz",
-      "vietnamese": "Đấng Toàn Năng"
+      "vietnamese": "Đấng Toàn Năng",
+      "description": "Quyền năng, không ai có thể khuất phục"
     },
     {
       "number": 9,
       "arabic": "الجبار",
       "transliteration": "Al-Jabbar",
-      "vietnamese": "Đấng Cưỡng Chế"
+      "vietnamese": "Đấng Cưỡng Bách",
+      "description": "Đấng sửa chữa mọi thứ theo ý muốn của Ngài"
     },
     {
       "number": 10,
       "arabic": "المتكبر",
       "transliteration": "Al-Mutakabbir",
-      "vietnamese": "Đấng Tối Cao"
+      "vietnamese": "Đấng Tối Cao",
+      "description": "Đấng duy nhất xứng đáng với sự vĩ đại"
     },
     {
       "number": 11,
       "arabic": "الخالق",
       "transliteration": "Al-Khaliq",
-      "vietnamese": "Đấng Tạo Hóa"
+      "vietnamese": "Đấng Sáng Tạo",
+      "description": "Tạo ra mọi thứ từ hư vô"
     },
     {
       "number": 12,
       "arabic": "البارئ",
       "transliteration": "Al-Bari'",
-      "vietnamese": "Đấng Tạo Tác"
+      "vietnamese": "Đấng Tạo Hình",
+      "description": "Làm cho vạn vật hiện hữu với sự hài hòa"
     },
     {
       "number": 13,
       "arabic": "المصور",
       "transliteration": "Al-Musawwir",
-      "vietnamese": "Đấng Tạo Hình"
+      "vietnamese": "Đấng Ban Hình Dạng",
+      "description": "Thiết kế hình dáng riêng biệt cho mỗi tạo vật"
     },
     {
       "number": 14,
       "arabic": "الغفار",
       "transliteration": "Al-Ghafar",
-      "vietnamese": "Đấng Tha Thứ"
+      "vietnamese": "Đấng Rất Mực Thứ Tha",
+      "description": "Tha thứ lặp đi lặp lại các tội lỗi"
     },
     {
       "number": 15,
       "arabic": "القهار",
       "transliteration": "Al-Qahhar",
-      "vietnamese": "Đấng Chinh Phục"
+      "vietnamese": "Đấng Khuất Phục",
+      "description": "Đấng nắm giữ quyền năng tuyệt đối trên mọi thứ"
     },
     {
       "number": 16,
       "arabic": "الوهاب",
       "transliteration": "Al-Wahhab",
-      "vietnamese": "Đấng Ban Phát"
+      "vietnamese": "Đấng Ban Tặng",
+      "description": "Ban phúc lành mà không mong cầu đáp lại"
     },
     {
       "number": 17,
-      "arabic": "الرزاق",
+      "arabic": "Ar-Razzaq",
       "transliteration": "Ar-Razzaq",
-      "vietnamese": "Đấng Cung Cấp"
+      "vietnamese": "Đấng Cung Dưỡng",
+      "description": "Cung cấp mọi nhu cầu cho sự sống"
     },
     {
       "number": 18,
       "arabic": "الفتاح",
       "transliteration": "Al-Fattah",
-      "vietnamese": "Đấng Mở Ra"
+      "vietnamese": "Đấng Mở Cửa",
+      "description": "Mở ra cánh cửa thành công, tri thức và lòng thương xót"
     },
     {
       "number": 19,
       "arabic": "العليم",
       "transliteration": "Al-Alim",
-      "vietnamese": "Đấng Toàn Tri"
+      "vietnamese": "Đấng Toàn Tri",
+      "description": "Biết hết mọi sự, dù là nhỏ nhất hay thầm kín nhất"
     },
     {
       "number": 20,
       "arabic": "القابض",
       "transliteration": "Al-Qabid",
-      "vietnamese": "Đấng Kiềm Chế"
+      "vietnamese": "Đấng Thu Hẹp",
+      "description": "Đấng hạn chế hoặc giữ lại theo ý muốn"
     },
     {
       "number": 21,
       "arabic": "الباسط",
       "transliteration": "Al-Basit",
-      "vietnamese": "Đấng Mở Rộng"
+      "vietnamese": "Đấng Mở Rộng",
+      "description": "Ban phát rộng rãi phúc lành"
     },
     {
       "number": 22,
       "arabic": "الخافض",
       "transliteration": "Al-Khafid",
-      "vietnamese": "Đấng Hạ Thấp"
+      "vietnamese": "Đấng Hạ Thấp",
+      "description": "Hạ bệ những kẻ kiêu ngạo"
     },
     {
       "number": 23,
       "arabic": "الرافع",
       "transliteration": "Al-Rafi'",
-      "vietnamese": "Đấng Nâng Cao"
+      "vietnamese": "Đấng Nâng Cao",
+      "description": "Nâng cao vị thế của người chính trực"
     },
     {
       "number": 24,
       "arabic": "المعز",
       "transliteration": "Al-Mu'izz",
-      "vietnamese": "Đấng Tôn Vinh"
+      "vietnamese": "Đấng Ban Vinh Quang",
+      "description": "Ban danh dự cho người Ngài muốn"
     },
     {
       "number": 25,
       "arabic": "المذل",
       "transliteration": "Al-Mudhill",
-      "vietnamese": "Đấng Hạ Nhục"
+      "vietnamese": "Đấng Làm Nhục",
+      "description": "Khiến những kẻ tội lỗi phải nhục nhã"
     },
     {
       "number": 26,
       "arabic": "السميع",
       "transliteration": "As-Sami'",
-      "vietnamese": "Đấng Toàn Thính"
+      "vietnamese": "Đấng Toàn Thính",
+      "description": "Nghe thấy tất cả mọi âm thanh và lời cầu nguyện"
     },
     {
       "number": 27,
       "arabic": "البصير",
       "transliteration": "Al-Basir",
-      "vietnamese": "Đấng Toàn Thị"
+      "vietnamese": "Đấng Toàn Nhãn",
+      "description": "Thấy rõ mọi sự dù trong bóng tối"
     },
     {
       "number": 28,
       "arabic": "الحكم",
       "transliteration": "Al-Hakam",
-      "vietnamese": "Đấng Thẩm Phán"
+      "vietnamese": "Đấng Phán Quyết",
+      "description": "Thẩm phán tối cao, phán quyết của Ngài là cuối cùng"
     },
     {
       "number": 29,
       "arabic": "العدل",
       "transliteration": "Al-Adl",
-      "vietnamese": "Đấng Công Chính"
+      "vietnamese": "Đấng Công Bằng",
+      "description": "Sự công bằng tuyệt đối"
     },
     {
       "number": 30,
       "arabic": "اللطيف",
       "transliteration": "Al-Latif",
-      "vietnamese": "Đấng Tinh Tế"
+      "vietnamese": "Đấng Tế Nhị",
+      "description": "Thấu hiểu những điều tinh vi nhất và rất mực nhẹ nhàng"
     },
     {
       "number": 31,
       "arabic": "الخبير",
       "transliteration": "Al-Khabir",
-      "vietnamese": "Đấng Toàn Hiểu"
+      "vietnamese": "Đấng Thông Suốt",
+      "description": "Am tường mọi sự việc tiềm ẩn"
     },
     {
       "number": 32,
       "arabic": "الحليم",
       "transliteration": "Al-Halim",
-      "vietnamese": "Đấng Khoan Dung"
+      "vietnamese": "Đấng Khoan Hòa",
+      "description": "Kiên nhẫn, không vội vàng trừng phạt"
     },
     {
       "number": 33,
       "arabic": "العظيم",
       "transliteration": "Al-Azim",
-      "vietnamese": "Đấng Vĩ Đại"
+      "vietnamese": "Đấng Vĩ Đại",
+      "description": "Sự vĩ đại không biên giới"
     },
     {
       "number": 34,
       "arabic": "الغفور",
       "transliteration": "Al-Ghafur",
-      "vietnamese": "Đấng Khoan Dung Tha Thứ"
+      "vietnamese": "Đấng Tha Thứ",
+      "description": "Xóa bỏ tội lỗi cho những ai hối cải"
     },
     {
       "number": 35,
       "arabic": "الشكور",
       "transliteration": "Ash-Shakur",
-      "vietnamese": "Đấng Đánh Giá Cao"
+      "vietnamese": "Đấng Ghi Nhận",
+      "description": "Đền đáp hậu hĩnh cho những việc thiện dù nhỏ nhất"
     },
     {
       "number": 36,
       "arabic": "العلي",
       "transliteration": "Al-Ali",
-      "vietnamese": "Đấng Tối Cao Nhất"
+      "vietnamese": "Đấng Cao Cả",
+      "description": "Vị thế cao nhất trên tất cả"
     },
     {
       "number": 37,
       "arabic": "الكبير",
       "transliteration": "Al-Kabir",
-      "vietnamese": "Đấng Vĩ Đại Nhất"
+      "vietnamese": "Đấng Lớn Lao",
+      "description": "Lớn lao về bản thể và thuộc tính"
     },
     {
       "number": 38,
       "arabic": "الحفيظ",
       "transliteration": "Al-Hafiz",
-      "vietnamese": "Đấng Bảo Tồn"
+      "vietnamese": "Đấng Gìn Giữ",
+      "description": "Bảo vệ vạn vật khỏi sự hủy diệt"
     },
     {
       "number": 39,
       "arabic": "المقيت",
       "transliteration": "Al-Muqit",
-      "vietnamese": "Đấng Nuôi Dưỡng"
+      "vietnamese": "Đấng Duy Trì",
+      "description": "Cung cấp năng lượng và sự sống"
     },
     {
       "number": 40,
       "arabic": "الحسيب",
       "transliteration": "Al-Hasib",
-      "vietnamese": "Đấng Tính Toán"
+      "vietnamese": "Đấng Tính Toán",
+      "description": "Đủ để làm người phán xử và đáp ứng mọi nhu cầu"
     },
     {
       "number": 41,
       "arabic": "الجليل",
       "transliteration": "Al-Jalil",
-      "vietnamese": "Đấng Uy Nghi"
+      "vietnamese": "Đấng Uy Nghi",
+      "description": "Sở hữu vẻ đẹp và quyền uy tối thượng"
     },
     {
       "number": 42,
       "arabic": "الكريم",
       "transliteration": "Al-Karim",
-      "vietnamese": "Đấng Rộng Lượng"
+      "vietnamese": "Đấng Hào Phóng",
+      "description": "Ban phát không giới hạn"
     },
     {
       "number": 43,
       "arabic": "الرقيب",
       "transliteration": "Ar-Raqib",
-      "vietnamese": "Đấng Canh Giữ"
+      "vietnamese": "Đấng Canh Chừng",
+      "description": "Luôn dõi theo mọi hành động"
     },
     {
       "number": 44,
       "arabic": "المجيب",
       "transliteration": "Al-Mujib",
-      "vietnamese": "Đấng Đáp Ứng"
+      "vietnamese": "Đấng Đáp Lời",
+      "description": "Đáp lại lời cầu nguyện của con người"
     },
     {
       "number": 45,
       "arabic": "الواسع",
       "transliteration": "Al-Wasi'",
-      "vietnamese": "Đấng Bao Trùm Khắp Nơi"
+      "vietnamese": "Đấng Bao La",
+      "description": "Kiến thức và lòng thương xót vô tận"
     },
     {
       "number": 46,
       "arabic": "الحكيم",
       "transliteration": "Al-Hakim",
-      "vietnamese": "Đấng Khôn Ngoan"
+      "vietnamese": "Đấng Sáng Suốt",
+      "description": "Mọi hành động và quyết định đều có trí tuệ sâu sắc"
     },
     {
       "number": 47,
       "arabic": "الودود",
       "transliteration": "Al-Wadud",
-      "vietnamese": "Đấng Yêu Thương"
+      "vietnamese": "Đấng Yêu Thương",
+      "description": "Nguồn gốc của tình yêu thuần khiết"
     },
     {
       "number": 48,
       "arabic": "المجيد",
       "transliteration": "Al-Majid",
-      "vietnamese": "Đấng Vinh Quang"
+      "vietnamese": "Đấng Vinh Hiển",
+      "description": "Vinh quang và quyền quý"
     },
     {
       "number": 49,
       "arabic": "الباعث",
       "transliteration": "Al-Ba'ith",
-      "vietnamese": "Đấng Phục Sinh"
+      "vietnamese": "Đấng Làm Sống Lại",
+      "description": "Phục sinh con người vào Ngày Phán Xét"
     },
     {
       "number": 50,
       "arabic": "الشهيد",
       "transliteration": "Ash-Shahid",
-      "vietnamese": "Đấng Chứng Kiến"
+      "vietnamese": "Đấng Chứng Giám",
+      "description": "Chứng kiến mọi sự kiện diễn ra"
     },
     {
       "number": 51,
       "arabic": "الحق",
       "transliteration": "Al-Haqq",
-      "vietnamese": "Đấng Chân Lý"
+      "vietnamese": "Đấng Chân Lý",
+      "description": "Sự thật tuyệt đối, duy nhất"
     },
     {
       "number": 52,
       "arabic": "الوكيل",
       "transliteration": "Al-Wakil",
-      "vietnamese": "Đấng Đáng Tin Cậy"
+      "vietnamese": "Đấng Đáng Tin Cậy",
+      "description": "Người bảo hộ tốt nhất để phó thác"
     },
     {
       "number": 53,
       "arabic": "القوي",
       "transliteration": "Al-Qawi",
-      "vietnamese": "Đấng Mạnh Mẽ"
+      "vietnamese": "Đấng Mạnh Mẽ",
+      "description": "Sức mạnh không gì sánh bằng"
     },
     {
       "number": 54,
       "arabic": "المتين",
       "transliteration": "Al-Matin",
-      "vietnamese": "Đấng Vững Chắc"
+      "vietnamese": "Đấng Kiên Cường",
+      "description": "Vững chắc, không bao giờ mệt mỏi"
     },
     {
       "number": 55,
       "arabic": "الولي",
       "transliteration": "Al-Wali",
-      "vietnamese": "Đấng Bảo Hộ"
+      "vietnamese": "Đấng Bảo Hộ",
+      "description": "Người bạn, người giúp đỡ những người tin tưởng"
     },
     {
       "number": 56,
       "arabic": "الحميد",
       "transliteration": "Al-Hamid",
-      "vietnamese": "Đấng Đáng Ca Ngợi"
+      "vietnamese": "Đấng Đáng Ca Ngợi",
+      "description": "Mọi lời khen ngợi đều thuộc về Ngài"
     },
     {
       "number": 57,
       "arabic": "المحصي",
       "transliteration": "Al-Muhsi",
-      "vietnamese": "Đấng Kế Toán"
+      "vietnamese": "Đấng Kiểm Kê",
+      "description": "Ghi chép và đếm chính xác mọi thứ"
     },
     {
       "number": 58,
       "arabic": "المبدئ",
       "transliteration": "Al-Mubdi'",
-      "vietnamese": "Đấng Khởi Nguyên"
+      "vietnamese": "Đấng Khởi Tạo",
+      "description": "Bắt đầu sự sáng tạo"
     },
     {
       "number": 59,
       "arabic": "المعيد",
       "transliteration": "Al-Mu'id",
-      "vietnamese": "Đấng Phục Hồi"
+      "vietnamese": "Đấng Tái Tạo",
+      "description": "Đưa mọi thứ trở lại sau khi chúng mất đi"
     },
     {
       "number": 60,
       "arabic": "المحيي",
       "transliteration": "Al-Muhyi",
-      "vietnamese": "Đấng Ban Sự Sống"
+      "vietnamese": "Đấng Ban Sự Sống",
+      "description": "Làm cho vật vô tri có sự sống"
     },
     {
       "number": 61,
       "arabic": "المميت",
       "transliteration": "Al-Mumit",
-      "vietnamese": "Đấng Thu Hồi Sự Sống"
+      "vietnamese": "Đấng Làm Cho Chết",
+      "description": "Lấy đi sự sống"
     },
     {
       "number": 62,
       "arabic": "الحي",
       "transliteration": "Al-Hayy",
-      "vietnamese": "Đấng Hằng Sống"
+      "vietnamese": "Đấng Hằng Sống",
+      "description": "Sống mãi mãi, không có bắt đầu hay kết thúc"
     },
     {
       "number": 63,
       "arabic": "القيوم",
       "transliteration": "Al-Qayyum",
-      "vietnamese": "Đấng Tự Lập Vĩnh Cửu"
+      "vietnamese": "Đấng Tự Hữu",
+      "description": "Tự tồn tại và duy trì mọi tạo vật"
     },
     {
       "number": 64,
       "arabic": "الواجد",
       "transliteration": "Al-Wajid",
-      "vietnamese": "Đấng Tìm Thấy"
+      "vietnamese": "Đấng Tìm Thấy",
+      "description": "Không bao giờ thiếu thốn điều gì"
     },
     {
       "number": 65,
       "arabic": "الماجد",
       "transliteration": "Al-Majid",
-      "vietnamese": "Đấng Cao Quý"
+      "vietnamese": "Đấng Cao Quý",
+      "description": "Sự huy hoàng và danh giá"
     },
     {
       "number": 66,
       "arabic": "الواحد",
       "transliteration": "Al-Wahid",
-      "vietnamese": "Đấng Duy Nhất"
+      "vietnamese": "Đấng Duy Nhất",
+      "description": "Không có đối tác hay đồng đẳng"
     },
     {
       "number": 67,
       "arabic": "الأحد",
       "transliteration": "Al-Ahad",
-      "vietnamese": "Đấng Một"
+      "vietnamese": "Đấng Độc Nhất",
+      "description": "Duy nhất trong bản thể"
     },
     {
       "number": 68,
       "arabic": "الصمد",
       "transliteration": "As-Samad",
-      "vietnamese": "Đấng Vĩnh Hằng"
+      "vietnamese": "Đấng Vĩnh Cửu",
+      "description": "Đấng mà mọi người cần đến, nhưng Ngài không cần ai"
     },
     {
       "number": 69,
-      "arabic": "القادر",
+      "arabic": "القader",
       "transliteration": "Al-Qadir",
-      "vietnamese": "Đấng Có Quyền Năng"
+      "vietnamese": "Đấng Có Khả Năng",
+      "description": "Làm được bất cứ điều gì Ngài muốn"
     },
     {
       "number": 70,
       "arabic": "المقتدر",
       "transliteration": "Al-Muqtadir",
-      "vietnamese": "Đấng Toàn Quyền"
+      "vietnamese": "Đấng Quyền Năng Tuyệt Đối",
+      "description": "Quyền năng thực thi mọi ý định"
     },
     {
       "number": 71,
       "arabic": "المقدم",
       "transliteration": "Al-Muqaddim",
-      "vietnamese": "Đấng Đẩy Nhanh"
+      "vietnamese": "Đấng Đưa Lên Trước",
+      "description": "Tiến cử hoặc ưu tiên ai đó"
     },
     {
       "number": 72,
       "arabic": "المؤخر",
       "transliteration": "Al-Mu'akhkhir",
-      "vietnamese": "Đấng Trì Hoãn"
+      "vietnamese": "Đấng Để Lại Sau",
+      "description": "Trì hoãn những gì Ngài muốn"
     },
     {
       "number": 73,
       "arabic": "الأول",
       "transliteration": "Al-Awwal",
-      "vietnamese": "Đấng Đầu Tiên"
+      "vietnamese": "Đấng Đầu Tiên",
+      "description": "Không có gì trước Ngài"
     },
     {
       "number": 74,
       "arabic": "الآخر",
       "transliteration": "Al-Akhir",
-      "vietnamese": "Đấng Cuối Cùng"
+      "vietnamese": "Đấng Cuối Cùng",
+      "description": "Không có gì sau Ngài"
     },
     {
       "number": 75,
       "arabic": "الظاهر",
       "transliteration": "Az-Zahir",
-      "vietnamese": "Đấng Hiển Hiện"
+      "vietnamese": "Đấng Hiển Lộ",
+      "description": "Rõ ràng qua các dấu lạ của tạo hóa"
     },
     {
       "number": 76,
       "arabic": "الباطن",
       "transliteration": "Al-Batin",
-      "vietnamese": "Đấng Ẩn Giấu"
+      "vietnamese": "Đấng Ẩn Mình",
+      "description": "Vượt xa trí tưởng tượng và sự quan sát của con người"
     },
     {
       "number": 77,
       "arabic": "الوالي",
       "transliteration": "Al-Wali",
-      "vietnamese": "Đấng Cai Trị"
+      "vietnamese": "Đấng Cai Quản",
+      "description": "Quản lý mọi sự việc của thế gian"
     },
     {
       "number": 78,
       "arabic": "المتعالي",
       "transliteration": "Al-Muta'ali",
-      "vietnamese": "Đấng Tôn Cao Nhất"
+      "vietnamese": "Đấng Tối Cao",
+      "description": "Vượt lên trên mọi sự mô tả của tạo vật"
     },
     {
       "number": 79,
       "arabic": "البر",
       "transliteration": "Al-Barr",
-      "vietnamese": "Nguồn Của Lòng Tốt"
+      "vietnamese": "Đấng Thiện Lành",
+      "description": "Nguồn gốc của mọi điều tốt đẹp"
     },
     {
       "number": 80,
       "arabic": "التواب",
       "transliteration": "At-Tawwab",
-      "vietnamese": "Đấng Chấp Nhận Sự Ăn Năn"
+      "vietnamese": "Đấng Chấp Nhận Sự Sám Hối",
+      "description": "Luôn mở lòng đón người quay đầu"
     },
     {
       "number": 81,
       "arabic": "المنتقم",
       "transliteration": "Al-Muntaqim",
-      "vietnamese": "Đấng Báo Thù"
+      "vietnamese": "Đấng Trừng Phạt",
+      "description": "Trừng trị những kẻ áp bức và tội ác"
     },
     {
       "number": 82,
       "arabic": "العفو",
       "transliteration": "Al-Afuw",
-      "vietnamese": "Đấng Tha Thứ"
+      "vietnamese": "Đấng Xóa Tội",
+      "description": "Xóa sạch dấu vết của tội lỗi"
     },
     {
       "number": 83,
       "arabic": "الرؤوف",
       "transliteration": "Ar-Ra'uf",
-      "vietnamese": "Đấng Thương Hại"
+      "vietnamese": "Đấng Rất Mực Từ Bi",
+      "description": "Lòng thương xót sâu sắc"
     },
     {
       "number": 84,
       "arabic": "مالك الملك",
       "transliteration": "Malik al-Mulk",
-      "vietnamese": "Chủ Nhân Của Vương Quyền"
+      "vietnamese": "Đấng Nắm Giữ Vương Quyền",
+      "description": "Chủ nhân của mọi vương quốc"
     },
     {
       "number": 85,
       "arabic": "ذو الجلال والإكرام",
       "transliteration": "Dhu al-Jalali wa al-Ikram",
-      "vietnamese": "Đấng Sở Hữu Uy Nghi Và Danh Dự"
+      "vietnamese": "Đấng Uy Nghi và Vinh Hiển",
+      "description": "Đấng Uy Nghi và Vinh Hiển"
     },
     {
       "number": 86,
       "arabic": "المقسط",
       "transliteration": "Al-Muqsit",
-      "vietnamese": "Đấng Công Bằng"
+      "vietnamese": "Đấng Công Minh",
+      "description": "Công bằng trong việc phân xử"
     },
     {
       "number": 87,
       "arabic": "الجامع",
       "transliteration": "Al-Jami'",
-      "vietnamese": "Đấng Tập Hợp"
+      "vietnamese": "Đấng Quy Tụ",
+      "description": "Tập hợp mọi người vào Ngày Phán Xét"
     },
     {
       "number": 88,
       "arabic": "الغني",
       "transliteration": "Al-Ghani",
-      "vietnamese": "Đấng Tự Túc"
+      "vietnamese": "Đấng Giàu Có",
+      "description": "Không cần bất cứ ai, giàu có tuyệt đối"
     },
     {
       "number": 89,
       "arabic": "المغني",
       "transliteration": "Al-Mughni",
-      "vietnamese": "Đấng Làm Giàu Có"
+      "vietnamese": "Đấng Làm Cho Giàu Có",
+      "description": "Ban sự đầy đủ cho tạo vật"
     },
     {
       "number": 90,
       "arabic": "المانع",
       "transliteration": "Al-Mani'",
-      "vietnamese": "Đấng Ngăn Chặn"
+      "vietnamese": "Đấng Ngăn Chặn",
+      "description": "Ngăn cản những gì không tốt cho tôi tớ"
     },
     {
       "number": 91,
       "arabic": "الضار",
       "transliteration": "Ad-Darr",
-      "vietnamese": "Đấng Gây Khổ Đau"
+      "vietnamese": "Đấng Gây Hại",
+      "description": "Cho phép nghịch cảnh xảy ra như một bài thử thách"
     },
     {
       "number": 92,
       "arabic": "النافع",
       "transliteration": "An-Nafi'",
-      "vietnamese": "Đấng Mang Lại Lợi Ích"
+      "vietnamese": "Đấng Ban Lợi Ích",
+      "description": "Nguồn gốc của mọi lợi ích"
     },
     {
       "number": 93,
       "arabic": "النور",
       "transliteration": "An-Nur",
-      "vietnamese": "Đấng Ánh Sáng"
+      "vietnamese": "Đấng Ánh Sáng",
+      "description": "Soi sáng thế gian và dẫn dắt tâm hồn"
     },
     {
       "number": 94,
       "arabic": "الهادي",
       "transliteration": "Al-Hadi",
-      "vietnamese": "Đấng Dẫn Dắt"
+      "vietnamese": "Đấng Dẫn Đường",
+      "description": "Dẫn dắt đến chân lý"
     },
     {
       "number": 95,
       "arabic": "البديع",
       "transliteration": "Al-Badi'",
-      "vietnamese": "Đấng Không So Sánh Được"
+      "vietnamese": "Đấng Sáng Tạo Vô Song",
+      "description": "Tạo ra những điều chưa từng có"
     },
     {
       "number": 96,
       "arabic": "الباقي",
       "transliteration": "Al-Baqi",
-      "vietnamese": "Đấng Vĩnh Cửu"
+      "vietnamese": "Đấng Bất Diệt",
+      "description": "Tồn tại mãi mãi khi vạn vật tan biến"
     },
     {
       "number": 97,
       "arabic": "الوارث",
       "transliteration": "Al-Warith",
-      "vietnamese": "Đấng Thừa Kế"
+      "vietnamese": "Đấng Thừa Kế",
+      "description": "Người cuối cùng nắm giữ mọi thứ"
     },
     {
       "number": 98,
       "arabic": "الرشيد",
       "transliteration": "Ar-Rashid",
-      "vietnamese": "Đấng Thầy Giáo Đức Hạnh"
+      "vietnamese": "Đấng Chỉ Đạo",
+      "description": "Hướng dẫn đến con đường đúng đắn"
     },
     {
       "number": 99,
       "arabic": "الصبور",
       "transliteration": "As-Sabur",
-      "vietnamese": "Đấng Kiên Nhẫn"
+      "vietnamese": "Đấng Kiên Nhẫn",
+      "description": "Không vội vàng trừng phạt để tạo cơ hội hối cải"
     }
   ]
 }

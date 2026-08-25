@@ -36,16 +36,19 @@ class NamesOfAllahViewModel @Inject constructor(
     private val _isLoading = MutableStateFlow(true)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
 
+    private val _isError = MutableStateFlow(false)
+    val isError: StateFlow<Boolean> = _isError.asStateFlow()
+
     private val _searchQuery = MutableStateFlow("")
     val searchQuery: StateFlow<String> = _searchQuery.asStateFlow()
 
     private val _selectedName = MutableStateFlow<AllahName?>(null)
     val selectedName: StateFlow<AllahName?> = _selectedName.asStateFlow()
 
-    /** Danh xưng sau khi lọc theo từ khoá tìm kiếm (debounce nhẹ để gõ mượt). */
+    /** Danh xưng sau khi lọc theo từ khoá tìm kiếm. */
     val namesList: StateFlow<List<AllahName>> = combine(
         _allNames,
-        _searchQuery.debounce(SEARCH_DEBOUNCE_MS)
+        _searchQuery
     ) { names, query -> names.filterByQuery(query) }
         .stateIn(
             scope = viewModelScope,
@@ -77,8 +80,16 @@ class NamesOfAllahViewModel @Inject constructor(
     private fun loadNames() {
         viewModelScope.launch {
             _isLoading.value = true
-            _allNames.value = runCatching { nameAllahRepository.getAllNames() }
-                .getOrElse { emptyList() }
+            _isError.value = false
+            val result = runCatching { nameAllahRepository.getAllNames() }
+            
+            if (result.isSuccess) {
+                val data = result.getOrThrow()
+                _allNames.value = data
+                _isError.value = data.isEmpty() // Nếu data rỗng thật sự thì coi như lỗi hoặc trống
+            } else {
+                _isError.value = true
+            }
             _isLoading.value = false
         }
     }

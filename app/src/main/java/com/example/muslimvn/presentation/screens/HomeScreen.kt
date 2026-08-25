@@ -20,6 +20,7 @@ import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
@@ -53,8 +54,12 @@ import com.example.muslimvn.domain.util.HijriCalendarUtils
 import com.example.muslimvn.domain.util.HijriMonthNames
 import com.example.muslimvn.presentation.components.ErrorState
 import com.example.muslimvn.presentation.components.LoadingIndicator
+import com.example.muslimvn.presentation.components.MiniPlayerBar
+import com.example.muslimvn.presentation.components.PodcastPlayerBarState
 import com.example.muslimvn.presentation.components.bouncyClick
+import com.example.muslimvn.presentation.components.formatSpeedLabel
 import com.example.muslimvn.presentation.viewmodels.HomeViewModel
+import com.example.muslimvn.presentation.viewmodels.PodcastPlayerViewModel
 import java.text.SimpleDateFormat
 import java.time.LocalDate
 import java.time.chrono.HijrahDate
@@ -67,18 +72,24 @@ import kotlinx.coroutines.launch
 @Composable
 fun HomeScreen(
     viewModel: HomeViewModel = hiltViewModel(),
+    playerViewModel: PodcastPlayerViewModel = hiltViewModel(),
     onQuranClick: () -> Unit = {},
     onQiblaClick: () -> Unit = {},
     onHijriCalendarClick: () -> Unit = {},
     onNamesOfAllahClick: () -> Unit = {},
+    onZakatClick: () -> Unit = {},
     onPodcastClick: () -> Unit = {},
+    onOpenFullPlayer: () -> Unit = {},
     onSettingsClick: () -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsState()
     var showPrayerSheet by remember { mutableStateOf(false) }
+    var showAllUtilitiesSheet by remember { mutableStateOf(false) }
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
+
+    // ... (logic permissions)
 
     // Xin vị trí + thông báo trong MỘT đợt duy nhất.
     // POST_NOTIFICATIONS chỉ tồn tại từ Android 13 (API 33) trở lên.
@@ -128,7 +139,35 @@ fun HomeScreen(
         // của root Scaffold (MainActivity) đã chịu trách nhiệm — nếu dùng mặc định
         // systemBars thì navigation bar bị tính 2 lần, nội dung bị hụt chiều cao.
         contentWindowInsets = WindowInsets.statusBars,
-        snackbarHost = { SnackbarHost(snackbarHostState) }
+        snackbarHost = { SnackbarHost(snackbarHostState) },
+        bottomBar = {
+            PodcastPlayerBarState(playerViewModel) { active ->
+                androidx.compose.animation.AnimatedVisibility(visible = active != null) {
+                    if (active != null) {
+                        val podcastPlaylist by playerViewModel.playlist.collectAsState()
+                        val isQuran = active.id.contains(":")
+                        
+                        MiniPlayerBar(
+                            title = active.title,
+                            subtitle = active.subtitle,
+                            artworkPath = active.artworkPath,
+                            isPlaying = active.isPlaying,
+                            isBuffering = active.isBuffering,
+                            positionMs = active.positionMs,
+                            durationMs = active.durationMs,
+                            speedLabel = formatSpeedLabel(active.speed),
+                            onPlayPauseClick = playerViewModel::togglePlayPause,
+                            onSeekTo = playerViewModel::seekTo,
+                            onCycleSpeed = playerViewModel::cyclePlaybackSpeed,
+                            onOpenFullPlayer = onOpenFullPlayer,
+                            currentMediaId = active.id,
+                            playlist = if (isQuran) emptyList() else podcastPlaylist,
+                            onPlayEpisode = playerViewModel::playEpisode
+                        )
+                    }
+                }
+            }
+        }
     ) { padding ->
         Column(
             modifier = Modifier
@@ -166,34 +205,51 @@ fun HomeScreen(
                 NextPrayerCard(times, onCountdownFinished = viewModel::refreshPrayerTimes)
                 Spacer(modifier = Modifier.height(24.dp))
 
-                
-                Text(
-                    text = stringResource(R.string.utilities_title),
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(vertical = 8.dp)
-                )
-                
-                UtilityGrid(
-                    onItemClick = { item ->
-                        when (item.id) {
-                            "quran" -> onQuranClick()
-                            "compass" -> onQiblaClick()
-                            "prayer" -> showPrayerSheet = true
-                            "schedule" -> onHijriCalendarClick()
-                            "99" -> onNamesOfAllahClick()
-                            "podcast" -> onPodcastClick()
-                            // Tính năng chưa triển khai → phản hồi "sắp ra mắt" thay vì im lặng
-                            else -> scope.launch {
-                                snackbarHostState.showSnackbar(
-                                    context.getString(R.string.feature_coming_soon, item.name)
-                                )
-                            }
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 8.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = stringResource(R.string.utilities_title),
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold
+                    )
+                    TextButton(onClick = { showAllUtilitiesSheet = true }) {
+                        Text(text = stringResource(R.string.view_all))
+                    }
+                }
+
+                val onUtilityClick: (UtilityItem) -> Unit = { item ->
+                    when (item.id) {
+                        "quran" -> onQuranClick()
+                        "compass" -> onQiblaClick()
+                        "prayer" -> showPrayerSheet = true
+                        "schedule" -> onHijriCalendarClick()
+                        "99" -> onNamesOfAllahClick()
+                        "zakat" -> onZakatClick()
+                        "podcast" -> onPodcastClick()
+                        else -> scope.launch {
+                            snackbarHostState.showSnackbar(
+                                context.getString(R.string.feature_coming_soon, item.name)
+                            )
                         }
                     }
-                )
+                }
 
-              
+                UtilityCarousel(onItemClick = onUtilityClick)
+
+                if (showAllUtilitiesSheet) {
+                    AllUtilitiesBottomSheet(
+                        onDismiss = { showAllUtilitiesSheet = false },
+                        onItemClick = { item ->
+                            showAllUtilitiesSheet = false
+                            onUtilityClick(item)
+                        }
+                    )
+                }
             } ?: run {
                 if (uiState.isLoading) {
                     LoadingIndicator(
@@ -213,22 +269,71 @@ fun HomeScreen(
 }
 
 @Composable
+fun UtilityCarousel(onItemClick: (UtilityItem) -> Unit) {
+    val items = getUtilityItems()
+
+    LazyRow(
+        contentPadding = PaddingValues(horizontal = 0.dp),
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        items(items) { item ->
+            // Mỗi item chiếm khoảng 85dp để tạo hiệu ứng "peek" (hở một phần icon tiếp theo)
+            // trên đa số màn hình điện thoại thông thường.
+            Box(modifier = Modifier.width(85.dp)) {
+                UtilityCard(item, onItemClick)
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun AllUtilitiesBottomSheet(
+    onDismiss: () -> Unit,
+    onItemClick: (UtilityItem) -> Unit
+) {
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
+        dragHandle = { BottomSheetDefaults.DragHandle() }
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 32.dp, start = 16.dp, end = 16.dp)
+        ) {
+            Text(
+                text = stringResource(R.string.all_utilities_title),
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.padding(bottom = 16.dp)
+            )
+            UtilityGrid(onItemClick = onItemClick)
+        }
+    }
+}
+
+private @Composable
+fun getUtilityItems() = listOf(
+    UtilityItem("quran", stringResource(R.string.utility_quran), "file:///android_asset/icon/quran.png"),
+    UtilityItem("compass", stringResource(R.string.utility_qibla), "file:///android_asset/icon/compass.png"),
+    UtilityItem("prayer", stringResource(R.string.utility_prayer), "file:///android_asset/icon/prayer.png"),
+    UtilityItem("schedule", stringResource(R.string.utility_schedule), "file:///android_asset/icon/schedule.png"),
+    UtilityItem("99", stringResource(R.string.utility_99_names), "file:///android_asset/icon/99.png"),
+    UtilityItem("tasbih", stringResource(R.string.utility_tasbih), "file:///android_asset/icon/tasbih.png"),
+    UtilityItem("doa", stringResource(R.string.utility_doa), "file:///android_asset/icon/doa.png"),
+    UtilityItem("zakat", stringResource(R.string.utility_zakat), "file:///android_asset/icon/zakat.png"),
+    UtilityItem("hadih", stringResource(R.string.utility_hadith), "file:///android_asset/icon/hadih.png"),
+    UtilityItem("book", stringResource(R.string.utility_library), "file:///android_asset/icon/book.png"),
+    UtilityItem("study", stringResource(R.string.utility_study), "file:///android_asset/icon/study.png"),
+    UtilityItem("podcast", stringResource(R.string.utility_podcast), "file:///android_asset/icon/podcast.png"),
+    UtilityItem("building", stringResource(R.string.utility_mosque), "file:///android_asset/icon/building.png"),
+)
+
+@Composable
 fun UtilityGrid(onItemClick: (UtilityItem) -> Unit) {
-    val items = listOf(
-        UtilityItem("quran", stringResource(R.string.utility_quran), "file:///android_asset/icon/quran.png"),
-        UtilityItem("compass", stringResource(R.string.utility_qibla), "file:///android_asset/icon/compass.png"),
-        UtilityItem("prayer", stringResource(R.string.utility_prayer), "file:///android_asset/icon/prayer.png"),
-        UtilityItem("schedule", stringResource(R.string.utility_schedule), "file:///android_asset/icon/schedule.png"),
-        UtilityItem("99", stringResource(R.string.utility_99_names), "file:///android_asset/icon/99.png"),
-        UtilityItem("tasbih", stringResource(R.string.utility_tasbih), "file:///android_asset/icon/tasbih.png"),
-        UtilityItem("doa", stringResource(R.string.utility_doa), "file:///android_asset/icon/doa.png"),
-        UtilityItem("zakat", stringResource(R.string.utility_zakat), "file:///android_asset/icon/zakat.png"),
-        UtilityItem("hadih", stringResource(R.string.utility_hadith), "file:///android_asset/icon/hadih.png"),
-        UtilityItem("book", stringResource(R.string.utility_library), "file:///android_asset/icon/book.png"),
-        UtilityItem("study", stringResource(R.string.utility_study), "file:///android_asset/icon/study.png"),
-        UtilityItem("podcast", stringResource(R.string.utility_podcast), "file:///android_asset/icon/podcast.png"),
-        UtilityItem("building", stringResource(R.string.utility_mosque), "file:///android_asset/icon/building.png"),
-    )
+    val items = getUtilityItems()
 
     LazyVerticalGrid(
         columns = GridCells.Adaptive(minSize = 80.dp),

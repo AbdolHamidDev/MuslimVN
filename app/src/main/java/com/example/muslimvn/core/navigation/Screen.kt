@@ -26,6 +26,8 @@ sealed class Screen(val route: String, @StringRes val titleResId: Int, val icon:
     object Qibla : Screen("qibla", R.string.nav_qibla, Icons.Default.LocationOn)
     object HijriCalendar : Screen("hijri_calendar", R.string.nav_hijri_calendar, Icons.Default.Schedule)
     object NamesOfAllah : Screen("names_of_allah", R.string.nav_names_of_allah, Icons.AutoMirrored.Filled.MenuBook)
+    object Zakat : Screen("zakat", R.string.utility_zakat, Icons.Default.Schedule)
+    object QuranSettings : Screen("quran_settings", R.string.nav_settings, Icons.Default.Settings)
     object SurahDetail : Screen("surah_detail/{surahNumber}", R.string.nav_surah_detail, Icons.Default.Menu) {
         fun createRoute(surahNumber: Int) = "surah_detail/$surahNumber"
     }

@@ -1,5 +1,6 @@
 package com.example.muslimvn.presentation.screens
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -9,6 +10,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -23,7 +25,11 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.muslimvn.R
 import com.example.muslimvn.domain.models.Surah
 import com.example.muslimvn.presentation.components.EmptyState
+import com.example.muslimvn.presentation.components.MiniPlayerBar
+import com.example.muslimvn.presentation.components.PodcastPlayerBarState
 import com.example.muslimvn.presentation.components.bouncyClick
+import com.example.muslimvn.presentation.components.formatSpeedLabel
+import com.example.muslimvn.presentation.viewmodels.PodcastPlayerViewModel
 import com.example.muslimvn.presentation.viewmodels.QuranViewModel
 import com.example.muslimvn.ui.theme.extendedTypography
 
@@ -32,77 +38,107 @@ import com.example.muslimvn.ui.theme.extendedTypography
 fun QuranScreen(
     onBackClick: () -> Unit = {},
     onSurahClick: (Int) -> Unit,
-    viewModel: QuranViewModel = hiltViewModel()
+    onSettingsClick: () -> Unit = {},
+    onOpenFullPlayer: () -> Unit = {},
+    viewModel: QuranViewModel = hiltViewModel(),
+    playerViewModel: PodcastPlayerViewModel = hiltViewModel()
 ) {
     val surahs by viewModel.surahs.collectAsState()
     val searchQuery by viewModel.searchQuery.collectAsState()
 
     Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text(stringResource(R.string.nav_quran)) },
-                navigationIcon = {
-                    IconButton(onClick = onBackClick) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = stringResource(R.string.back)
+        contentWindowInsets = WindowInsets(0, 0, 0, 0),
+        bottomBar = {
+            PodcastPlayerBarState(playerViewModel) { active ->
+                androidx.compose.animation.AnimatedVisibility(visible = active != null) {
+                    if (active != null) {
+                        val podcastPlaylist by playerViewModel.playlist.collectAsState()
+                        
+                        // Trên màn danh sách, MiniPlayer hỗ trợ Podcast đầy đủ, 
+                        // với Quran sẽ hiển thị thông tin nhưng không hỗ trợ swipe playlist lớn (để tránh lag)
+                        val isQuran = active.id.contains(":")
+                        
+                        MiniPlayerBar(
+                            title = active.title,
+                            subtitle = active.subtitle,
+                            artworkPath = active.artworkPath,
+                            isPlaying = active.isPlaying,
+                            isBuffering = active.isBuffering,
+                            positionMs = active.positionMs,
+                            durationMs = active.durationMs,
+                            speedLabel = formatSpeedLabel(active.speed),
+                            onPlayPauseClick = playerViewModel::togglePlayPause,
+                            onSeekTo = playerViewModel::seekTo,
+                            onCycleSpeed = playerViewModel::cyclePlaybackSpeed,
+                            onOpenFullPlayer = onOpenFullPlayer,
+                            currentMediaId = active.id,
+                            playlist = if (isQuran) emptyList() else podcastPlaylist,
+                            onPlayEpisode = playerViewModel::playEpisode
                         )
                     }
                 }
-            )
+            }
         }
     ) { innerPadding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(innerPadding)
-                .padding(horizontal = 16.dp)
+                .statusBarsPadding()
+                .padding(bottom = innerPadding.calculateBottomPadding())
         ) {
-            // Thanh tìm kiếm: phần tử "card" DUY NHẤT được giữ khung trên màn danh sách
-            OutlinedTextField(
-                value = searchQuery,
-                onValueChange = { viewModel.onSearchQueryChange(it) },
+            // Thanh tiêu đề + Tìm kiếm tích hợp kiểu Google (không khoảng cách thừa)
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(bottom = 8.dp),
-                placeholder = { Text(stringResource(R.string.search_surah_placeholder)) },
-                leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
-                trailingIcon = {
-                    if (searchQuery.isNotEmpty()) {
-                        IconButton(onClick = { viewModel.onSearchQueryChange("") }) {
-                            Icon(Icons.Default.Close, contentDescription = stringResource(R.string.back))
+                    .padding(horizontal = 8.dp, vertical = 8.dp)
+            ) {
+                IconButton(onClick = onBackClick) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                        contentDescription = stringResource(R.string.back)
+                    )
+                }
+
+                SearchBar(
+                    query = searchQuery,
+                    onQueryChange = viewModel::onSearchQueryChange,
+                    onSearch = { },
+                    active = false,
+                    onActiveChange = { },
+                    placeholder = { Text(stringResource(R.string.search_surah_placeholder)) },
+                    leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
+                    trailingIcon = {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            if (searchQuery.isNotEmpty()) {
+                                IconButton(onClick = { viewModel.onSearchQueryChange("") }) {
+                                    Icon(Icons.Default.Close, contentDescription = null)
+                                }
+                            }
+                            IconButton(onClick = onSettingsClick) {
+                                Icon(Icons.Default.Settings, contentDescription = null)
+                            }
                         }
-                    }
-                },
-                singleLine = true,
-                shape = CircleShape,
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedTextColor = MaterialTheme.colorScheme.onSurface,
-                    unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
-                    focusedContainerColor = MaterialTheme.colorScheme.surfaceContainerLowest,
-                    unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainerLowest,
-                    focusedBorderColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.45f),
-                    unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.45f)
-                )
-            )
+                    },
+                    modifier = Modifier.weight(1f),
+                    colors = SearchBarDefaults.colors(
+                        containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
+                    )
+                ) { }
+            }
 
             if (surahs.isEmpty()) {
-                // Danh sách rỗng: đang tải lần đầu HOẶC tìm kiếm không có kết quả
-                EmptyState(
-                    message = if (searchQuery.isBlank()) {
-                        stringResource(R.string.loading_please_wait)
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    if (searchQuery.isBlank()) {
+                        CircularProgressIndicator()
                     } else {
-                        stringResource(R.string.search_no_results)
-                    },
-                    hint = if (searchQuery.isBlank()) {
-                        null
-                    } else {
-                        stringResource(R.string.search_no_results_hint)
-                    },
-                    modifier = Modifier.fillMaxSize()
-                )
+                        EmptyState(
+                            message = stringResource(R.string.search_no_results),
+                            hint = stringResource(R.string.search_no_results_hint)
+                        )
+                    }
+                }
             } else {
-                // Danh sách phẳng: các item không đóng khung, phân tách bằng divider mảnh
                 LazyColumn(
                     contentPadding = PaddingValues(bottom = 16.dp),
                     modifier = Modifier.fillMaxSize()

@@ -13,6 +13,7 @@ data class PodcastEpisode(
     val scholarId: String,
     val title: String,
     val audioUrl: String,
+    val artworkUrl: String?, // Hình ảnh riêng của tập phát (từ RSS)
     val duration: Long,
     val pubDate: Long,
     val description: String,
