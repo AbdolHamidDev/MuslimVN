@@ -9,6 +9,7 @@ import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Newspaper
+import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Podcasts
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material.icons.filled.Settings
@@ -28,6 +29,7 @@ sealed class Screen(val route: String, @StringRes val titleResId: Int, val icon:
     object NamesOfAllah : Screen("names_of_allah", R.string.nav_names_of_allah, Icons.AutoMirrored.Filled.MenuBook)
     object Zakat : Screen("zakat", R.string.utility_zakat, Icons.Default.Schedule)
     object QuranSettings : Screen("quran_settings", R.string.nav_settings, Icons.Default.Settings)
+    object PrayerNotifications : Screen("prayer_notifications", R.string.nav_settings, Icons.Default.Notifications)
     object SurahDetail : Screen("surah_detail/{surahNumber}", R.string.nav_surah_detail, Icons.Default.Menu) {
         fun createRoute(surahNumber: Int) = "surah_detail/$surahNumber"
     }

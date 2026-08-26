@@ -5,7 +5,10 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.os.Build
+import com.example.muslimvn.domain.models.PrayerName
+import com.example.muslimvn.domain.models.PrayerReminder
 import com.example.muslimvn.domain.models.PrayerTimes
+import com.example.muslimvn.domain.models.ReminderMode
 import dagger.hilt.android.qualifiers.ApplicationContext
 import java.util.Date
 import javax.inject.Inject
@@ -37,26 +40,36 @@ class AdhanScheduler @Inject constructor(
      * mà tự động cộng 1 ngày (+24h) để tính cho NGÀY MAI. Sau đó chọn mốc có
      * thời gian nhỏ nhất (luôn ở tương lai).
      */
-    fun scheduleNextPrayer(prayerTimes: PrayerTimes) {
+    /**
+     * Tìm và chỉ lập MỘT báo thức cho mốc cầu nguyện sắp tới gần nhất mà người dùng CÓ BẬT lời nhắc.
+     */
+    fun scheduleNextWithSettings(prayerTimes: PrayerTimes, reminders: Map<String, PrayerReminder>) {
         val now = System.currentTimeMillis()
 
         val candidates = listOf(
-            PrayerAlarm(FAJR, prayerTimes.fajr.time),
-            PrayerAlarm(DHUHR, prayerTimes.dhuhr.time),
-            PrayerAlarm(ASR, prayerTimes.asr.time),
-            PrayerAlarm(MAGHRIB, prayerTimes.maghrib.time),
-            PrayerAlarm(ISHA, prayerTimes.isha.time)
+            PrayerAlarm(PrayerName.FAJR, prayerTimes.fajr.time),
+            PrayerAlarm(PrayerName.DHUHR, prayerTimes.dhuhr.time),
+            PrayerAlarm(PrayerName.ASR, prayerTimes.asr.time),
+            PrayerAlarm(PrayerName.MAGHRIB, prayerTimes.maghrib.time),
+            PrayerAlarm(PrayerName.ISHA, prayerTimes.isha.time)
         ).map { prayer ->
             if (prayer.timeInMillis <= now) {
-                // Đã qua giờ hôm nay -> dời sang ngày mai (+24h)
                 prayer.copy(timeInMillis = prayer.timeInMillis + ONE_DAY_MILLIS)
             } else {
                 prayer
             }
+        }.filter { prayer ->
+            // Chỉ đặt báo thức nếu mode không phải SILENT
+            val reminder = reminders[prayer.name]
+            reminder?.mode != ReminderMode.SILENT
         }
 
-        val next = candidates.minByOrNull { it.timeInMillis } ?: return
-        scheduleAdhan(next.name, Date(next.timeInMillis))
+        val next = candidates.minByOrNull { it.timeInMillis }
+        if (next != null) {
+            scheduleAdhan(next.name, Date(next.timeInMillis))
+        } else {
+            cancelAdhan()
+        }
     }
 
     /**
@@ -92,16 +105,25 @@ class AdhanScheduler @Inject constructor(
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S &&
-            !alarmManager.canScheduleExactAlarms()
-        ) {
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S &&
+                !alarmManager.canScheduleExactAlarms()
+            ) {
+                alarmManager.setAndAllowWhileIdle(
+                    AlarmManager.RTC_WAKEUP,
+                    triggerAtMillis,
+                    pendingIntent
+                )
+            } else {
+                alarmManager.setExactAndAllowWhileIdle(
+                    AlarmManager.RTC_WAKEUP,
+                    triggerAtMillis,
+                    pendingIntent
+                )
+            }
+        } catch (e: SecurityException) {
+            // Fallback to non-exact alarm if exact is not allowed
             alarmManager.setAndAllowWhileIdle(
-                AlarmManager.RTC_WAKEUP,
-                triggerAtMillis,
-                pendingIntent
-            )
-        } else {
-            alarmManager.setExactAndAllowWhileIdle(
                 AlarmManager.RTC_WAKEUP,
                 triggerAtMillis,
                 pendingIntent
@@ -127,11 +149,5 @@ class AdhanScheduler @Inject constructor(
 
         private const val REQUEST_CODE_ADHAN = 2001
         private const val ONE_DAY_MILLIS = 24L * 60 * 60 * 1000
-
-        private const val FAJR = "Fajr"
-        private const val DHUHR = "Dhuhr"
-        private const val ASR = "Asr"
-        private const val MAGHRIB = "Maghrib"
-        private const val ISHA = "Isha"
     }
 }

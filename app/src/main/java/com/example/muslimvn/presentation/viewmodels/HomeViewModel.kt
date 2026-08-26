@@ -8,7 +8,9 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.muslimvn.core.utils.AdhanScheduler
+import com.example.muslimvn.domain.models.PrayerReminder
 import com.example.muslimvn.domain.models.PrayerTimes
+import com.example.muslimvn.domain.repository.SettingsRepository
 import com.example.muslimvn.domain.usecases.GetHijriDateOffsetUseCase
 import com.example.muslimvn.domain.usecases.GetPrayerTimesUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -25,7 +27,8 @@ import javax.inject.Inject
 
 data class HomeUiState(
     val prayerTimes: PrayerTimes? = null,
-    val isLoading: Boolean = false,
+    val reminders: Map<String, PrayerReminder> = emptyMap(),
+    val isLoading: Boolean = true, // Mặc định là đang tải để tránh hiện lỗi giả
     val error: String? = null,
     val isLocationPermissionGranted: Boolean = false,
     val isNotificationPermissionGranted: Boolean = true,
@@ -38,6 +41,7 @@ class HomeViewModel @Inject constructor(
     @ApplicationContext private val appContext: Context,
     private val getPrayerTimesUseCase: GetPrayerTimesUseCase,
     private val getHijriDateOffsetUseCase: GetHijriDateOffsetUseCase,
+    private val settingsRepository: SettingsRepository,
     private val adhanScheduler: AdhanScheduler
 ) : ViewModel() {
 
@@ -52,14 +56,29 @@ class HomeViewModel @Inject constructor(
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), 0)
 
     init {
-        // Đồng bộ quyền với trạng thái THẬT của hệ thống TRƯỚC TIÊN: nếu người dùng
-        // đã cấp quyền ở phiên trước thì card "Cấp quyền" KHÔNG BAO GIỜ hiện lại
-        // khi mở app (sửa lỗi card cứ hiện lại mỗi lần khởi động).
         syncPermissionState()
-        // Tải dữ liệu NGAY LẬP TỨC (fallback vị trí mặc định nếu chưa có quyền)
-        // để màn hình không trống trong lúc chờ người dùng trả lời hộp thoại quyền.
         refreshPrayerTimes()
         startCountdownTimer()
+        observeReminders()
+    }
+
+    private fun observeReminders() {
+        viewModelScope.launch {
+            settingsRepository.getPrayerReminders().collect { reminders ->
+                _uiState.update { it.copy(reminders = reminders) }
+                // Re-schedule when settings change
+                val currentTimes = _uiState.value.prayerTimes
+                if (currentTimes != null) {
+                    adhanScheduler.scheduleNextWithSettings(currentTimes, reminders)
+                }
+            }
+        }
+    }
+
+    fun updateReminder(reminder: PrayerReminder) {
+        viewModelScope.launch {
+            settingsRepository.updateReminder(reminder)
+        }
     }
 
     /**
@@ -116,13 +135,20 @@ class HomeViewModel @Inject constructor(
 
     fun refreshPrayerTimes() {
         viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true) }
+            _uiState.update { it.copy(isLoading = true, error = null) }
             try {
                 val times = getPrayerTimesUseCase()
-                _uiState.update { it.copy(prayerTimes = times, isLoading = false, error = null) }
-                adhanScheduler.scheduleNextPrayer(times)
+                _uiState.update { it.copy(prayerTimes = times, isLoading = false) }
+                
+                // Đặt báo thức trong một khối try-catch riêng để không làm hỏng luồng UI
+                try {
+                    adhanScheduler.scheduleNextWithSettings(times, _uiState.value.reminders)
+                } catch (e: Exception) {
+                    // Chỉ ghi log hoặc thông báo nhẹ, không làm hiện màn hình lỗi chính
+                    android.util.Log.e("HomeViewModel", "Alarm scheduling failed", e)
+                }
             } catch (e: Exception) {
-                _uiState.update { it.copy(error = e.message, isLoading = false) }
+                _uiState.update { it.copy(error = e.localizedMessage ?: "Unknown error", isLoading = false) }
             }
         }
     }

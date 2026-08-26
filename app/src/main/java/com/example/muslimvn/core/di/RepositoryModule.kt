@@ -1,19 +1,7 @@
 package com.example.muslimvn.core.di
 
-import com.example.muslimvn.data.repository.HijriCalendarRepositoryImpl
-import com.example.muslimvn.data.repository.LocationRepositoryImpl
-import com.example.muslimvn.data.repository.NameAllahRepositoryImpl
-import com.example.muslimvn.data.repository.PodcastRepositoryImpl
-import com.example.muslimvn.data.repository.PrayerRepositoryImpl
-import com.example.muslimvn.data.repository.QuranRepositoryImpl
-import com.example.muslimvn.data.repository.ZakatRepositoryImpl
-import com.example.muslimvn.domain.repository.HijriCalendarRepository
-import com.example.muslimvn.domain.repository.LocationRepository
-import com.example.muslimvn.domain.repository.NameAllahRepository
-import com.example.muslimvn.domain.repository.PodcastRepository
-import com.example.muslimvn.domain.repository.PrayerRepository
-import com.example.muslimvn.domain.repository.QuranRepository
-import com.example.muslimvn.domain.repository.ZakatRepository
+import com.example.muslimvn.data.repository.*
+import com.example.muslimvn.domain.repository.*
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -65,4 +53,9 @@ abstract class RepositoryModule {
     abstract fun bindZakatRepository(
         zakatRepositoryImpl: ZakatRepositoryImpl
     ): ZakatRepository
+    @Binds
+    @Singleton
+    abstract fun bindSettingsRepository(
+        settingsRepositoryImpl: SettingsRepositoryImpl
+    ): SettingsRepository
 }

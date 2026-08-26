@@ -163,7 +163,7 @@ fun PodcastPlayerScreen(
 
     LaunchedEffect(pagerState) {
         snapshotFlow { pagerState.currentPage }.collect { page ->
-            if (playlist.isNotEmpty() && page < playlist.size) {
+            if (pagerState.isScrollInProgress && playlist.isNotEmpty() && page < playlist.size) {
                 val episode = playlist[page]
                 if (episode.id != currentEpisodeId) {
                     viewModel.playEpisode(episode)

@@ -120,6 +120,7 @@ class AudioPlayerManager @Inject constructor(
         isPodcast: Boolean = false
     ) {
         initializePlayer()
+        onPlaybackFinished = null
         if (isPodcastSession && _currentMediaId.value != null) persistProgressNow()
 
         isPodcastSession = isPodcast
@@ -385,7 +386,7 @@ class AudioPlayerManager @Inject constructor(
         const val SKIP_MS = 10_000L
         val PLAYBACK_SPEEDS = listOf(0.8f, 1.0f, 1.25f, 1.5f, 2.0f)
         private const val DEFAULT_SPEED = 1.0f
-        private const val TICK_INTERVAL_MS = 500L
+        private const val TICK_INTERVAL_MS = 50L // Giảm từ 500ms xuống 50ms để highlight mượt mà
         private const val PROGRESS_SAVE_INTERVAL_MS = 5_000L
     }
 }

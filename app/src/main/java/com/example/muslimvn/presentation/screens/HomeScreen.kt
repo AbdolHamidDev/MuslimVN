@@ -9,15 +9,11 @@ import android.os.Build
 import android.provider.Settings
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.core.Spring
-import androidx.compose.animation.core.spring
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideInVertically
-import androidx.compose.animation.slideOutVertically
-import androidx.compose.animation.togetherWith
+import androidx.compose.animation.*
+import androidx.compose.animation.core.*
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
@@ -25,16 +21,17 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.LocationOn
-import androidx.compose.material.icons.filled.Notifications
-import androidx.compose.material.icons.filled.NotificationsOff
-import androidx.compose.material.icons.filled.Schedule
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.VolumeUp
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -49,21 +46,17 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import coil.compose.AsyncImage
 import com.example.muslimvn.R
+import com.example.muslimvn.domain.models.PrayerName
+import com.example.muslimvn.domain.models.PrayerReminder
 import com.example.muslimvn.domain.models.PrayerTimes
+import com.example.muslimvn.domain.models.ReminderMode
 import com.example.muslimvn.domain.util.HijriCalendarUtils
 import com.example.muslimvn.domain.util.HijriMonthNames
-import com.example.muslimvn.presentation.components.ErrorState
-import com.example.muslimvn.presentation.components.LoadingIndicator
-import com.example.muslimvn.presentation.components.MiniPlayerBar
-import com.example.muslimvn.presentation.components.PodcastPlayerBarState
-import com.example.muslimvn.presentation.components.bouncyClick
-import com.example.muslimvn.presentation.components.formatSpeedLabel
+import com.example.muslimvn.presentation.components.*
 import com.example.muslimvn.presentation.viewmodels.HomeViewModel
 import com.example.muslimvn.presentation.viewmodels.PodcastPlayerViewModel
 import java.text.SimpleDateFormat
 import java.time.LocalDate
-import java.time.chrono.HijrahDate
-import java.time.temporal.ChronoField
 import java.util.*
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -80,27 +73,23 @@ fun HomeScreen(
     onZakatClick: () -> Unit = {},
     onPodcastClick: () -> Unit = {},
     onOpenFullPlayer: () -> Unit = {},
-    onSettingsClick: () -> Unit = {}
+    onSettingsClick: () -> Unit = {},
 ) {
     val uiState by viewModel.uiState.collectAsState()
     var showPrayerSheet by remember { mutableStateOf(false) }
     var showAllUtilitiesSheet by remember { mutableStateOf(false) }
+    var selectedPrayerForReminder by remember { mutableStateOf<String?>(null) }
+    
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
 
-    // ... (logic permissions)
-
-    // Xin vị trí + thông báo trong MỘT đợt duy nhất.
-    // POST_NOTIFICATIONS chỉ tồn tại từ Android 13 (API 33) trở lên.
     val notificationPermissions = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
         arrayOf(Manifest.permission.POST_NOTIFICATIONS)
     } else {
         emptyArray()
     }
 
-    // Số lần người dùng từ chối quyền vị trí — dùng để phát hiện trường hợp
-    // "Không hỏi lại" (từ chối vĩnh viễn) và chuyển sang hướng dẫn mở Cài đặt.
     var deniedAttempts by rememberSaveable { mutableIntStateOf(0) }
 
     val permissionLauncher = rememberLauncherForActivityResult(
@@ -118,14 +107,11 @@ fun HomeScreen(
 
     val hijriOffset by viewModel.hijriDateOffset.collectAsState()
 
-    // Kiểm tra lại quyền mỗi khi màn hình RESUME (cả lần đầu vào): phủ trường hợp
-    // người dùng bật quyền thủ công trong Cài đặt rồi quay về — card phải tự biến mất.
     val lifecycleOwner = LocalLifecycleOwner.current
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
             if (event == Lifecycle.Event.ON_RESUME) {
                 if (viewModel.syncPermissionState()) {
-                    // Vừa mới có quyền vị trí → tính lại giờ cầu nguyện theo vị trí thật
                     viewModel.refreshPrayerTimes()
                 }
             }
@@ -135,9 +121,6 @@ fun HomeScreen(
     }
 
     Scaffold(
-        // Chỉ cần inset status bar (màn không có TopAppBar). Phía đáy NavigationBar
-        // của root Scaffold (MainActivity) đã chịu trách nhiệm — nếu dùng mặc định
-        // systemBars thì navigation bar bị tính 2 lần, nội dung bị hụt chiều cao.
         contentWindowInsets = WindowInsets.statusBars,
         snackbarHost = { SnackbarHost(snackbarHostState) },
         bottomBar = {
@@ -178,9 +161,6 @@ fun HomeScreen(
             HeaderSection(hijriOffsetDays = hijriOffset)
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Card giải thích lý do cần vị trí — hiện khi CHƯA có quyền và người
-            // dùng chưa bấm "Để sau". Chỉ gọi hộp thoại hệ thống khi người dùng
-            // chủ động bấm "Cấp quyền" (UX tốt hơn auto-prompt khi mở app).
             if (!uiState.isLocationPermissionGranted && !uiState.isPermissionCardDismissed) {
                 LocationPermissionCard(
                     isPermanentlyDenied = deniedAttempts > 0 &&
@@ -200,9 +180,15 @@ fun HomeScreen(
                 Spacer(modifier = Modifier.height(16.dp))
             }
 
-            
-            uiState.prayerTimes?.let { times ->
-                NextPrayerCard(times, onCountdownFinished = viewModel::refreshPrayerTimes)
+            val prayerTimes = uiState.prayerTimes
+            if (prayerTimes != null) {
+                NextPrayerHero(
+                    prayerTimes = prayerTimes,
+                    onCountdownFinished = viewModel::refreshPrayerTimes,
+                    modifier = Modifier.bouncyClick {
+                        selectedPrayerForReminder = prayerTimes.nextPrayerName
+                    }
+                )
                 Spacer(modifier = Modifier.height(24.dp))
 
                 Row(
@@ -226,7 +212,9 @@ fun HomeScreen(
                     when (item.id) {
                         "quran" -> onQuranClick()
                         "compass" -> onQiblaClick()
-                        "prayer" -> showPrayerSheet = true
+                        "prayer" -> {
+                            showPrayerSheet = true
+                        }
                         "schedule" -> onHijriCalendarClick()
                         "99" -> onNamesOfAllahClick()
                         "zakat" -> onZakatClick()
@@ -241,6 +229,33 @@ fun HomeScreen(
 
                 UtilityCarousel(onItemClick = onUtilityClick)
 
+                if (showPrayerSheet) {
+                    ModalBottomSheet(
+                        onDismissRequest = { showPrayerSheet = false },
+                        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+                    ) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(bottom = 32.dp)
+                        ) {
+                            Text(
+                                text = stringResource(R.string.utility_prayer),
+                                style = MaterialTheme.typography.titleLarge,
+                                fontWeight = FontWeight.Bold,
+                                modifier = Modifier.padding(16.dp)
+                            )
+                            PrayerList(
+                                prayerTimes = prayerTimes,
+                                reminders = uiState.reminders,
+                                onReminderClick = { 
+                                    selectedPrayerForReminder = it 
+                                }
+                            )
+                        }
+                    }
+                }
+
                 if (showAllUtilitiesSheet) {
                     AllUtilitiesBottomSheet(
                         onDismiss = { showAllUtilitiesSheet = false },
@@ -250,7 +265,22 @@ fun HomeScreen(
                         }
                     )
                 }
-            } ?: run {
+
+                selectedPrayerForReminder?.let { prayerName ->
+                    val reminder = uiState.reminders[prayerName] ?: PrayerReminder(prayerName)
+                    PrayerReminderBottomSheet(
+                        prayerName = prayerName,
+                        currentReminder = reminder,
+                        onDismiss = { 
+                            selectedPrayerForReminder = null 
+                        },
+                        onSave = { 
+                            viewModel.updateReminder(it)
+                            selectedPrayerForReminder = null
+                        }
+                    )
+                }
+            } else {
                 if (uiState.isLoading) {
                     LoadingIndicator(
                         label = stringResource(R.string.loading_please_wait),
@@ -258,7 +288,7 @@ fun HomeScreen(
                     )
                 } else {
                     ErrorState(
-                        message = stringResource(R.string.prayer_times_error),
+                        message = uiState.error ?: stringResource(R.string.prayer_times_error),
                         onRetry = viewModel::refreshPrayerTimes,
                         modifier = Modifier.fillMaxSize()
                     )
@@ -278,8 +308,6 @@ fun UtilityCarousel(onItemClick: (UtilityItem) -> Unit) {
         modifier = Modifier.fillMaxWidth()
     ) {
         items(items) { item ->
-            // Mỗi item chiếm khoảng 85dp để tạo hiệu ứng "peek" (hở một phần icon tiếp theo)
-            // trên đa số màn hình điện thoại thông thường.
             Box(modifier = Modifier.width(85.dp)) {
                 UtilityCard(item, onItemClick)
             }
@@ -349,8 +377,6 @@ fun UtilityGrid(onItemClick: (UtilityItem) -> Unit) {
 
 @Composable
 fun UtilityCard(item: UtilityItem, onClick: (UtilityItem) -> Unit) {
-    // Icon TIỆN ÍCH hiển thị ẢNH TRẦN: không Card, không nền, không viền/shadow
-    // bao ngoài. Chỉ giữ phản hồi nhấn scale spring + haptic nhẹ cho đã tay.
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier
@@ -375,18 +401,15 @@ fun UtilityCard(item: UtilityItem, onClick: (UtilityItem) -> Unit) {
 
 @Composable
 fun HeaderSection(hijriOffsetDays: Int) {
-    // remember để không tạo lại formatter (và format lại chuỗi) mỗi lần recompose
     val gregorianDate = remember {
         SimpleDateFormat("EEEE, d MMMM yyyy", Locale.getDefault()).format(Date())
     }
 
-    // Áp dụng offset người dùng điều chỉnh ở màn Lịch Hijri (qua cùng DataStore)
-    // để header Trang chủ và màn Lịch Hijri luôn hiển thị khớp nhau.
     val hijriLabel = remember(hijriOffsetDays) {
         HijriCalendarUtils.hijriDateFor(LocalDate.now(), hijriOffsetDays)?.let { hijri ->
-            val day = hijri.get(ChronoField.DAY_OF_MONTH)
-            val month = HijriMonthNames.monthName(hijri.get(ChronoField.MONTH_OF_YEAR))
-            val year = hijri.get(ChronoField.YEAR)
+            val day = hijri.get(java.time.temporal.ChronoField.DAY_OF_MONTH)
+            val month = HijriMonthNames.monthName(hijri.get(java.time.temporal.ChronoField.MONTH_OF_YEAR))
+            val year = hijri.get(java.time.temporal.ChronoField.YEAR)
             "$day $month $year AH"
         }.orEmpty()
     }
@@ -407,99 +430,23 @@ fun HeaderSection(hijriOffsetDays: Int) {
 }
 
 @Composable
-fun NextPrayerCard(prayerTimes: PrayerTimes, onCountdownFinished: () -> Unit) {
-    // Đếm ngược theo GIÂY ngay trong UI (không gọi lại repository mỗi giây).
-    // Khi hết giờ → yêu cầu tính lại mốc cầu nguyện tiếp theo đúng một lần.
-    var remainingMs by remember(prayerTimes.nextPrayerTime) {
-        mutableLongStateOf(prayerTimes.nextPrayerTime.time - System.currentTimeMillis())
-    }
-    var refreshRequested by remember(prayerTimes.nextPrayerTime) { mutableStateOf(false) }
-
-    LaunchedEffect(prayerTimes.nextPrayerTime) {
-        while (true) {
-            remainingMs = prayerTimes.nextPrayerTime.time - System.currentTimeMillis()
-            if (!refreshRequested && remainingMs <= 0L) {
-                refreshRequested = true
-                onCountdownFinished()
-            }
-            delay(1_000)
-        }
-    }
-
-    // ── HERO CARD duy nhất của Trang chủ ──────────────────────────────────────
-    // Nền solid primary nổi bật trên canvas trắng sạch (quy tắc "1 Hero Card"),
-    // mọi card khác trên màn hình đều nền trắng không màu.
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = MaterialTheme.shapes.extraLarge,
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.primary,
-            contentColor = MaterialTheme.colorScheme.onPrimary
-        ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
-    ) {
-        Column(
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 28.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            // Tên lời nguyện trượt lên/xuống mượt mà bằng spring khi mốc thay đổi
-            AnimatedContent(
-                targetState = prayerTimes.nextPrayerName,
-                transitionSpec = {
-                    val offsetSpec = spring<IntOffset>(stiffness = Spring.StiffnessMediumLow)
-                    val fadeSpec = spring<Float>(stiffness = Spring.StiffnessMediumLow)
-                    (
-                        slideInVertically(offsetSpec) { it / 2 } + fadeIn(fadeSpec)
-                        ).togetherWith(slideOutVertically(offsetSpec) { -it / 2 } + fadeOut(fadeSpec))
-                },
-                label = "nextPrayerName"
-            ) { name ->
-                Text(
-                    text = stringResource(R.string.next_prayer_label, name),
-                    style = MaterialTheme.typography.headlineSmall,
-                    fontWeight = FontWeight.ExtraBold,
-                    textAlign = TextAlign.Center
-                )
-            }
-            Spacer(modifier = Modifier.height(10.dp))
-            Text(
-                text = formatRemaining(remainingMs),
-                style = MaterialTheme.typography.displaySmall,
-                fontWeight = FontWeight.Black
-            )
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(
-                text = stringResource(R.string.countdown_hint),
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.7f)
-            )
-        }
-    }
-}
-
-/** Định dạng "HH:mm:ss" cho thời gian còn lại tới mốc cầu nguyện tiếp theo. */
-private fun formatRemaining(remainingMs: Long): String {
-    val totalSeconds = (remainingMs / 1000).coerceAtLeast(0)
-    val hours = totalSeconds / 3600
-    val minutes = (totalSeconds % 3600) / 60
-    val seconds = totalSeconds % 60
-    return String.format(Locale.getDefault(), "%02d:%02d:%02d", hours, minutes, seconds)
-}
-
-@Composable
-fun PrayerList(prayerTimes: PrayerTimes) {
+fun PrayerList(prayerTimes: PrayerTimes, reminders: Map<String, PrayerReminder>, onReminderClick: (String) -> Unit) {
     val prayers = listOf(
-        PrayerItemData(stringResource(R.string.prayer_fajr), prayerTimes.fajr, Icons.Default.Schedule),
-        PrayerItemData(stringResource(R.string.prayer_sunrise), prayerTimes.sunrise, Icons.Default.Schedule),
-        PrayerItemData(stringResource(R.string.prayer_dhuhr), prayerTimes.dhuhr, Icons.Default.Schedule),
-        PrayerItemData(stringResource(R.string.prayer_asr), prayerTimes.asr, Icons.Default.Schedule),
-        PrayerItemData(stringResource(R.string.prayer_maghrib), prayerTimes.maghrib, Icons.Default.Schedule),
-        PrayerItemData(stringResource(R.string.prayer_isha), prayerTimes.isha, Icons.Default.Schedule)
+        PrayerItemData(stringResource(R.string.prayer_fajr), prayerTimes.fajr, Icons.Default.NightsStay, PrayerName.FAJR),
+        PrayerItemData(stringResource(R.string.prayer_sunrise), prayerTimes.sunrise, Icons.Default.WbTwilight, PrayerName.SUNRISE),
+        PrayerItemData(stringResource(R.string.prayer_dhuhr), prayerTimes.dhuhr, Icons.Default.WbSunny, PrayerName.DHUHR),
+        PrayerItemData(stringResource(R.string.prayer_asr), prayerTimes.asr, Icons.Default.WbCloudy, PrayerName.ASR),
+        PrayerItemData(stringResource(R.string.prayer_maghrib), prayerTimes.maghrib, Icons.Default.WbTwilight, PrayerName.MAGHRIB),
+        PrayerItemData(stringResource(R.string.prayer_isha), prayerTimes.isha, Icons.Default.Bedtime, PrayerName.ISHA)
     )
 
-    LazyColumn {
+    LazyColumn(
+        verticalArrangement = Arrangement.spacedBy(12.dp),
+        contentPadding = PaddingValues(16.dp)
+    ) {
         items(prayers) { prayer ->
-            PrayerItemRow(prayer)
+            val reminder = reminders[prayer.id] ?: PrayerReminder(prayer.id)
+            PrayerItemRow(prayer, reminder, onReminderClick)
         }
     }
 }
@@ -513,47 +460,119 @@ data class UtilityItem(
 data class PrayerItemData(
     val name: String,
     val time: Date,
-    val icon: ImageVector
+    val icon: ImageVector,
+    val id: String
 )
 
 @Composable
-fun PrayerItemRow(prayer: PrayerItemData) {
+fun PrayerItemRow(prayer: PrayerItemData, reminder: PrayerReminder, onReminderClick: (String) -> Unit) {
     val timeFormat = remember { SimpleDateFormat("HH:mm", Locale.getDefault()) }
-    var isEnabled by remember { mutableStateOf(true) }
+    val isEnabled = reminder.mode != ReminderMode.SILENT
+    val backgroundImage = getPrayerImage(prayer.id)
 
-    // Hàng phẳng phân tách bằng divider mảnh thay vì Surface đóng khung từng dòng
-    Column(modifier = Modifier.fillMaxWidth()) {
-        Row(
-            modifier = Modifier
-                .padding(horizontal = 16.dp, vertical = 14.dp)
-                .fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(prayer.icon, contentDescription = null)
-                Spacer(modifier = Modifier.width(12.dp))
-                Column {
-                    Text(text = prayer.name, fontWeight = FontWeight.Bold)
-                    Text(text = timeFormat.format(prayer.time), style = MaterialTheme.typography.bodySmall)
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(80.dp)
+            .clickable { onReminderClick(prayer.id) },
+        shape = MaterialTheme.shapes.large,
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+    ) {
+        Box(modifier = Modifier.fillMaxSize()) {
+            AsyncImage(
+                model = backgroundImage,
+                contentDescription = null,
+                modifier = Modifier.fillMaxSize(),
+                contentScale = ContentScale.Crop,
+                alpha = 0.6f
+            )
+            
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(
+                        brush = Brush.horizontalGradient(
+                            colors = listOf(
+                                MaterialTheme.colorScheme.surface.copy(alpha = 0.9f),
+                                MaterialTheme.colorScheme.surface.copy(alpha = 0.4f)
+                            )
+                        )
+                    )
+            )
+
+            Row(
+                modifier = Modifier
+                    .padding(horizontal = 16.dp)
+                    .fillMaxSize(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Box(
+                        modifier = Modifier
+                            .size(40.dp)
+                            .background(
+                                MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.7f),
+                                CircleShape
+                            ),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = prayer.icon, 
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(24.dp)
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(16.dp))
+                    Column {
+                        Text(
+                            text = prayer.name, 
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Text(
+                            text = timeFormat.format(prayer.time), 
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+                
+                IconButton(
+                    onClick = { onReminderClick(prayer.id) },
+                    modifier = Modifier.background(
+                        MaterialTheme.colorScheme.surface.copy(alpha = 0.5f),
+                        CircleShape
+                    )
+                ) {
+                    Icon(
+                        imageVector = when (reminder.mode) {
+                            ReminderMode.SILENT -> Icons.Default.NotificationsOff
+                            ReminderMode.NOTIFICATION -> Icons.Default.Notifications
+                            ReminderMode.ADHAN -> Icons.AutoMirrored.Filled.VolumeUp
+                        },
+                        contentDescription = stringResource(R.string.toggle_adhan),
+                        tint = if (isEnabled) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline
+                    )
                 }
             }
-            IconButton(onClick = { isEnabled = !isEnabled }) {
-                Icon(
-                    imageVector = if (isEnabled) Icons.Default.Notifications else Icons.Default.NotificationsOff,
-                    contentDescription = stringResource(R.string.toggle_adhan),
-                    tint = if (isEnabled) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline
-                )
-            }
         }
-        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f))
     }
 }
 
-/**
- * Card giải thích lý do cần quyền vị trí TRƯỚC khi gọi hộp thoại hệ thống.
- * Khi bị từ chối vĩnh viễn ("Không hỏi lại") thì chuyển sang hướng dẫn mở Cài đặt.
- */
+private fun getPrayerImage(prayerId: String): String {
+    val base = "file:///android_asset/images/praytime/"
+    return when (prayerId) {
+        PrayerName.FAJR -> "${base}fajr.webp"
+        PrayerName.DHUHR -> "${base}dhuhr.jpg"
+        PrayerName.ASR -> "${base}asr.jpg"
+        PrayerName.MAGHRIB -> "${base}maghrib.jpg"
+        PrayerName.ISHA -> "${base}isha.jpg"
+        else -> "${base}vietnammosque.jpg"
+    }
+}
+
 @Composable
 fun LocationPermissionCard(
     isPermanentlyDenied: Boolean,
@@ -564,7 +583,6 @@ fun LocationPermissionCard(
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = MaterialTheme.shapes.medium,
-        // Nền trắng tinh + viền hairline rất nhạt — không dùng container màu đậm
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceContainerLowest,
             contentColor = MaterialTheme.colorScheme.onSurface
@@ -616,12 +634,10 @@ fun LocationPermissionCard(
     }
 }
 
-/** True khi hệ thống VẪN có thể hiện lại dialog xin quyền (chưa bị từ chối vĩnh viễn). */
 private fun shouldShowLocationRationale(context: Context): Boolean =
     (context as? Activity)
         ?.shouldShowRequestPermissionRationale(Manifest.permission.ACCESS_FINE_LOCATION) == true
 
-/** Mở trang thông tin ứng dụng trong Cài đặt để người dùng bật quyền thủ công. */
 private fun openAppSettings(context: Context) {
     context.startActivity(
         Intent(

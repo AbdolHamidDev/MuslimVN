@@ -84,6 +84,11 @@ class HijriCalendarViewModel @Inject constructor(
         refresh()
     }
 
+    fun gotoMonth(month: YearMonth) {
+        _displayedMonth.value = month
+        refresh()
+    }
+
     /** Background refresh (Aladhan -> Room cache) for the currently displayed month. */
     fun refresh() {
         val month = _displayedMonth.value

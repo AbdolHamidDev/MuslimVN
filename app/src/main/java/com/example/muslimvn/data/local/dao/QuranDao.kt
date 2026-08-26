@@ -3,11 +3,13 @@ package com.example.muslimvn.data.local.dao
 import androidx.room.*
 import com.example.muslimvn.data.local.entities.AyahEntity
 import com.example.muslimvn.data.local.entities.SurahEntity
+import com.example.muslimvn.data.local.entities.TafsirEntity
 import com.example.muslimvn.data.local.entities.VerseTimingEntity
 import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface QuranDao {
+    // ... existing methods ...
     @Query("SELECT * FROM surahs ORDER BY number ASC")
     fun getAllSurahs(): Flow<List<SurahEntity>>
 
@@ -41,4 +43,10 @@ interface QuranDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertVerseTiming(timing: VerseTimingEntity)
+
+    @Query("SELECT * FROM tafsirs WHERE verseKey = :verseKey AND resourceId = :resourceId")
+    suspend fun getTafsir(verseKey: String, resourceId: Int): TafsirEntity?
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertTafsir(tafsir: TafsirEntity)
 }

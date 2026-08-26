@@ -3,13 +3,11 @@ package com.example.muslimvn.presentation.screens
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.FontDownload
 import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.TouchApp
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -19,7 +17,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -38,7 +35,6 @@ fun QuranSettingsScreen(
     val reciterIdentifier by viewModel.reciterIdentifier.collectAsState()
     val fontSize by viewModel.fontSize.collectAsState()
     val displayMode by viewModel.displayMode.collectAsState()
-    val hapticEnabled by viewModel.hapticEnabled.collectAsState()
 
     Scaffold(
         topBar = {
@@ -72,20 +68,6 @@ fun QuranSettingsScreen(
                 FontSizeSlider(
                     currentSize = fontSize,
                     onSizeChanged = viewModel::onFontSizeChanged
-                )
-            }
-
-            item {
-                SettingsSectionTitle(title = "Hiệu ứng & Trải nghiệm", icon = Icons.Default.TouchApp)
-                ListItem(
-                    headlineContent = { Text("Phản hồi rung khi đọc") },
-                    supportingContent = { Text("Rung nhẹ khi highlight từng từ theo audio") },
-                    trailingContent = {
-                        Switch(
-                            checked = hapticEnabled,
-                            onCheckedChange = viewModel::onHapticEnabledChanged
-                        )
-                    }
                 )
             }
 

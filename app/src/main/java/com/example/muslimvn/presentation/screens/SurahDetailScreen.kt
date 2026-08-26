@@ -2,8 +2,7 @@ package com.example.muslimvn.presentation.screens
 
 import android.content.Intent
 import androidx.compose.animation.animateColorAsState
-import androidx.compose.animation.core.Spring
-import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -11,21 +10,24 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.MenuBook
 import androidx.compose.material.icons.automirrored.filled.VolumeUp
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -33,6 +35,7 @@ import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -46,6 +49,8 @@ import com.example.muslimvn.presentation.components.MiniPlayerBar
 import com.example.muslimvn.presentation.components.PodcastPlayerBarState
 import com.example.muslimvn.presentation.viewmodels.PodcastPlayerViewModel
 import com.example.muslimvn.presentation.viewmodels.QuranUiSettings
+import com.example.muslimvn.presentation.viewmodels.TafsirState
+import com.example.muslimvn.presentation.viewmodels.TranslationState
 import com.example.muslimvn.presentation.viewmodels.SurahDetailState
 import com.example.muslimvn.presentation.viewmodels.SurahDetailViewModel
 import com.example.muslimvn.ui.theme.extendedTypography
@@ -67,15 +72,10 @@ fun SurahDetailScreen(
     val playingWordIndex by viewModel.playingWordIndex.collectAsState()
     val isSyncing by viewModel.isSyncing.collectAsState()
     val syncProgress by viewModel.syncProgress.collectAsState()
+    val tafsirState by viewModel.tafsirState.collectAsState()
+    val translationState by viewModel.translationState.collectAsState()
+    val currentTafsirAyah by viewModel.currentTafsirAyah.collectAsState()
     val context = LocalContext.current
-    val haptic = LocalHapticFeedback.current
-
-    // Trigger haptic feedback khi word thay đổi
-    LaunchedEffect(playingWordIndex) {
-        if (playingWordIndex != null && quranSettings.hapticEnabled) {
-            haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-        }
-    }
 
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
     val lazyListState = rememberLazyListState()
@@ -153,10 +153,7 @@ fun SurahDetailScreen(
             PodcastPlayerBarState(playerViewModel) { active ->
                 androidx.compose.animation.AnimatedVisibility(visible = active != null) {
                     if (active != null) {
-                        val quranPlaylist by viewModel.playlist.collectAsState()
-                        val podcastPlaylist by playerViewModel.playlist.collectAsState()
-                        
-                        // Xác định xem đang phát Quran hay Podcast để dùng đúng playlist
+                        val playlist by playerViewModel.playlist.collectAsState()
                         val isQuran = active.id.contains(":")
                         
                         MiniPlayerBar(
@@ -173,10 +170,9 @@ fun SurahDetailScreen(
                             onCycleSpeed = playerViewModel::cyclePlaybackSpeed,
                             onOpenFullPlayer = onOpenFullPlayer,
                             currentMediaId = active.id,
-                            // Đồng bộ playlist linh hoạt
                             playlist = if (isQuran && state is SurahDetailState.Success) {
                                 val sNumber = (state as SurahDetailState.Success).surahDetail.surah.number
-                                quranPlaylist.map { ayah ->
+                                (state as SurahDetailState.Success).surahDetail.ayahs.map { ayah ->
                                     com.example.muslimvn.domain.models.PodcastEpisode(
                                         id = "${sNumber}:${ayah.ayahNumber}",
                                         scholarId = sNumber.toString(),
@@ -190,7 +186,7 @@ fun SurahDetailScreen(
                                         lastPositionMs = 0
                                     )
                                 }
-                            } else podcastPlaylist,
+                            } else playlist,
                             onPlayEpisode = { episode ->
                                 if (isQuran) {
                                     val ayahNum = episode.id.split(":").getOrNull(1)?.toIntOrNull() ?: 1
@@ -235,6 +231,22 @@ fun SurahDetailScreen(
                             SurahHeader(surahDetail.surah.nameArabic, surahDetail.surah.nameVietnamese)
                         }
                         
+                        if (surahDetail.surah.number != 1 && surahDetail.surah.number != 9) {
+                            item {
+                                Box(
+                                    modifier = Modifier.fillMaxWidth().padding(vertical = 24.dp),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Text(
+                                        text = "بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ",
+                                        style = MaterialTheme.extendedTypography.arabicHeading,
+                                        fontSize = (quranSettings.fontSize * 1.2).sp,
+                                        color = MaterialTheme.colorScheme.primary
+                                    )
+                                }
+                            }
+                        }
+                        
                         items(surahDetail.ayahs, key = { it.id }) { ayah ->
                             val isAyahPlaying = currentMediaId == "${surahDetail.surah.number}:${ayah.ayahNumber}"
                             val currentPlayingWordIndex = if (isAyahPlaying) playingWordIndex else null
@@ -246,6 +258,7 @@ fun SurahDetailScreen(
                                 isPlaying = isAyahPlaying && isPlaying,
                                 isBuffering = isAyahPlaying && isBuffering,
                                 playingWordIndex = currentPlayingWordIndex,
+                                isAnyAyahPlaying = isPlaying && currentMediaId != null,
                                 onClick = { selectedAyah = ayah }
                             )
                             HorizontalDivider(
@@ -282,8 +295,241 @@ fun SurahDetailScreen(
                         }
                         context.startActivity(Intent.createChooser(sendIntent, null))
                         selectedAyah = null
+                    },
+                    onTafsirClick = {
+                        val currentAyah = selectedAyah // Lưu lại để dùng sau khi menu đóng
+                        selectedAyah = null // Đóng menu hành động ngay lập tức
+                        if (currentAyah != null) {
+                            viewModel.loadTafsir(currentAyah)
+                        }
                     }
                 )
+            }
+        }
+
+        if (tafsirState !is TafsirState.Idle) {
+            TafsirBottomSheet(
+                state = tafsirState,
+                translationState = translationState,
+                ayah = currentTafsirAyah,
+                onTranslateClick = viewModel::translateCurrentTafsir,
+                onDismiss = { viewModel.clearTafsir() }
+            )
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun TafsirBottomSheet(
+    state: TafsirState,
+    translationState: TranslationState,
+    ayah: Ayah?,
+    onTranslateClick: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    var showTranslation by remember { mutableStateOf(false) }
+    
+    // Tự động bật hiển thị tiếng Việt nếu dịch thành công
+    LaunchedEffect(translationState) {
+        if (translationState is TranslationState.Success) {
+            showTranslation = true
+        }
+    }
+
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
+        modifier = Modifier.fillMaxSize(),
+        dragHandle = { BottomSheetDefaults.DragHandle() },
+        containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+        contentWindowInsets = { WindowInsets(0, 0, 0, 0) }
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .statusBarsPadding()
+                .navigationBarsPadding()
+        ) {
+            // Header: Title & Translation Toggle (AssistChip style)
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 20.dp, vertical = 8.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Tafsir Ibn Kathir",
+                    style = MaterialTheme.typography.headlineSmall,
+                    fontWeight = FontWeight.ExtraBold,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                
+                if (state is TafsirState.Success) {
+                    val tafsir = state.tafsir
+                    val hasTranslation = tafsir.translatedText != null
+                    
+                    AssistChip(
+                        onClick = { 
+                            if (hasTranslation) {
+                                showTranslation = !showTranslation 
+                            } else {
+                                onTranslateClick()
+                            }
+                        },
+                        label = { 
+                            val label = when {
+                                hasTranslation && showTranslation -> "Xem bản gốc (EN)"
+                                hasTranslation && !showTranslation -> "Xem tiếng Việt"
+                                translationState is TranslationState.DownloadingModel -> "Đang tải model..."
+                                translationState is TranslationState.Translating -> "Đang dịch..."
+                                else -> "Dịch sang VI"
+                            }
+                            Text(label, style = MaterialTheme.typography.labelMedium) 
+                        },
+                        leadingIcon = {
+                            if (translationState is TranslationState.DownloadingModel || translationState is TranslationState.Translating) {
+                                CircularProgressIndicator(modifier = Modifier.size(14.dp), strokeWidth = 2.dp)
+                            } else {
+                                Icon(
+                                    imageVector = Icons.Default.Translate,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(16.dp)
+                                )
+                            }
+                        },
+                        shape = CircleShape,
+                        colors = AssistChipDefaults.assistChipColors(
+                            labelColor = MaterialTheme.colorScheme.primary
+                        )
+                    )
+                }
+            }
+
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(horizontal = 20.dp, vertical = 8.dp)
+            ) {
+                // Ayah Context: Hiển thị như một "Reference Card" của Google
+                if (ayah != null) {
+                    item {
+                        Surface(
+                            color = MaterialTheme.colorScheme.surfaceContainerHighest,
+                            shape = RoundedCornerShape(20.dp),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(bottom = 24.dp)
+                        ) {
+                            Column(modifier = Modifier.padding(20.dp)) {
+                                Text(
+                                    text = "VERSE ${ayah.surahId}:${ayah.ayahNumber}",
+                                    style = MaterialTheme.typography.labelLarge,
+                                    fontWeight = FontWeight.Black,
+                                    color = MaterialTheme.colorScheme.primary,
+                                    letterSpacing = 1.sp
+                                )
+                                Spacer(modifier = Modifier.height(12.dp))
+                                CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
+                                    Text(
+                                        text = ayah.textArabic,
+                                        style = MaterialTheme.extendedTypography.arabicAyah,
+                                        fontSize = 24.sp,
+                                        lineHeight = 40.sp,
+                                        color = MaterialTheme.colorScheme.onSurface
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+
+                when (state) {
+                    is TafsirState.Loading -> {
+                        item {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(200.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                CircularProgressIndicator(strokeWidth = 3.dp)
+                            }
+                        }
+                    }
+                    is TafsirState.Error -> {
+                        item {
+                            Surface(
+                                color = MaterialTheme.colorScheme.errorContainer,
+                                shape = RoundedCornerShape(16.dp),
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Text(
+                                    text = state.message,
+                                    modifier = Modifier.padding(16.dp),
+                                    color = MaterialTheme.colorScheme.onErrorContainer,
+                                    style = MaterialTheme.typography.bodyMedium
+                                )
+                            }
+                        }
+                    }
+                    is TafsirState.Success -> {
+                        val tafsirData = state.tafsir
+                        item {
+                            if (showTranslation && tafsirData.translatedText != null) {
+                                Surface(
+                                    color = MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.4f),
+                                    shape = RoundedCornerShape(12.dp),
+                                    modifier = Modifier.padding(bottom = 20.dp)
+                                ) {
+                                    Row(
+                                        modifier = Modifier.padding(12.dp),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Icon(
+                                            Icons.Default.Info,
+                                            contentDescription = null,
+                                            modifier = Modifier.size(16.dp),
+                                            tint = MaterialTheme.colorScheme.onTertiaryContainer
+                                        )
+                                        Spacer(modifier = Modifier.width(8.dp))
+                                        Text(
+                                            text = "Bản dịch ngoại tuyến bởi Google AI",
+                                            style = MaterialTheme.typography.labelSmall,
+                                            color = MaterialTheme.colorScheme.onTertiaryContainer
+                                        )
+                                    }
+                                }
+                            }
+                            
+                            val textToDisplay = if (showTranslation && tafsirData.translatedText != null) {
+                                tafsirData.translatedText
+                            } else {
+                                tafsirData.text
+                            }
+
+                            val cleanText = remember(textToDisplay) {
+                                textToDisplay
+                                    .replace(Regex("<[^>]*>"), "")
+                                    .replace("&nbsp;", " ")
+                                    .replace("&quot;", "\"")
+                                    .trim()
+                            }
+                            
+                            Text(
+                                text = cleanText,
+                                style = MaterialTheme.typography.bodyLarge,
+                                fontSize = 17.sp,
+                                lineHeight = 30.sp,
+                                textAlign = TextAlign.Justify,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            
+                            Spacer(modifier = Modifier.height(40.dp))
+                        }
+                    }
+                    else -> {}
+                }
             }
         }
     }
@@ -295,7 +541,8 @@ private fun AyahActionsContent(
     isPlaying: Boolean,
     onPlayClick: () -> Unit,
     onBookmarkClick: () -> Unit,
-    onShareClick: () -> Unit
+    onShareClick: () -> Unit,
+    onTafsirClick: () -> Unit
 ) {
     Column(
         modifier = Modifier
@@ -309,6 +556,11 @@ private fun AyahActionsContent(
             modifier = Modifier.padding(bottom = 16.dp)
         )
         
+        ListItem(
+            headlineContent = { Text("Xem giải thích (Tafsir)") },
+            leadingContent = { Icon(Icons.AutoMirrored.Filled.MenuBook, contentDescription = null) },
+            modifier = Modifier.clickable { onTafsirClick() }
+        )
         ListItem(
             headlineContent = { Text(if (isPlaying) "Tạm dừng" else "Phát âm thanh") },
             leadingContent = { 
@@ -363,11 +615,19 @@ fun AyahItem(
     isPlaying: Boolean,
     isBuffering: Boolean,
     playingWordIndex: Int? = null,
+    isAnyAyahPlaying: Boolean = false,
     onClick: () -> Unit
 ) {
+    // Focus Effect: Chỉ mờ khi CÓ audio đang phát toàn cục. Nếu không phát gì, tất cả đều rõ nét (Alpha 1.0)
+    val itemAlpha by animateFloatAsState(
+        targetValue = if (isAnyAyahPlaying && !isPlaying) 0.4f else 1.0f,
+        animationSpec = tween(600),
+        label = "itemAlpha"
+    )
+
     val containerColor by animateColorAsState(
         targetValue = if (isPlaying) {
-            MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.2f)
+            MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.15f)
         } else {
             Color.Transparent
         },
@@ -378,10 +638,11 @@ fun AyahItem(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(12.dp))
+            .alpha(itemAlpha)
+            .clip(RoundedCornerShape(16.dp))
             .background(containerColor)
             .clickable { onClick() }
-            .padding(horizontal = 4.dp, vertical = 12.dp)
+            .padding(horizontal = 8.dp, vertical = 16.dp)
     ) {
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -399,7 +660,7 @@ fun AyahItem(
 
             if (isBuffering) {
                 CircularProgressIndicator(
-                    modifier = Modifier.size(24.dp),
+                    modifier = Modifier.size(20.dp),
                     strokeWidth = 2.dp
                 )
             } else if (isPlaying) {
@@ -407,7 +668,7 @@ fun AyahItem(
                     imageVector = Icons.AutoMirrored.Filled.VolumeUp,
                     contentDescription = null,
                     tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(20.dp)
+                    modifier = Modifier.size(18.dp)
                 )
             }
             
@@ -417,7 +678,7 @@ fun AyahItem(
                     imageVector = Icons.Default.Bookmark,
                     contentDescription = null,
                     tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(16.dp)
+                    modifier = Modifier.size(14.dp)
                 )
             }
         }
@@ -427,36 +688,39 @@ fun AyahItem(
                 ayah.textArabic.trim().split(Regex("\\s+"))
             }
             
-            val annotatedArabic = buildAnnotatedString {
-                words.forEachIndexed { index, word ->
-                    val isWordHighlighted = playingWordIndex == index
-                    withStyle(
-                        style = SpanStyle(
-                            color = if (isWordHighlighted) MaterialTheme.colorScheme.primary 
-                                    else MaterialTheme.colorScheme.onSurface,
-                            fontWeight = if (isWordHighlighted) FontWeight.Bold else FontWeight.Normal,
-                            background = if (isWordHighlighted) MaterialTheme.colorScheme.primary.copy(alpha = 0.1f) 
-                                         else Color.Transparent
-                        )
-                    ) {
-                        append(word)
-                    }
-                    if (index < words.size - 1) append(" ")
-                }
+            val waqfMarks = remember { 
+                setOf("ۖ", "ۗ", "ۚ", "ۛ", "ۜ", "ۘ", "ۙ", "ۣ", "۞", "۝") 
             }
 
-            Text(
-                text = annotatedArabic,
-                modifier = Modifier.fillMaxWidth(),
-                textAlign = TextAlign.End,
-                style = MaterialTheme.extendedTypography.arabicAyah,
-                fontSize = (fontSize * 1.4).sp, // To rõ vượt trội
-                lineHeight = (fontSize * 2.2).sp // Khoảng cách dòng rộng cho người già dễ đọc
-            )
+            CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
+                FlowRow(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.Start,
+                    verticalArrangement = Arrangement.spacedBy(16.dp) // ⚡ TĂNG PADDING: Đảm bảo các dấu harakat không bao giờ bị đè nhau
+                ) {
+                    var logicalWordIndex = 0
+                    words.forEach { word ->
+                        val isWaqfMark = waqfMarks.contains(word) || 
+                                         (word.length == 1 && word[0] in '\u06D6'..'\u06DC')
+                        
+                        val isHighlighted = !isWaqfMark && playingWordIndex == logicalWordIndex
+                        
+                        WordItem(
+                            word = word,
+                            fontSize = (fontSize * 1.4).sp,
+                            isHighlighted = isHighlighted,
+                            isWaqfMark = isWaqfMark,
+                            isAnyAyahPlaying = isAnyAyahPlaying
+                        )
+                        
+                        if (!isWaqfMark) logicalWordIndex++
+                    }
+                }
+            }
         }
 
         if (displayMode == QuranDisplayMode.BOTH) {
-            Spacer(modifier = Modifier.height(4.dp)) // Thu hẹp khoảng cách với bản dịch
+            Spacer(modifier = Modifier.height(8.dp))
         }
 
         if (displayMode != QuranDisplayMode.ARABIC_ONLY) {
@@ -464,13 +728,58 @@ fun AyahItem(
                 text = ayah.textVietnamese,
                 modifier = Modifier.fillMaxWidth(),
                 textAlign = TextAlign.Start,
-                style = MaterialTheme.typography.bodyMedium, // Chữ nhỏ hơn, mảnh hơn
-                fontSize = (fontSize * 0.8).sp,
-                lineHeight = (fontSize * 1.2).sp,
-                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f) // Mờ hơn để không tranh chấp với tiếng Ả Rập
+                style = MaterialTheme.typography.bodyMedium,
+                fontSize = (fontSize * 0.85).sp,
+                lineHeight = (fontSize * 1.3).sp,
+                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.75f)
             )
         }
     }
+}
+
+@Composable
+private fun WordItem(
+    word: String,
+    fontSize: androidx.compose.ui.unit.TextUnit,
+    isHighlighted: Boolean,
+    isWaqfMark: Boolean,
+    isAnyAyahPlaying: Boolean
+) {
+    // Hoạt ảnh cực kỳ nhẹ nhàng, trang trọng (Dùng tween thay vì spring để không nhún nhảy)
+    val scale by animateFloatAsState(
+        targetValue = if (isHighlighted) 1.05f else 1.0f,
+        animationSpec = tween(400, easing = LinearOutSlowInEasing),
+        label = "wordScale"
+    )
+    
+    // Chỉ làm mờ các chữ khác khi CÓ audio đang phát toàn cục.
+    // Tăng độ mờ lên 0.5 để người dùng vẫn có thể đọc được các chữ xung quanh dễ dàng.
+    val alpha by animateFloatAsState(
+        targetValue = if (isHighlighted) 1.0f 
+                     else if (isAnyAyahPlaying) (if (isWaqfMark) 0.5f else 0.45f) 
+                     else 1.0f,
+        animationSpec = tween(500),
+        label = "wordAlpha"
+    )
+    
+    val color by animateColorAsState(
+        targetValue = if (isHighlighted) MaterialTheme.colorScheme.primary 
+                     else MaterialTheme.colorScheme.onSurface,
+        animationSpec = tween(500),
+        label = "wordColor"
+    )
+
+    Text(
+        text = word,
+        fontSize = fontSize,
+        fontFamily = com.example.muslimvn.ui.theme.ArabicFontFamily,
+        fontWeight = if (isHighlighted) FontWeight.Bold else FontWeight.Normal,
+        color = color,
+        modifier = Modifier
+            .padding(horizontal = 3.dp) // Tăng nhẹ khoảng cách ngang giữa các từ
+            .alpha(alpha)
+            .scale(scale)
+    )
 }
 
 private fun Int.toArabicOrnate(): String = buildString {

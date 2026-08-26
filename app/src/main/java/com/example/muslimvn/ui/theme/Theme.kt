@@ -2,18 +2,11 @@ package com.example.muslimvn.ui.theme
 
 import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.darkColorScheme
-import androidx.compose.material3.dynamicDarkColorScheme
-import androidx.compose.material3.dynamicLightColorScheme
-import androidx.compose.material3.lightColorScheme
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.Immutable
-import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.ReadOnlyComposable
-import androidx.compose.runtime.staticCompositionLocalOf
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import com.example.muslimvn.domain.models.AppTheme
 
 private val LightColorScheme = lightColorScheme(
     primary = md_light_primary,
@@ -125,19 +118,21 @@ val MaterialTheme.extendedColors: ExtendedColors
 /**
  * Theme chính của MuslimVN.
  *
- * - Android 12+ (S) và [dynamicColor] bật: dùng Dynamic Color (Material You)
- *   sinh bảng màu từ wallpaper người dùng — đúng hành vi các app Google
- *   (Files/Gmail); nền luôn là tone surfaceContainerLowest rất nhạt/sạch.
- * - Thiết bị cũ hơn: dùng bảng màu thương hiệu "Teal & Brass" tĩnh.
- *
- * @param dynamicColor mặc định BẬT theo yêu cầu thiết kế M3 giống Google apps.
+ * @param themeMode Chế độ theme được chọn (Hệ thống, Sáng, Tối).
+ * @param dynamicColor Mặc định BẬT cho Android 12+.
  */
 @Composable
 fun MuslimVNTheme(
-    darkTheme: Boolean = isSystemInDarkTheme(),
+    themeMode: AppTheme = AppTheme.FOLLOW_SYSTEM,
     dynamicColor: Boolean = true,
     content: @Composable () -> Unit
 ) {
+    val darkTheme = when (themeMode) {
+        AppTheme.FOLLOW_SYSTEM -> isSystemInDarkTheme()
+        AppTheme.LIGHT -> false
+        AppTheme.DARK -> true
+    }
+
     val context = LocalContext.current
     val colorScheme = when {
         dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S ->

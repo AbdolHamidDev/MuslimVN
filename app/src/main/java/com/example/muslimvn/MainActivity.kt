@@ -13,17 +13,17 @@ import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.example.muslimvn.core.navigation.MainNavigation
 import com.example.muslimvn.core.navigation.bottomNavItems
+import com.example.muslimvn.presentation.viewmodels.SettingsViewModel
 import com.example.muslimvn.ui.theme.MuslimVNTheme
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -36,7 +36,10 @@ class MainActivity : ComponentActivity() {
         // status bar trong suốt, nội dung app trôi liền mạch phía sau system indicators.
         enableEdgeToEdge()
         setContent {
-            MuslimVNTheme {
+            val settingsViewModel: SettingsViewModel = hiltViewModel()
+            val themeMode by settingsViewModel.appTheme.collectAsState()
+
+            MuslimVNTheme(themeMode = themeMode) {
                 MainScreen()
             }
         }

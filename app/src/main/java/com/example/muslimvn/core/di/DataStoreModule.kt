@@ -20,8 +20,13 @@ annotation class HijriDataStore
 @Retention(AnnotationRetention.BINARY)
 annotation class QuranDataStore
 
+@Qualifier
+@Retention(AnnotationRetention.BINARY)
+annotation class SettingsDataStore
+
 private val Context.hijriDataStore: DataStore<Preferences> by preferencesDataStore(name = "hijri_preferences")
 private val Context.quranDataStore: DataStore<Preferences> by preferencesDataStore(name = "quran_settings")
+private val Context.settingsDataStore: DataStore<Preferences> by preferencesDataStore(name = "app_settings")
 
 @Module
 @InstallIn(SingletonComponent::class)
@@ -36,4 +41,8 @@ object DataStoreModule {
     @Singleton
     @QuranDataStore
     fun provideQuranDataStore(@ApplicationContext context: Context): DataStore<Preferences> = context.quranDataStore
+    @Provides
+    @Singleton
+    @SettingsDataStore
+    fun provideSettingsDataStore(@ApplicationContext context: Context): DataStore<Preferences> = context.settingsDataStore
 }

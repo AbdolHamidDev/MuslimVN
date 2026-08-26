@@ -111,6 +111,9 @@ dependencies {
     // Palette
     implementation(libs.androidx.palette.ktx)
 
+    // ML Kit Translation
+    implementation(libs.google.mlkit.translate)
+
     // Coil
     implementation(libs.coil.compose)
 

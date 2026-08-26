@@ -20,6 +20,7 @@ import com.example.muslimvn.presentation.screens.HomeScreen
 import com.example.muslimvn.presentation.screens.NamesOfAllahScreen
 import com.example.muslimvn.presentation.screens.PodcastHomeScreen
 import com.example.muslimvn.presentation.screens.PodcastPlayerScreen
+import com.example.muslimvn.presentation.screens.PrayerNotificationsScreen
 import com.example.muslimvn.presentation.screens.QiblaScreen
 import com.example.muslimvn.presentation.screens.QuranScreen
 import com.example.muslimvn.presentation.screens.QuranSettingsScreen
@@ -79,6 +80,9 @@ fun MainNavigation(navController: NavHostController, modifier: Modifier = Modifi
         composable(Screen.QuranSettings.route) {
             QuranSettingsScreen(onBackClick = { navController.popBackStack() })
         }
+        composable(Screen.PrayerNotifications.route) {
+            PrayerNotificationsScreen(onBackClick = { navController.popBackStack() })
+        }
         composable(Screen.Qibla.route) {
             QiblaScreen(onBackClick = { navController.popBackStack() })
         }
@@ -91,7 +95,12 @@ fun MainNavigation(navController: NavHostController, modifier: Modifier = Modifi
         composable(Screen.Zakat.route) {
             ZakatScreen(onBackClick = { navController.popBackStack() })
         }
-        composable(Screen.Settings.route) { SettingsScreen() }
+        composable(Screen.Settings.route) {
+            SettingsScreen(
+                onNavigateToQuranSettings = { navController.navigate(Screen.QuranSettings.route) },
+                onNavigateToPrayerNotifications = { navController.navigate(Screen.PrayerNotifications.route) }
+            )
+        }
         composable(
             route = Screen.SurahDetail.route,
             arguments = listOf(navArgument("surahNumber") { type = NavType.IntType })

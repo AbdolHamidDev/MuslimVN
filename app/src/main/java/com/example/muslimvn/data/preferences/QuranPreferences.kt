@@ -22,15 +22,7 @@ class QuranPreferences @Inject constructor(
         val RECITER_IDENTIFIER = stringPreferencesKey("reciter_identifier")
         val FONT_SIZE = floatPreferencesKey("font_size")
         val DISPLAY_MODE = stringPreferencesKey("display_mode")
-        val HAPTIC_ENABLED = booleanPreferencesKey("haptic_enabled")
     }
-
-    val hapticEnabled: Flow<Boolean> = dataStore.data
-        .catch { exception ->
-            if (exception is IOException) emit(emptyPreferences()) else throw exception
-        }.map { preferences ->
-            preferences[Keys.HAPTIC_ENABLED] ?: true
-        }
 
     val reciterIdentifier: Flow<String> = dataStore.data
         .catch { exception ->
@@ -73,12 +65,6 @@ class QuranPreferences @Inject constructor(
     suspend fun saveDisplayMode(mode: QuranDisplayMode) {
         dataStore.edit { preferences ->
             preferences[Keys.DISPLAY_MODE] = mode.name
-        }
-    }
-
-    suspend fun saveHapticEnabled(enabled: Boolean) {
-        dataStore.edit { preferences ->
-            preferences[Keys.HAPTIC_ENABLED] = enabled
         }
     }
 }

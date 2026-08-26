@@ -108,7 +108,9 @@ fun MiniPlayerBar(
 
             LaunchedEffect(pagerState) {
                 snapshotFlow { pagerState.currentPage }.collect { page ->
-                    if (playlist.isNotEmpty() && page < playlist.size) {
+                    // CHỈ đổi tập khi người dùng CHỦ ĐỘNG lướt tay (isScrollInProgress)
+                    // để tránh xung đột với việc audio tự động chuyển câu
+                    if (pagerState.isScrollInProgress && playlist.isNotEmpty() && page < playlist.size) {
                         val episode = playlist[page]
                         if (episode.id != currentMediaId) {
                             onPlayEpisode(episode)

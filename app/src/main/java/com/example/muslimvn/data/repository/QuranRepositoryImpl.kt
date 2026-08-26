@@ -3,9 +3,11 @@ package com.example.muslimvn.data.repository
 import com.example.muslimvn.data.local.dao.QuranDao
 import com.example.muslimvn.data.local.entities.AyahEntity
 import com.example.muslimvn.data.local.entities.SurahEntity
+import com.example.muslimvn.data.local.entities.TafsirEntity
 import com.example.muslimvn.data.local.entities.VerseTimingEntity
 import com.example.muslimvn.data.remote.QuranApiService
 import com.example.muslimvn.data.util.QuranJsonParser
+import com.example.muslimvn.data.util.TafsirTranslator
 import com.example.muslimvn.domain.models.*
 import com.example.muslimvn.domain.repository.QuranRepository
 import com.google.gson.Gson
@@ -19,6 +21,7 @@ class QuranRepositoryImpl @Inject constructor(
     private val dao: QuranDao,
     private val apiService: QuranApiService,
     private val jsonParser: QuranJsonParser,
+    private val translator: TafsirTranslator,
     private val gson: Gson
 ) : QuranRepository {
 
@@ -94,6 +97,39 @@ class QuranRepositoryImpl @Inject constructor(
         }
     }
 
+    override suspend fun getTafsir(verseKey: String, resourceId: Int): Tafsir? {
+        val cached = dao.getTafsir(verseKey, resourceId)
+        if (cached != null) {
+            return Tafsir(cached.verseKey, cached.resourceId, cached.text, cached.translatedText)
+        }
+
+        return try {
+            val response = apiService.getTafsir(resourceId, verseKey)
+            val entity = TafsirEntity(
+                verseKey = verseKey,
+                resourceId = resourceId,
+                text = response.tafsir.text
+            )
+            dao.insertTafsir(entity)
+            Tafsir(entity.verseKey, entity.resourceId, entity.text)
+        } catch (e: Exception) {
+            null
+        }
+    }
+
+    override suspend fun translateTafsir(verseKey: String, text: String): String? {
+        // 1. Dịch văn bản
+        val translated = translator.translate(text) ?: return null
+        
+        // 2. Cập nhật vào DB để lần sau dùng luôn
+        val cached = dao.getTafsir(verseKey, 169)
+        if (cached != null) {
+            dao.insertTafsir(cached.copy(translatedText = translated))
+        }
+        
+        return translated
+    }
+
     override suspend fun initializeData() {
         val existingSurahs = dao.getAllSurahs().first()
         if (existingSurahs.isEmpty()) {
@@ -111,12 +147,27 @@ class QuranRepositoryImpl @Inject constructor(
         revelationType = revelationType
     )
 
-    private fun AyahEntity.toDomain() = Ayah(
-        id = id,
-        surahId = surahId,
-        ayahNumber = ayahNumber,
-        textArabic = textArabic,
-        textVietnamese = textVietnamese,
-        isBookmarked = isBookmarked
-    )
+    private fun AyahEntity.toDomain(): Ayah {
+        var cleanText = textArabic
+        // Nếu không phải Surah 1 (Fatiha) và là câu số 1 -> Loại bỏ Bismillah prefix nếu có
+        // để khớp với dữ liệu timing từ Quran.com
+        if (surahId != 1 && ayahNumber == 1) {
+            val bismillahPrefix = "بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ "
+            if (cleanText.startsWith(bismillahPrefix)) {
+                cleanText = cleanText.removePrefix(bismillahPrefix)
+            } else if (cleanText.startsWith("بِسْمِ اللهِ الرَّحْمٰنِ الرَّحِيْمِ")) {
+                // Phân biệt một số biến thể unicode nếu có
+                cleanText = cleanText.substringAfter("الرَّحِيْمِ").trim()
+            }
+        }
+        
+        return Ayah(
+            id = id,
+            surahId = surahId,
+            ayahNumber = ayahNumber,
+            textArabic = cleanText,
+            textVietnamese = textVietnamese,
+            isBookmarked = isBookmarked
+        )
+    }
 }

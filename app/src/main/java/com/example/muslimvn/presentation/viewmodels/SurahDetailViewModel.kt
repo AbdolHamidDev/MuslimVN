@@ -18,8 +18,7 @@ import javax.inject.Inject
 data class QuranUiSettings(
     val reciterIdentifier: String = "Alafasy_128kbps",
     val fontSize: Float = 18f,
-    val displayMode: QuranDisplayMode = QuranDisplayMode.BOTH,
-    val hapticEnabled: Boolean = true
+    val displayMode: QuranDisplayMode = QuranDisplayMode.BOTH
 )
 
 @HiltViewModel
@@ -29,6 +28,7 @@ class SurahDetailViewModel @Inject constructor(
     private val audioPlayerManager: AudioPlayerManager,
     private val quranPreferences: QuranPreferences,
     private val quranRepository: com.example.muslimvn.domain.repository.QuranRepository,
+    private val translator: com.example.muslimvn.data.util.TafsirTranslator,
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
@@ -48,6 +48,15 @@ class SurahDetailViewModel @Inject constructor(
     private val _syncProgress = MutableStateFlow(0f)
     val syncProgress = _syncProgress.asStateFlow()
 
+    private val _tafsirState = MutableStateFlow<TafsirState>(TafsirState.Idle)
+    val tafsirState = _tafsirState.asStateFlow()
+
+    private val _translationState = MutableStateFlow<TranslationState>(TranslationState.Idle)
+    val translationState = _translationState.asStateFlow()
+
+    private val _currentTafsirAyah = MutableStateFlow<com.example.muslimvn.domain.models.Ayah?>(null)
+    val currentTafsirAyah = _currentTafsirAyah.asStateFlow()
+
     private val _playlist = MutableStateFlow<List<com.example.muslimvn.domain.models.Ayah>>(emptyList())
     val playlist = _playlist.asStateFlow()
 
@@ -59,16 +68,26 @@ class SurahDetailViewModel @Inject constructor(
     val quranSettings = combine(
         quranPreferences.reciterIdentifier,
         quranPreferences.fontSize,
-        quranPreferences.displayMode,
-        quranPreferences.hapticEnabled
-    ) { reciter, fontSize, displayMode, haptic ->
-        QuranUiSettings(reciter, fontSize, displayMode, haptic)
+        quranPreferences.displayMode
+    ) { reciter, fontSize, displayMode ->
+        QuranUiSettings(reciter, fontSize, displayMode)
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), QuranUiSettings())
 
     init {
         loadSurahDetail()
         observeMediaTiming()
         prefetchTiming()
+        observeTranslationProgress()
+    }
+
+    private fun observeTranslationProgress() {
+        translator.isDownloading
+            .onEach { isDownloading ->
+                if (isDownloading) {
+                    _translationState.value = TranslationState.DownloadingModel
+                }
+            }
+            .launchIn(viewModelScope)
     }
 
     private fun prefetchTiming() {
@@ -136,17 +155,19 @@ class SurahDetailViewModel @Inject constructor(
         
         val surah = currentState.surahDetail.surah
         val settings = quranSettings.value
-        val mediaId = "$surahNumber:$ayahNumber"
+        val mediaId = "${surah.number}:$ayahNumber"
         
+        // Nếu đang phát đúng câu này rồi -> Chỉ toggle Play/Pause
         if (currentMediaId.value == mediaId) {
             if (isPlaying.value) audioPlayerManager.pause() else audioPlayerManager.resume()
             return
         }
 
+        // Nếu chuyển sang câu mới -> Nạp playlist mới (Gapless)
         val items = currentState.surahDetail.ayahs.map { ayah ->
             com.example.muslimvn.data.util.AudioPlayItem(
-                url = QuranAudioUrlBuilder.buildAyahUrl(surahNumber, ayah.ayahNumber, settings.reciterIdentifier),
-                mediaId = "$surahNumber:${ayah.ayahNumber}",
+                url = QuranAudioUrlBuilder.buildAyahUrl(surah.number, ayah.ayahNumber, settings.reciterIdentifier),
+                mediaId = "${surah.number}:${ayah.ayahNumber}",
                 title = "${surah.nameVietnamese} - Câu ${ayah.ayahNumber}",
                 artist = "Quran Recitation",
                 artworkPath = "icon/quran.png"
@@ -164,6 +185,46 @@ class SurahDetailViewModel @Inject constructor(
         audioPlayerManager.stop()
     }
 
+    fun loadTafsir(ayah: com.example.muslimvn.domain.models.Ayah) {
+        val verseKey = "${ayah.surahId}:${ayah.ayahNumber}"
+        _currentTafsirAyah.value = ayah
+        _tafsirState.value = TafsirState.Loading
+        viewModelScope.launch {
+            val tafsir = quranRepository.getTafsir(verseKey)
+            if (tafsir != null) {
+                _tafsirState.value = TafsirState.Success(tafsir)
+            } else {
+                _tafsirState.value = TafsirState.Error("Could not load Tafsir")
+            }
+        }
+    }
+
+    fun clearTafsir() {
+        _tafsirState.value = TafsirState.Idle
+        _currentTafsirAyah.value = null
+        _translationState.value = TranslationState.Idle
+    }
+
+    fun translateCurrentTafsir() {
+        val currentState = _tafsirState.value
+        if (currentState !is TafsirState.Success) return
+        
+        val tafsir = currentState.tafsir
+        // Nếu đã có bản dịch rồi thì không dịch lại
+        if (tafsir.translatedText != null) return
+        
+        viewModelScope.launch {
+            _translationState.value = TranslationState.Translating
+            val result = quranRepository.translateTafsir(tafsir.verseKey, tafsir.text)
+            if (result != null) {
+                _tafsirState.value = TafsirState.Success(tafsir.copy(translatedText = result))
+                _translationState.value = TranslationState.Success
+            } else {
+                _translationState.value = TranslationState.Error("Translation failed")
+            }
+        }
+    }
+
     override fun onCleared() {
         super.onCleared()
     }
@@ -173,4 +234,19 @@ sealed class SurahDetailState {
     object Loading : SurahDetailState()
     data class Success(val surahDetail: SurahDetail) : SurahDetailState()
     data class Error(val message: String) : SurahDetailState()
+}
+
+sealed class TafsirState {
+    object Idle : TafsirState()
+    object Loading : TafsirState()
+    data class Success(val tafsir: com.example.muslimvn.domain.models.Tafsir) : TafsirState()
+    data class Error(val message: String) : TafsirState()
+}
+
+sealed class TranslationState {
+    object Idle : TranslationState()
+    object DownloadingModel : TranslationState()
+    object Translating : TranslationState()
+    object Success : TranslationState()
+    data class Error(val message: String) : TranslationState()
 }

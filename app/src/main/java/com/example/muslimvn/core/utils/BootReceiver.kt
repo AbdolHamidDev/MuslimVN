@@ -3,11 +3,13 @@ package com.example.muslimvn.core.utils
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import com.example.muslimvn.domain.repository.SettingsRepository
 import com.example.muslimvn.domain.usecases.GetPrayerTimesUseCase
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -20,6 +22,9 @@ class BootReceiver : BroadcastReceiver() {
     @Inject
     lateinit var adhanScheduler: AdhanScheduler
 
+    @Inject
+    lateinit var settingsRepository: SettingsRepository
+
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
 
     override fun onReceive(context: Context, intent: Intent) {
@@ -28,7 +33,8 @@ class BootReceiver : BroadcastReceiver() {
             scope.launch {
                 try {
                     val prayerTimes = getPrayerTimesUseCase()
-                    adhanScheduler.scheduleNextPrayer(prayerTimes)
+                    val reminders = settingsRepository.getPrayerReminders().first()
+                    adhanScheduler.scheduleNextWithSettings(prayerTimes, reminders)
                 } finally {
                     pendingResult.finish()
                 }

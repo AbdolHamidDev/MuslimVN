@@ -27,9 +27,6 @@ class QuranSettingsViewModel @Inject constructor(
     val displayMode: StateFlow<QuranDisplayMode> = preferences.displayMode
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), QuranDisplayMode.BOTH)
 
-    val hapticEnabled: StateFlow<Boolean> = preferences.hapticEnabled
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), true)
-
     fun onReciterSelected(reciter: Reciter) {
         viewModelScope.launch {
             preferences.saveReciterIdentifier(reciter.identifier)
@@ -45,12 +42,6 @@ class QuranSettingsViewModel @Inject constructor(
     fun onDisplayModeChanged(mode: QuranDisplayMode) {
         viewModelScope.launch {
             preferences.saveDisplayMode(mode)
-        }
-    }
-
-    fun onHapticEnabledChanged(enabled: Boolean) {
-        viewModelScope.launch {
-            preferences.saveHapticEnabled(enabled)
         }
     }
 }

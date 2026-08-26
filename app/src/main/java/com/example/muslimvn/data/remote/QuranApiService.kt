@@ -12,6 +12,12 @@ interface QuranApiService {
         @Query("words") words: Boolean = true,
         @Query("audio") recitationId: Int
     ): VerseAudioResponse
+
+    @GET("tafsirs/{tafsirId}/by_ayah/{verseKey}")
+    suspend fun getTafsir(
+        @Path("tafsirId") tafsirId: Int,
+        @Path("verseKey") verseKey: String
+    ): TafsirResponse
 }
 
 data class VerseWithAudio(
@@ -26,4 +32,13 @@ data class AudioData(
 
 data class VerseAudioResponse(
     val verse: VerseWithAudio
+)
+
+data class TafsirContent(
+    @SerializedName("resource_id") val resourceId: Int,
+    val text: String
+)
+
+data class TafsirResponse(
+    val tafsir: TafsirContent
 )

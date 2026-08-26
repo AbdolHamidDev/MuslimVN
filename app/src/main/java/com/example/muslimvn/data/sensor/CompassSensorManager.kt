@@ -20,10 +20,16 @@ class CompassSensorManager @Inject constructor(
     private val accelerometerSensor = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER)
     private val magneticFieldSensor = sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD)
 
-    private var _azimuthFlow = callbackFlow<Float> {
+    data class CompassData(
+        val azimuth: Float,
+        val accuracy: Int
+    )
+
+    private var _compassDataFlow = callbackFlow<CompassData> {
         val listener = object : SensorEventListener {
             private var lastAzimuth = 0f
             private val alpha = 0.15f // Smoothing factor
+            private var currentAccuracy = SensorManager.SENSOR_STATUS_ACCURACY_LOW
 
             // For fallback
             private var gravity = FloatArray(3)
@@ -69,10 +75,14 @@ class CompassSensorManager @Inject constructor(
                 val smoothedAzimuth = smoothAzimuth(lastAzimuth, azimuth, alpha)
                 lastAzimuth = smoothedAzimuth
                 
-                trySend(smoothedAzimuth)
+                trySend(CompassData(smoothedAzimuth, currentAccuracy))
             }
 
             override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {
+                if (sensor?.type == Sensor.TYPE_ROTATION_VECTOR || 
+                    sensor?.type == Sensor.TYPE_MAGNETIC_FIELD) {
+                    currentAccuracy = accuracy
+                }
             }
         }
 
@@ -88,7 +98,7 @@ class CompassSensorManager @Inject constructor(
         }
     }
 
-    val azimuthFlow: Flow<Float> = _azimuthFlow
+    val compassDataFlow: Flow<CompassData> = _compassDataFlow
 
     /**
      * Exponential smoothing that handles wrap-around from 359 to 0.
