@@ -21,6 +21,7 @@ import com.example.muslimvn.presentation.screens.NamesOfAllahScreen
 import com.example.muslimvn.presentation.screens.PodcastHomeScreen
 import com.example.muslimvn.presentation.screens.PodcastPlayerScreen
 import com.example.muslimvn.presentation.screens.PrayerNotificationsScreen
+import com.example.muslimvn.presentation.screens.ProfileScreen
 import com.example.muslimvn.presentation.screens.QiblaScreen
 import com.example.muslimvn.presentation.screens.QuranScreen
 import com.example.muslimvn.presentation.screens.QuranSettingsScreen
@@ -97,8 +98,18 @@ fun MainNavigation(navController: NavHostController, modifier: Modifier = Modifi
         }
         composable(Screen.Settings.route) {
             SettingsScreen(
+                navController = navController,
                 onNavigateToQuranSettings = { navController.navigate(Screen.QuranSettings.route) },
-                onNavigateToPrayerNotifications = { navController.navigate(Screen.PrayerNotifications.route) }
+                onNavigateToPrayerNotifications = { navController.navigate(Screen.PrayerNotifications.route) },
+                onNavigateToProfile = { navController.navigate(Screen.Profile.route) }
+            )
+        }
+        composable(Screen.Profile.route) {
+            ProfileScreen(
+                onBackClick = { 
+                    navController.previousBackStackEntry?.savedStateHandle?.set("profile_updated", true)
+                    navController.popBackStack() 
+                }
             )
         }
         composable(

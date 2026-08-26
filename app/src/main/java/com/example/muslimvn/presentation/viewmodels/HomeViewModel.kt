@@ -10,7 +10,11 @@ import androidx.lifecycle.viewModelScope
 import com.example.muslimvn.core.utils.AdhanScheduler
 import com.example.muslimvn.domain.models.PrayerReminder
 import com.example.muslimvn.domain.models.PrayerTimes
+import com.example.muslimvn.domain.models.UserData
+import com.example.muslimvn.domain.models.UserProfile
+import com.example.muslimvn.domain.repository.AuthRepository
 import com.example.muslimvn.domain.repository.SettingsRepository
+import com.example.muslimvn.domain.repository.UserRepository
 import com.example.muslimvn.domain.usecases.GetHijriDateOffsetUseCase
 import com.example.muslimvn.domain.usecases.GetPrayerTimesUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -20,6 +24,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -28,7 +34,9 @@ import javax.inject.Inject
 data class HomeUiState(
     val prayerTimes: PrayerTimes? = null,
     val reminders: Map<String, PrayerReminder> = emptyMap(),
-    val isLoading: Boolean = true, // Mặc định là đang tải để tránh hiện lỗi giả
+    val userData: UserData? = null,
+    val userProfile: UserProfile? = null,
+    val isLoading: Boolean = true,
     val error: String? = null,
     val isLocationPermissionGranted: Boolean = false,
     val isNotificationPermissionGranted: Boolean = true,
@@ -42,6 +50,8 @@ class HomeViewModel @Inject constructor(
     private val getPrayerTimesUseCase: GetPrayerTimesUseCase,
     private val getHijriDateOffsetUseCase: GetHijriDateOffsetUseCase,
     private val settingsRepository: SettingsRepository,
+    private val authRepository: AuthRepository,
+    private val userRepository: UserRepository,
     private val adhanScheduler: AdhanScheduler
 ) : ViewModel() {
 
@@ -60,6 +70,7 @@ class HomeViewModel @Inject constructor(
         refreshPrayerTimes()
         startCountdownTimer()
         observeReminders()
+        observeUser()
     }
 
     private fun observeReminders() {
@@ -150,6 +161,29 @@ class HomeViewModel @Inject constructor(
             } catch (e: Exception) {
                 _uiState.update { it.copy(error = e.localizedMessage ?: "Unknown error", isLoading = false) }
             }
+        }
+    }
+
+    @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
+    private fun observeUser() {
+        viewModelScope.launch {
+            authRepository.currentUser.collect { user ->
+                _uiState.update { it.copy(userData = user) }
+            }
+        }
+        
+        viewModelScope.launch {
+            authRepository.currentUser
+                .flatMapLatest { user ->
+                    if (user != null) {
+                        userRepository.getUserProfile(user.uid)
+                    } else {
+                        flowOf(null)
+                    }
+                }
+                .collect { profile ->
+                    _uiState.update { it.copy(userProfile = profile) }
+                }
         }
     }
 

@@ -3,6 +3,7 @@ package com.example.muslimvn.core.navigation
 import androidx.annotation.StringRes
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.MenuBook
+import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Groups
 import androidx.compose.material.icons.filled.Home
@@ -22,6 +23,7 @@ sealed class Screen(val route: String, @StringRes val titleResId: Int, val icon:
     object Community : Screen("community", R.string.nav_community, Icons.Default.Groups)
     object AI : Screen("ai", R.string.nav_ai, Icons.Default.AutoAwesome)
     object Settings : Screen("settings", R.string.nav_settings, Icons.Default.Settings)
+    object Profile : Screen("profile", R.string.nav_settings, Icons.Default.AccountCircle)
 
     object Quran : Screen("quran", R.string.nav_quran, Icons.Default.Menu)
     object Qibla : Screen("qibla", R.string.nav_qibla, Icons.Default.LocationOn)

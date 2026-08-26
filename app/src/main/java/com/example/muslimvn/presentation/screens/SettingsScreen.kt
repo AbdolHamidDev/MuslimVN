@@ -4,36 +4,73 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.automirrored.filled.MenuBook
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.NavController
+import coil.compose.AsyncImage
 import com.example.muslimvn.R
 import com.example.muslimvn.domain.models.AppTheme
+import com.example.muslimvn.domain.models.UserData
 import com.example.muslimvn.presentation.viewmodels.SettingsViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(
+    navController: NavController,
     onNavigateToQuranSettings: () -> Unit,
     onNavigateToPrayerNotifications: () -> Unit,
+    onNavigateToProfile: () -> Unit,
     viewModel: SettingsViewModel = hiltViewModel()
 ) {
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
     val appTheme by viewModel.appTheme.collectAsState()
+    val currentUser by viewModel.currentUser.collectAsState()
+    val authUiState by viewModel.authUiState.collectAsState()
+    val context = LocalContext.current
+    val snackbarHostState = remember { SnackbarHostState() }
+    
     var showThemeDialog by remember { mutableStateOf(false) }
+    var showLogoutDialog by remember { mutableStateOf(false) }
+
+    // Listen for profile update success from ProfileScreen
+    val profileUpdated by navController.currentBackStackEntry
+        ?.savedStateHandle
+        ?.getStateFlow("profile_updated", false)
+        ?.collectAsState() ?: remember { mutableStateOf(false) }
+    
+    LaunchedEffect(profileUpdated) {
+        if (profileUpdated) {
+            snackbarHostState.showSnackbar("Hồ sơ của bạn đã được cập nhật")
+            navController.currentBackStackEntry?.savedStateHandle?.set("profile_updated", false)
+        }
+    }
+
+    LaunchedEffect(authUiState.errorMessage) {
+        authUiState.errorMessage?.let {
+            snackbarHostState.showSnackbar(it)
+            viewModel.clearError()
+        }
+    }
 
     Scaffold(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             LargeTopAppBar(
                 title = { Text(stringResource(R.string.nav_settings)) },
@@ -41,79 +78,104 @@ fun SettingsScreen(
             )
         }
     ) { innerPadding ->
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
-        ) {
-            item { PreferenceHeader(title = "Giao diện") }
-            item {
-                PreferenceItem(
-                    title = "Chế độ tối",
-                    subtitle = when (appTheme) {
-                        AppTheme.FOLLOW_SYSTEM -> "Theo hệ thống"
-                        AppTheme.LIGHT -> "Sáng"
-                        AppTheme.DARK -> "Tối"
-                    },
-                    icon = Icons.Default.DarkMode,
-                    onClick = { showThemeDialog = true }
-                )
-            }
-
-            item { PreferenceHeader(title = "Nội dung & Thông báo") }
-            item {
-                PreferenceItem(
-                    title = "Cài đặt Quran",
-                    subtitle = "Font chữ, học giả, chế độ hiển thị",
-                    icon = Icons.AutoMirrored.Filled.MenuBook,
-                    onClick = onNavigateToQuranSettings
-                )
-            }
-            item {
-                PreferenceItem(
-                    title = "Thông báo cầu nguyện",
-                    subtitle = "Âm thanh Adhan và thông báo",
-                    icon = Icons.Default.Notifications,
-                    onClick = onNavigateToPrayerNotifications
-                )
-            }
-
-            item { PreferenceHeader(title = "Về ứng dụng") }
-            item {
-                val context = androidx.compose.ui.platform.LocalContext.current
-                PreferenceItem(
-                    title = "Đánh giá ứng dụng",
-                    icon = Icons.Default.Star,
-                    onClick = {
-                        val intent = android.content.Intent(android.content.Intent.ACTION_VIEW).apply {
-                            data = android.net.Uri.parse("market://details?id=${context.packageName}")
-                        }
-                        try {
-                            context.startActivity(intent)
-                        } catch (e: Exception) {
-                            context.startActivity(android.content.Intent(android.content.Intent.ACTION_VIEW).apply {
-                                data = android.net.Uri.parse("https://play.google.com/store/apps/details?id=${context.packageName}")
-                            })
-                        }
-                    }
-                )
-            }
-            item {
-                val context = androidx.compose.ui.platform.LocalContext.current
-                val packageInfo = remember {
-                    try {
-                        context.packageManager.getPackageInfo(context.packageName, 0)
-                    } catch (e: Exception) {
-                        null
+        Box(modifier = Modifier.fillMaxSize().padding(innerPadding)) {
+            LazyColumn(modifier = Modifier.fillMaxSize()) {
+                item { PreferenceHeader(title = "Tài khoản") }
+                item {
+                    if (currentUser != null) {
+                        UserPreferenceItem(
+                            userData = currentUser!!,
+                            onClick = onNavigateToProfile,
+                            onSignOut = { showLogoutDialog = true }
+                        )
+                    } else {
+                        PreferenceItem(
+                            title = "Đăng nhập",
+                            subtitle = "Đăng nhập để lưu dữ liệu và sử dụng AI",
+                            icon = Icons.Default.AccountCircle,
+                            onClick = { viewModel.signInWithGoogle(context) }
+                        )
                     }
                 }
-                val version = packageInfo?.versionName ?: "1.0.0"
-                PreferenceItem(
-                    title = "Phiên bản",
-                    subtitle = version,
-                    icon = Icons.Default.Info,
-                    onClick = { }
-                )
+
+                item { PreferenceHeader(title = "Giao diện") }
+                item {
+                    PreferenceItem(
+                        title = "Chế độ tối",
+                        subtitle = when (appTheme) {
+                            AppTheme.FOLLOW_SYSTEM -> "Theo hệ thống"
+                            AppTheme.LIGHT -> "Sáng"
+                            AppTheme.DARK -> "Tối"
+                        },
+                        icon = Icons.Default.DarkMode,
+                        onClick = { showThemeDialog = true }
+                    )
+                }
+
+                item { PreferenceHeader(title = "Nội dung & Thông báo") }
+                item {
+                    PreferenceItem(
+                        title = "Cài đặt Quran",
+                        subtitle = "Font chữ, học giả, chế độ hiển thị",
+                        icon = Icons.AutoMirrored.Filled.MenuBook,
+                        onClick = onNavigateToQuranSettings
+                    )
+                }
+                item {
+                    PreferenceItem(
+                        title = "Thông báo cầu nguyện",
+                        subtitle = "Âm thanh Adhan và thông báo",
+                        icon = Icons.Default.Notifications,
+                        onClick = onNavigateToPrayerNotifications
+                    )
+                }
+
+                item { PreferenceHeader(title = "Về ứng dụng") }
+                item {
+                    PreferenceItem(
+                        title = "Đánh giá ứng dụng",
+                        icon = Icons.Default.Star,
+                        onClick = {
+                            val intent = android.content.Intent(android.content.Intent.ACTION_VIEW).apply {
+                                data = android.net.Uri.parse("market://details?id=${context.packageName}")
+                            }
+                            try {
+                                context.startActivity(intent)
+                            } catch (e: Exception) {
+                                context.startActivity(android.content.Intent(android.content.Intent.ACTION_VIEW).apply {
+                                    data = android.net.Uri.parse("https://play.google.com/store/apps/details?id=${context.packageName}")
+                                })
+                            }
+                        }
+                    )
+                }
+                item {
+                    val packageInfo = remember {
+                        try {
+                            context.packageManager.getPackageInfo(context.packageName, 0)
+                        } catch (e: Exception) {
+                            null
+                        }
+                    }
+                    val version = packageInfo?.versionName ?: "1.0.0"
+                    PreferenceItem(
+                        title = "Phiên bản",
+                        subtitle = version,
+                        icon = Icons.Default.Info,
+                        onClick = { }
+                    )
+                }
+            }
+
+            if (authUiState.isLoading) {
+                Surface(
+                    modifier = Modifier.fillMaxSize(),
+                    color = MaterialTheme.colorScheme.surface.copy(alpha = 0.5f)
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        CircularProgressIndicator()
+                    }
+                }
             }
         }
     }
@@ -126,6 +188,33 @@ fun SettingsScreen(
                 showThemeDialog = false
             },
             onDismiss = { showThemeDialog = false }
+        )
+    }
+
+    if (showLogoutDialog) {
+        AlertDialog(
+            onDismissRequest = { showLogoutDialog = false },
+            icon = { Icon(Icons.AutoMirrored.Filled.Logout, contentDescription = null) },
+            title = { Text("Đăng xuất?") },
+            text = { Text("Bạn sẽ không thể đồng bộ bookmark, lịch sử và sử dụng các tính năng AI cá nhân hóa nếu đăng xuất.") },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        viewModel.signOut()
+                        showLogoutDialog = false
+                    },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.error
+                    )
+                ) {
+                    Text("Đăng xuất")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showLogoutDialog = false }) {
+                    Text("Hủy")
+                }
+            }
         )
     }
 }
@@ -186,6 +275,58 @@ fun ThemeOption(
         RadioButton(selected = selected, onClick = null)
         Spacer(modifier = Modifier.width(16.dp))
         Text(title, style = MaterialTheme.typography.bodyLarge)
+    }
+}
+
+@Composable
+fun UserPreferenceItem(
+    userData: UserData,
+    onClick: () -> Unit,
+    onSignOut: () -> Unit
+) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 8.dp)
+            .clickable(onClick = onClick),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+        )
+    ) {
+        ListItem(
+            colors = ListItemDefaults.colors(containerColor = androidx.compose.ui.graphics.Color.Transparent),
+            headlineContent = { 
+                Text(
+                    userData.displayName ?: "Người dùng",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold
+                ) 
+            },
+            supportingContent = { Text(userData.email ?: "") },
+            leadingContent = {
+                if (userData.photoUrl != null) {
+                    AsyncImage(
+                        model = userData.photoUrl,
+                        contentDescription = null,
+                        modifier = Modifier
+                            .size(56.dp)
+                            .clip(CircleShape),
+                        contentScale = ContentScale.Crop
+                    )
+                } else {
+                    Icon(
+                        Icons.Default.AccountCircle,
+                        contentDescription = null,
+                        modifier = Modifier.size(56.dp)
+                    )
+                }
+            },
+            trailingContent = {
+                IconButton(onClick = onSignOut) {
+                    Icon(Icons.AutoMirrored.Filled.Logout, contentDescription = "Đăng xuất")
+                }
+            }
+        )
     }
 }
 

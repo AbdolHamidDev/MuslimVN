@@ -156,8 +156,14 @@ fun HomeScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .padding(16.dp)
+                .padding(horizontal = 16.dp)
         ) {
+            GreetingSection(
+                userData = uiState.userData,
+                userProfile = uiState.userProfile,
+                onProfileClick = onSettingsClick
+            )
+            Spacer(modifier = Modifier.height(8.dp))
             HeaderSection(hijriOffsetDays = hijriOffset)
             Spacer(modifier = Modifier.height(16.dp))
 

@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "302968735213",
+    "project_id": "muslimvietnam-3e294",
+    "storage_bucket": "muslimvietnam-3e294.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:302968735213:android:5f880cfbf5a3eeb0f593e4",
+        "android_client_info": {
+          "package_name": "com.example.muslimvn"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "302968735213-ut57jvfbk6t4opkvpbvstmkqt0ck7ag8.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.muslimvn",
+            "certificate_hash": "228e9b529b595b5178492cdf661a95dc971dd53f"
+          }
+        },
+        {
+          "client_id": "302968735213-0e536m6rhldqtbaeas7hsbhcha15p95g.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB_YmbHtsQj3G8j2h0UBgCn6lQ4keQssck"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "302968735213-0e536m6rhldqtbaeas7hsbhcha15p95g.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
