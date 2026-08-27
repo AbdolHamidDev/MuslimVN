@@ -33,9 +33,13 @@ val md_light_error = Color(0xFFBA1A1A)
 val md_light_on_error = Color(0xFFFFFFFF)
 val md_light_error_container = Color(0xFFFFDAD6)
 val md_light_on_error_container = Color(0xFF410002)
-val md_light_background = Color(0xFFFFFFFF)          // nền màn hình: trắng tinh
+
+// ⚡ GOOGLE 2026 DESIGN SYSTEM:
+// Nền màn hình (background) mặc định dùng surface_container để tạo độ sâu.
+// Thẻ (surface) mặc định dùng trắng tinh để nổi bật trên nền container.
+val md_light_background = Color(0xFFE9EFED)          // Đồng bộ với surface_container
 val md_light_on_background = Color(0xFF161D1B)
-val md_light_surface = Color(0xFFFFFFFF)             // surface: trắng tinh
+val md_light_surface = Color(0xFFFFFFFF)             // Surface luôn trắng tinh
 val md_light_on_surface = Color(0xFF161D1B)
 val md_light_surface_variant = Color(0xFFDAE5E1)
 val md_light_on_surface_variant = Color(0xFF3F4946)
@@ -71,9 +75,11 @@ val md_dark_error = Color(0xFFFFB4AB)
 val md_dark_on_error = Color(0xFF690005)
 val md_dark_error_container = Color(0xFF93000A)
 val md_dark_on_error_container = Color(0xFFFFDAD6)
-val md_dark_background = Color(0xFF0E1513)
+
+// Dark mode background: dùng container để giảm chói mắt
+val md_dark_background = Color(0xFF1A211F)           // Đồng bộ với surface_container
 val md_dark_on_background = Color(0xFFDDE4E1)
-val md_dark_surface = Color(0xFF0E1513)
+val md_dark_surface = Color(0xFF0E1513)              // Surface tối hẳn
 val md_dark_on_surface = Color(0xFFDDE4E1)
 val md_dark_surface_variant = Color(0xFF3F4946)
 val md_dark_on_surface_variant = Color(0xFFBEC9C5)

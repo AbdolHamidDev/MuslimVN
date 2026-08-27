@@ -3,9 +3,10 @@
 
     <!-- Navigation -->
     <string name="nav_home">Trang chủ</string>
-    <string name="nav_news">Tin tức</string>
-    <string name="nav_community">Cộng đồng</string>
-    <string name="nav_ai">AI</string>
+    <string name="nav_ibadah">Ibadah</string>
+    <string name="nav_knowledge">Kiến thức</string>
+    <string name="nav_utilities">Tiện ích</string>
+    <string name="nav_local">Local VN</string>
     <string name="nav_settings">Cài đặt</string>
     <string name="nav_quran">Quran</string>
     <string name="nav_qibla">Qibla</string>
@@ -24,6 +25,7 @@
     <string name="utility_tasbih">Chuỗi hạt</string>
     <string name="utility_doa">Lời cầu nguyện</string>
     <string name="utility_zakat">Zakat</string>
+    <string name="utility_azkar">Azkar</string>
     <string name="utility_hadith">Hadith</string>
     <string name="utility_library">Thư viện</string>
     <string name="utility_study">Học tập</string>

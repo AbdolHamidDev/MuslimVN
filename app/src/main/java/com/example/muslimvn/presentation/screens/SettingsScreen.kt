@@ -290,7 +290,7 @@ fun UserPreferenceItem(
             .padding(horizontal = 16.dp, vertical = 8.dp)
             .clickable(onClick = onClick),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+            containerColor = MaterialTheme.colorScheme.surface
         )
     ) {
         ListItem(
@@ -335,7 +335,7 @@ fun PreferenceHeader(title: String) {
     Text(
         text = title,
         style = MaterialTheme.typography.labelLarge,
-        color = MaterialTheme.colorScheme.primary,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
         modifier = Modifier
             .padding(horizontal = 16.dp, vertical = 8.dp)
             .padding(top = 8.dp)

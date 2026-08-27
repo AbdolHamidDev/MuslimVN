@@ -6,35 +6,24 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import com.example.muslimvn.R
+import com.example.muslimvn.presentation.RoadmapData
 import com.example.muslimvn.presentation.components.ComingSoonScreen
-import com.example.muslimvn.presentation.screens.HijriCalendarScreen
-import com.example.muslimvn.presentation.screens.HomeScreen
-import com.example.muslimvn.presentation.screens.NamesOfAllahScreen
-import com.example.muslimvn.presentation.screens.PodcastHomeScreen
-import com.example.muslimvn.presentation.screens.PodcastPlayerScreen
-import com.example.muslimvn.presentation.screens.PrayerNotificationsScreen
-import com.example.muslimvn.presentation.screens.ProfileScreen
-import com.example.muslimvn.presentation.screens.QiblaScreen
-import com.example.muslimvn.presentation.screens.QuranScreen
-import com.example.muslimvn.presentation.screens.QuranSettingsScreen
-import com.example.muslimvn.presentation.screens.ScholarDetailScreen
-import com.example.muslimvn.presentation.screens.SettingsScreen
-import com.example.muslimvn.presentation.screens.SurahDetailScreen
+import com.example.muslimvn.presentation.screens.*
 import com.example.muslimvn.presentation.screens.zakat.ZakatScreen
 
 @Composable
 fun MainNavigation(navController: NavHostController, modifier: Modifier = Modifier) {
     NavHost(
         navController = navController,
-        startDestination = Screen.Home.route,
+        startDestination = Screen.Ibadah.route,
         modifier = modifier,
         // Chuyển cảnh nhẹ nhàng: màn mới trượt lên + mờ dần hiện ra;
         // khi quay lại thì trượt xuống. Ngắn (<300ms) để không gây cảm giác chậm.
@@ -47,7 +36,7 @@ fun MainNavigation(navController: NavHostController, modifier: Modifier = Modifi
             fadeOut(tween(180)) + slideOutVertically(tween(260)) { it / 20 }
         }
     ) {
-        composable(Screen.Home.route) {
+        composable(Screen.Ibadah.route) {
             HomeScreen(
                 onQuranClick = { navController.navigate(Screen.Quran.route) },
                 onQiblaClick = { navController.navigate(Screen.Qibla.route) },
@@ -56,17 +45,49 @@ fun MainNavigation(navController: NavHostController, modifier: Modifier = Modifi
                 onZakatClick = { navController.navigate(Screen.Zakat.route) },
                 onPodcastClick = { navController.navigate(Screen.PodcastHome.route) },
                 onOpenFullPlayer = { navController.navigate(Screen.PodcastPlayer.route) },
-                onSettingsClick = { navController.navigate(Screen.Settings.route) }
+                onSettingsClick = { navController.navigate(Screen.Settings.route) },
+                onFeatureClick = { feature ->
+                    if (feature == "Azkar") {
+                        navController.navigate(Screen.Azkar.route)
+                    } else {
+                        navController.navigate("coming_soon/$feature")
+                    }
+                }
             )
         }
-        composable(Screen.News.route) {
-            ComingSoonScreen(title = stringResource(R.string.nav_news))
+        composable(Screen.Knowledge.route) {
+            val category = remember {
+                RoadmapData.getKnowledgeCategory(
+                    onZakatClick = { navController.navigate(Screen.Zakat.route) },
+                    onPodcastClick = { navController.navigate(Screen.PodcastHome.route) },
+                    onFeatureClick = { title -> navController.navigate("coming_soon/$title") }
+                )
+            }
+            RoadmapCategoryScreen(title = "Kiến thức", category = category)
         }
-        composable(Screen.Community.route) {
-            ComingSoonScreen(title = stringResource(R.string.nav_community))
+        composable(Screen.Utilities.route) {
+            val category = remember {
+                RoadmapData.getUtilitiesCategory(
+                    onZakatClick = { navController.navigate(Screen.Zakat.route) },
+                    onFeatureClick = { title -> navController.navigate("coming_soon/$title") }
+                )
+            }
+            RoadmapCategoryScreen(title = "Tiện ích", category = category)
         }
-        composable(Screen.AI.route) {
-            ComingSoonScreen(title = stringResource(R.string.nav_ai))
+        composable(Screen.Local.route) {
+            val category = remember {
+                RoadmapData.getLocalCategory(
+                    onFeatureClick = { title -> navController.navigate("coming_soon/$title") }
+                )
+            }
+            RoadmapCategoryScreen(title = "Local Việt Nam", category = category)
+        }
+        composable("coming_soon/{title}") { backStackEntry ->
+            val title = backStackEntry.arguments?.getString("title") ?: ""
+            ComingSoonScreen(title = title, onBackClick = { navController.popBackStack() })
+        }
+        composable(Screen.Azkar.route) {
+            AzkarScreen(onBackClick = { navController.popBackStack() })
         }
         composable(Screen.Quran.route) {
             QuranScreen(

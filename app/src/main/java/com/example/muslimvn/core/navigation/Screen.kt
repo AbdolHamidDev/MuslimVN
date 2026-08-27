@@ -2,9 +2,12 @@ package com.example.muslimvn.core.navigation
 
 import androidx.annotation.StringRes
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.LibraryBooks
 import androidx.compose.material.icons.automirrored.filled.MenuBook
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.AutoAwesome
+import androidx.compose.material.icons.filled.Book
+import androidx.compose.material.icons.filled.Explore
 import androidx.compose.material.icons.filled.Groups
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.LocationOn
@@ -14,17 +17,20 @@ import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Podcasts
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Widgets
 import androidx.compose.ui.graphics.vector.ImageVector
 import com.example.muslimvn.R
 
 sealed class Screen(val route: String, @StringRes val titleResId: Int, val icon: ImageVector) {
     object Home : Screen("home", R.string.nav_home, Icons.Default.Home)
-    object News : Screen("news", R.string.nav_news, Icons.Default.Newspaper)
-    object Community : Screen("community", R.string.nav_community, Icons.Default.Groups)
-    object AI : Screen("ai", R.string.nav_ai, Icons.Default.AutoAwesome)
+    object Ibadah : Screen("ibadah", R.string.nav_ibadah, Icons.AutoMirrored.Filled.MenuBook)
+    object Knowledge : Screen("knowledge", R.string.nav_knowledge, Icons.AutoMirrored.Filled.LibraryBooks)
+    object Utilities : Screen("utilities", R.string.nav_utilities, Icons.Default.Widgets)
+    object Local : Screen("local", R.string.nav_local, Icons.Default.LocationOn)
     object Settings : Screen("settings", R.string.nav_settings, Icons.Default.Settings)
     object Profile : Screen("profile", R.string.nav_settings, Icons.Default.AccountCircle)
 
+    object Azkar : Screen("azkar", R.string.utility_azkar, Icons.Default.Menu)
     object Quran : Screen("quran", R.string.nav_quran, Icons.Default.Menu)
     object Qibla : Screen("qibla", R.string.nav_qibla, Icons.Default.LocationOn)
     object HijriCalendar : Screen("hijri_calendar", R.string.nav_hijri_calendar, Icons.Default.Schedule)
@@ -50,9 +56,9 @@ sealed class Screen(val route: String, @StringRes val titleResId: Int, val icon:
 }
 
 val bottomNavItems = listOf(
-    Screen.Home,
-    Screen.News,
-    Screen.Community,
-    Screen.AI,
+    Screen.Ibadah,
+    Screen.Knowledge,
+    Screen.Utilities,
+    Screen.Local,
     Screen.Settings
 )

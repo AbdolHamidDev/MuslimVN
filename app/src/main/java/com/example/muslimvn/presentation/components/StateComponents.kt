@@ -13,15 +13,19 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.CloudOff
 import androidx.compose.material.icons.filled.RocketLaunch
 import androidx.compose.material.icons.filled.SearchOff
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -148,15 +152,29 @@ fun EmptyState(
  * Màn hình "Sắp ra mắt" dành cho tab/tính năng chưa hoàn thiện —
  * thay thế cho placeholder chỉ có một dòng chữ.
  */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ComingSoonScreen(
     title: String,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onBackClick: (() -> Unit)? = null
 ) {
     Scaffold(
-        // Component này chỉ dùng cho các tab cấp cao (News/Community/AI/Settings):
-        // cần mỗi mình inset status bar; inset đáy do NavigationBar của root
-        // Scaffold chịu trách nhiệm → tránh tính kép navigation bar.
+        topBar = {
+            if (onBackClick != null) {
+                TopAppBar(
+                    title = { Text(text = title) },
+                    navigationIcon = {
+                        IconButton(onClick = onBackClick) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                contentDescription = null
+                            )
+                        }
+                    }
+                )
+            }
+        },
         contentWindowInsets = WindowInsets.statusBars
     ) { innerPadding ->
         Column(

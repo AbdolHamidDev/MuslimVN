@@ -70,4 +70,10 @@ abstract class RepositoryModule {
     abstract fun bindUserRepository(
         userRepositoryImpl: UserRepositoryImpl
     ): UserRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindAzkarRepository(
+        azkarRepositoryImpl: AzkarRepositoryImpl
+    ): AzkarRepository
 }

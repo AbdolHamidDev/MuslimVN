@@ -2,10 +2,12 @@ package com.example.muslimvn.core.di
 
 import android.content.Context
 import androidx.room.Room
+import com.example.muslimvn.data.local.AzkarDatabase
 import com.example.muslimvn.data.local.HijriCalendarDatabase
 import com.example.muslimvn.data.local.PodcastDatabase
 import com.example.muslimvn.data.local.QuranDatabase
 import com.example.muslimvn.data.local.ZakatDatabase
+import com.example.muslimvn.data.local.dao.AzkarDao
 import com.example.muslimvn.data.local.dao.HijriCalendarDao
 import com.example.muslimvn.data.local.dao.PodcastEpisodeDao
 import com.example.muslimvn.data.local.dao.QuranDao
@@ -97,5 +99,25 @@ object DatabaseModule {
     @Singleton
     fun provideZakatDao(database: ZakatDatabase): ZakatDao {
         return database.zakatDao
+    }
+
+    @Provides
+    @Singleton
+    fun provideAzkarDatabase(
+        @ApplicationContext context: Context
+    ): AzkarDatabase {
+        return Room.databaseBuilder(
+            context,
+            AzkarDatabase::class.java,
+            AzkarDatabase.DATABASE_NAME
+        )
+            .fallbackToDestructiveMigration()
+            .build()
+    }
+
+    @Provides
+    @Singleton
+    fun provideAzkarDao(database: AzkarDatabase): AzkarDao {
+        return database.azkarDao
     }
 }

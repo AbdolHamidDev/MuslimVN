@@ -595,8 +595,8 @@ fun SurahHeader(nameArabic: String, nameVietnamese: String) {
         Text(
             text = nameArabic,
             style = MaterialTheme.extendedTypography.arabicDisplay,
-            fontSize = 36.sp, // Tăng từ 30sp lên 36sp cho tiêu đề chính
-            color = MaterialTheme.colorScheme.primary
+            fontSize = 36.sp,
+            color = MaterialTheme.colorScheme.onSurface
         )
         Text(
             text = nameVietnamese,

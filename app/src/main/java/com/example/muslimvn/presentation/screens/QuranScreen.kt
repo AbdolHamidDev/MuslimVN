@@ -206,7 +206,7 @@ fun SurahItem(
             Text(
                 text = surah.nameArabic,
                 style = MaterialTheme.extendedTypography.arabicInline,
-                color = MaterialTheme.colorScheme.primary
+                color = MaterialTheme.colorScheme.onSurface
             )
         }
 

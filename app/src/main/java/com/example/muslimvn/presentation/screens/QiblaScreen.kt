@@ -189,7 +189,7 @@ fun QiblaMainContent(
             text = stringResource(R.string.qibla_title),
             style = MaterialTheme.typography.headlineMedium,
             fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.primary
+            color = MaterialTheme.colorScheme.onSurface
         )
 
         Spacer(modifier = Modifier.height(8.dp))
@@ -207,7 +207,7 @@ fun QiblaMainContent(
             modifier = Modifier
                 .size(300.dp)
                 .shadow(8.dp, CircleShape)
-                .background(MaterialTheme.colorScheme.surfaceContainerLowest, CircleShape)
+                .background(MaterialTheme.colorScheme.surface, CircleShape)
                 .padding(8.dp),
             contentAlignment = Alignment.Center
         ) {
@@ -226,7 +226,7 @@ fun QiblaMainContent(
             ) {
                 Surface(
                     modifier = Modifier.size(12.dp, 24.dp),
-                    color = MaterialTheme.colorScheme.primary,
+                    color = MaterialTheme.colorScheme.secondary,
                     shape = CircleShape
                 ) {}
             }
@@ -318,7 +318,7 @@ fun LocationInfo(state: QiblaViewModel.QiblaUiState) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceContainerLowest,
+            containerColor = MaterialTheme.colorScheme.surface,
             contentColor = MaterialTheme.colorScheme.onSurface
         ),
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
@@ -327,7 +327,7 @@ fun LocationInfo(state: QiblaViewModel.QiblaUiState) {
             modifier = Modifier.padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Icon(Icons.Default.LocationOn, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+            Icon(Icons.Default.LocationOn, contentDescription = null, tint = MaterialTheme.colorScheme.secondary)
             Spacer(modifier = Modifier.width(8.dp))
             Column {
                 Text(
