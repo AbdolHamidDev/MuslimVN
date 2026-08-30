@@ -40,6 +40,7 @@ import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -54,7 +55,6 @@ import com.example.muslimvn.domain.models.PrayerTimes
 import com.example.muslimvn.domain.models.ReminderMode
 import com.example.muslimvn.domain.util.HijriCalendarUtils
 import com.example.muslimvn.domain.util.HijriMonthNames
-import com.example.muslimvn.presentation.RoadmapData
 import com.example.muslimvn.presentation.components.*
 import com.example.muslimvn.presentation.viewmodels.HomeViewModel
 import com.example.muslimvn.presentation.viewmodels.PodcastPlayerViewModel
@@ -69,15 +69,10 @@ import kotlinx.coroutines.launch
 fun HomeScreen(
     viewModel: HomeViewModel = hiltViewModel(),
     playerViewModel: PodcastPlayerViewModel = hiltViewModel(),
-    onQuranClick: () -> Unit = {},
-    onQiblaClick: () -> Unit = {},
-    onHijriCalendarClick: () -> Unit = {},
-    onNamesOfAllahClick: () -> Unit = {},
-    onZakatClick: () -> Unit = {},
     onPodcastClick: () -> Unit = {},
+    onScholarClick: (String) -> Unit = {},
+    onVietnamScholarClick: (String) -> Unit = {},
     onOpenFullPlayer: () -> Unit = {},
-    onSettingsClick: () -> Unit = {},
-    onFeatureClick: (String) -> Unit = {},
 ) {
     val uiState by viewModel.uiState.collectAsState()
     var showPrayerSheet by remember { mutableStateOf(false) }
@@ -85,28 +80,6 @@ fun HomeScreen(
     
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
-    val context = LocalContext.current
-
-    val notificationPermissions = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-        arrayOf(Manifest.permission.POST_NOTIFICATIONS)
-    } else {
-        emptyArray()
-    }
-
-    var deniedAttempts by rememberSaveable { mutableIntStateOf(0) }
-
-    val permissionLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.RequestMultiplePermissions()
-    ) { grants ->
-        val locationGranted =
-            grants[Manifest.permission.ACCESS_FINE_LOCATION] == true ||
-                grants[Manifest.permission.ACCESS_COARSE_LOCATION] == true
-        if (!locationGranted) deniedAttempts++
-        val notificationsGranted =
-            Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU ||
-                grants[Manifest.permission.POST_NOTIFICATIONS] == true
-        viewModel.onPermissionsResult(locationGranted, notificationsGranted)
-    }
 
     val hijriOffset by viewModel.hijriDateOffset.collectAsState()
 
@@ -128,11 +101,11 @@ fun HomeScreen(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         bottomBar = {
             PodcastPlayerBarState(playerViewModel) { active ->
-                androidx.compose.animation.AnimatedVisibility(visible = active != null) {
+                val isQuran = active?.id?.contains(":") == true
+                androidx.compose.animation.AnimatedVisibility(visible = active != null && !isQuran) {
                     if (active != null) {
                         val podcastPlaylist by playerViewModel.playlist.collectAsState()
-                        val isQuran = active.id.contains(":")
-                        
+
                         MiniPlayerBar(
                             title = active.title,
                             subtitle = active.subtitle,
@@ -147,68 +120,49 @@ fun HomeScreen(
                             onCycleSpeed = playerViewModel::cyclePlaybackSpeed,
                             onOpenFullPlayer = onOpenFullPlayer,
                             currentMediaId = active.id,
-                            playlist = if (isQuran) emptyList() else podcastPlaylist,
+                            playlist = podcastPlaylist,
                             onPlayEpisode = playerViewModel::playEpisode
                         )
                     }
                 }
             }
         }
-    ) { padding ->
-        val ibadahCategory = remember {
-            RoadmapData.getIbadahCategory(
-                onQuranClick = onQuranClick,
-                onPrayerTimesClick = { showPrayerSheet = true },
-                onQiblaClick = onQiblaClick,
-                onHijriCalendarClick = onHijriCalendarClick,
-                onNamesOfAllahClick = onNamesOfAllahClick,
-                onFeatureClick = onFeatureClick
-            )
-        }
-
+    )
+{ padding ->
         LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-                .padding(horizontal = 16.dp)
+            modifier = Modifier.fillMaxSize(),
+            contentPadding = PaddingValues(bottom = padding.calculateBottomPadding()),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            item { GreetingSection(userData = uiState.userData, userProfile = uiState.userProfile, onProfileClick = onSettingsClick) }
-            item { Spacer(modifier = Modifier.height(8.dp)) }
-            item { HeaderSection(hijriOffsetDays = hijriOffset) }
-            item { Spacer(modifier = Modifier.height(16.dp)) }
-
-            if (!uiState.isLocationPermissionGranted && !uiState.isPermissionCardDismissed) {
-                item {
-                    LocationPermissionCard(
-                        isPermanentlyDenied = deniedAttempts > 0 && !shouldShowLocationRationale(context),
-                        onGrantClick = {
-                            permissionLauncher.launch(
-                                arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION, *notificationPermissions)
-                            )
-                        },
-                        onOpenSettingsClick = { openAppSettings(context) },
-                        onDismissClick = viewModel::dismissPermissionCard
-                    )
-                    Spacer(modifier = Modifier.height(16.dp))
-                }
-            }
-
             val prayerTimes = uiState.prayerTimes
             if (prayerTimes != null) {
                 item {
                     NextPrayerHero(
                         prayerTimes = prayerTimes,
+                        hijriOffset = hijriOffset,
                         onCountdownFinished = viewModel::refreshPrayerTimes,
                         modifier = Modifier.bouncyClick {
                             selectedPrayerForReminder = prayerTimes.nextPrayerName
                         }
                     )
-                    Spacer(modifier = Modifier.height(24.dp))
                 }
 
                 item {
-                    RoadmapSection(ibadahCategory)
-                    Spacer(modifier = Modifier.height(16.dp))
+                    VietnamScholarsSection(
+                        onScholarClick = { scholar ->
+                            onVietnamScholarClick(scholar.id)
+                        }
+                    )
+                }
+
+                if (uiState.featuredScholars.isNotEmpty()) {
+                    item {
+                        FeaturedPodcastSection(
+                            scholars = uiState.featuredScholars,
+                            onScholarClick = onScholarClick,
+                            onSeeAllClick = onPodcastClick
+                        )
+                    }
                 }
 
                 if (showPrayerSheet) {
@@ -241,260 +195,77 @@ fun HomeScreen(
                 }
             } else {
                 item {
-                    if (uiState.isLoading) {
-                        LoadingIndicator(label = stringResource(R.string.loading_please_wait), modifier = Modifier.fillParentMaxSize())
-                    } else {
-                        ErrorState(message = uiState.error ?: stringResource(R.string.prayer_times_error), onRetry = viewModel::refreshPrayerTimes, modifier = Modifier.fillParentMaxSize())
+                    Box(modifier = Modifier.padding(horizontal = 16.dp)) {
+                        if (uiState.isLoading) {
+                            LoadingIndicator(label = stringResource(R.string.loading_please_wait), modifier = Modifier.fillParentMaxSize())
+                        } else {
+                            ErrorState(message = uiState.error ?: stringResource(R.string.prayer_times_error), onRetry = viewModel::refreshPrayerTimes, modifier = Modifier.fillParentMaxSize())
+                        }
                     }
                 }
             }
-            
-            item { Spacer(modifier = Modifier.height(32.dp)) }
         }
     }
 }
 
 @Composable
-fun HeaderSection(hijriOffsetDays: Int) {
-    val gregorianDate = remember {
-        SimpleDateFormat("EEEE, d MMMM yyyy", Locale.getDefault()).format(Date())
-    }
-
-    val hijriLabel = remember(hijriOffsetDays) {
-        HijriCalendarUtils.hijriDateFor(LocalDate.now(), hijriOffsetDays)?.let { hijri ->
-            val day = hijri.get(java.time.temporal.ChronoField.DAY_OF_MONTH)
-            val month = HijriMonthNames.monthName(hijri.get(java.time.temporal.ChronoField.MONTH_OF_YEAR))
-            val year = hijri.get(java.time.temporal.ChronoField.YEAR)
-            "$day $month $year AH"
-        }.orEmpty()
-    }
-
-    Column {
-        Text(
-            text = gregorianDate,
-            style = MaterialTheme.typography.titleMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
-        Text(
-            text = hijriLabel,
-            style = MaterialTheme.typography.titleLarge,
-            fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.onSurface
-        )
-    }
-}
-
-@Composable
-fun PrayerList(prayerTimes: PrayerTimes, reminders: Map<String, PrayerReminder>, onReminderClick: (String) -> Unit) {
-    val prayers = listOf(
-        PrayerItemData(stringResource(R.string.prayer_fajr), prayerTimes.fajr, Icons.Default.NightsStay, PrayerName.FAJR),
-        PrayerItemData(stringResource(R.string.prayer_sunrise), prayerTimes.sunrise, Icons.Default.WbTwilight, PrayerName.SUNRISE),
-        PrayerItemData(stringResource(R.string.prayer_dhuhr), prayerTimes.dhuhr, Icons.Default.WbSunny, PrayerName.DHUHR),
-        PrayerItemData(stringResource(R.string.prayer_asr), prayerTimes.asr, Icons.Default.WbCloudy, PrayerName.ASR),
-        PrayerItemData(stringResource(R.string.prayer_maghrib), prayerTimes.maghrib, Icons.Default.WbTwilight, PrayerName.MAGHRIB),
-        PrayerItemData(stringResource(R.string.prayer_isha), prayerTimes.isha, Icons.Default.Bedtime, PrayerName.ISHA)
-    )
-
-    LazyColumn(
-        modifier = Modifier.height(400.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp),
-        contentPadding = PaddingValues(16.dp)
-    ) {
-        items(prayers) { prayer ->
-            val reminder = reminders[prayer.id] ?: PrayerReminder(prayer.id)
-            PrayerItemRow(prayer, reminder, onReminderClick)
-        }
-    }
-}
-
-data class PrayerItemData(
-    val name: String,
-    val time: Date,
-    val icon: ImageVector,
-    val id: String
-)
-
-@Composable
-fun PrayerItemRow(prayer: PrayerItemData, reminder: PrayerReminder, onReminderClick: (String) -> Unit) {
-    val timeFormat = remember { SimpleDateFormat("HH:mm", Locale.getDefault()) }
-    val isEnabled = reminder.mode != ReminderMode.SILENT
-    val backgroundImage = getPrayerImage(prayer.id)
-
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(80.dp)
-            .clickable { onReminderClick(prayer.id) },
-        shape = MaterialTheme.shapes.extraLarge,
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
-        )
-    ) {
-        Box(modifier = Modifier.fillMaxSize()) {
-            AsyncImage(
-                model = backgroundImage,
-                contentDescription = null,
-                modifier = Modifier.fillMaxSize(),
-                contentScale = ContentScale.Crop,
-                alpha = 0.6f
-            )
-            
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(
-                        brush = Brush.horizontalGradient(
-                            colors = listOf(
-                                MaterialTheme.colorScheme.surface.copy(alpha = 0.9f),
-                                MaterialTheme.colorScheme.surface.copy(alpha = 0.4f)
-                            )
-                        )
-                    )
-            )
-
-            Row(
-                modifier = Modifier
-                    .padding(horizontal = 16.dp)
-                    .fillMaxSize(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Box(
-                        modifier = Modifier
-                            .size(40.dp)
-                            .background(
-                                MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.7f),
-                                CircleShape
-                            ),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            imageVector = prayer.icon, 
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.size(24.dp)
-                        )
-                    }
-                    Spacer(modifier = Modifier.width(16.dp))
-                    Column {
-                        Text(
-                            text = prayer.name, 
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold
-                        )
-                        Text(
-                            text = timeFormat.format(prayer.time), 
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                }
-                
-                IconButton(
-                    onClick = { onReminderClick(prayer.id) },
-                    modifier = Modifier.background(
-                        MaterialTheme.colorScheme.surface.copy(alpha = 0.5f),
-                        CircleShape
-                    )
-                ) {
-                    Icon(
-                        imageVector = when (reminder.mode) {
-                            ReminderMode.SILENT -> Icons.Default.NotificationsOff
-                            ReminderMode.NOTIFICATION -> Icons.Default.Notifications
-                            ReminderMode.ADHAN -> Icons.AutoMirrored.Filled.VolumeUp
-                        },
-                        contentDescription = stringResource(R.string.toggle_adhan),
-                        tint = if (isEnabled) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline
-                    )
-                }
-            }
-        }
-    }
-}
-
-private fun getPrayerImage(prayerId: String): String {
-    val base = "file:///android_asset/images/praytime/"
-    return when (prayerId) {
-        PrayerName.FAJR -> "${base}fajr.webp"
-        PrayerName.DHUHR -> "${base}dhuhr.jpg"
-        PrayerName.ASR -> "${base}asr.jpg"
-        PrayerName.MAGHRIB -> "${base}maghrib.jpg"
-        PrayerName.ISHA -> "${base}isha.jpg"
-        else -> "${base}vietnammosque.jpg"
-    }
-}
-
-@Composable
-fun LocationPermissionCard(
-    isPermanentlyDenied: Boolean,
-    onGrantClick: () -> Unit,
-    onOpenSettingsClick: () -> Unit,
-    onDismissClick: () -> Unit
+fun FeaturedPodcastSection(
+    scholars: List<com.example.muslimvn.domain.models.Scholar>,
+    onScholarClick: (String) -> Unit,
+    onSeeAllClick: () -> Unit
 ) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = MaterialTheme.shapes.medium,
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface,
-            contentColor = MaterialTheme.colorScheme.onSurface
-        ),
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
-    ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(
-                    imageVector = Icons.Default.LocationOn,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.primary
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(
-                    text = stringResource(R.string.permission_location_title),
-                    style = MaterialTheme.typography.titleSmall,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-            }
-            Spacer(modifier = Modifier.height(8.dp))
+    Column(modifier = Modifier.fillMaxWidth()) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
             Text(
-                text = if (isPermanentlyDenied) {
-                    stringResource(R.string.permission_location_denied)
-                } else {
-                    stringResource(R.string.permission_location_rationale)
-                },
-                style = MaterialTheme.typography.bodySmall,
+                text = stringResource(R.string.podcast_featured_scholars),
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
-            Spacer(modifier = Modifier.height(12.dp))
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                if (isPermanentlyDenied) {
-                    FilledTonalButton(onClick = onOpenSettingsClick) {
-                        Text(stringResource(R.string.action_open_settings))
+            TextButton(onClick = onSeeAllClick) {
+                Text(text = stringResource(R.string.view_all))
+            }
+        }
+        
+        LazyRow(
+            contentPadding = PaddingValues(horizontal = 16.dp),
+            horizontalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            items(scholars) { scholar ->
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier
+                        .width(80.dp)
+                        .bouncyClick { onScholarClick(scholar.id) }
+                ) {
+                    Surface(
+                        modifier = Modifier.size(72.dp),
+                        shape = CircleShape,
+                        color = MaterialTheme.colorScheme.surfaceContainer
+                    ) {
+                        AsyncImage(
+                            model = scholar.avatarPath.toAndroidAssetUri(),
+                            contentDescription = scholar.name,
+                            modifier = Modifier.fillMaxSize(),
+                            contentScale = ContentScale.Crop
+                        )
                     }
-                } else {
-                    Button(onClick = onGrantClick) {
-                        Text(stringResource(R.string.action_grant_permission))
-                    }
-                }
-                Spacer(modifier = Modifier.weight(1f))
-                TextButton(onClick = onDismissClick) {
-                    Text(stringResource(R.string.action_later))
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = scholar.name,
+                        style = MaterialTheme.typography.labelSmall,
+                        textAlign = TextAlign.Center,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
                 }
             }
         }
     }
-}
-
-private fun shouldShowLocationRationale(context: Context): Boolean =
-    (context as? Activity)
-        ?.shouldShowRequestPermissionRationale(Manifest.permission.ACCESS_FINE_LOCATION) == true
-
-private fun openAppSettings(context: Context) {
-    context.startActivity(
-        Intent(
-            Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
-            Uri.fromParts("package", context.packageName, null)
-        ).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-    )
 }

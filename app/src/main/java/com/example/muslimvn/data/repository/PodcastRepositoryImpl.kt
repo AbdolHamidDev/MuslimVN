@@ -17,6 +17,10 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import androidx.paging.Pager
+import androidx.paging.PagingConfig
+import androidx.paging.PagingData
+import androidx.paging.map
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
@@ -37,9 +41,7 @@ class PodcastRepositoryImpl @Inject constructor(
     private val seedMutex = Mutex()
 
     override suspend fun initializeData() {
-        if (scholarDao.count() > 0) return
         seedMutex.withLock {
-            if (scholarDao.count() > 0) return
             val file = loadScholarsFile() ?: return
             val featuredIds = file.featuredScholarIds.toSet()
             scholarDao.insertScholars(
@@ -79,6 +81,19 @@ class PodcastRepositoryImpl @Inject constructor(
 
     override fun getEpisodesByScholar(scholarId: String): Flow<List<PodcastEpisode>> =
         episodeDao.getEpisodesByScholar(scholarId).map { list -> list.map { it.toDomain() } }
+
+    override fun getEpisodesByScholarPaging(scholarId: String): Flow<androidx.paging.PagingData<PodcastEpisode>> {
+        return androidx.paging.Pager(
+            config = androidx.paging.PagingConfig(
+                pageSize = 20,
+                enablePlaceholders = false,
+                initialLoadSize = 20
+            ),
+            pagingSourceFactory = { episodeDao.getEpisodesByScholarPaging(scholarId) }
+        ).flow.map { pagingData ->
+            pagingData.map { it.toDomain() }
+        }
+    }
 
     override suspend fun refreshEpisodes(scholarId: String): Result<Int> {
         val scholar = scholarDao.getScholarById(scholarId)

@@ -14,6 +14,9 @@ interface PodcastEpisodeDao {
     @Query("SELECT * FROM podcast_episodes WHERE scholarId = :scholarId ORDER BY pubDate DESC")
     fun getEpisodesByScholar(scholarId: String): Flow<List<PodcastEpisodeEntity>>
 
+    @Query("SELECT * FROM podcast_episodes WHERE scholarId = :scholarId ORDER BY pubDate DESC")
+    fun getEpisodesByScholarPaging(scholarId: String): androidx.paging.PagingSource<Int, PodcastEpisodeEntity>
+
     /** Bản chụp tức thời (không Flow) — dùng để merge dữ liệu mới từ RSS giữ lại vị trí nghe. */
     @Query("SELECT * FROM podcast_episodes WHERE scholarId = :scholarId")
     suspend fun getEpisodesByScholarOnce(scholarId: String): List<PodcastEpisodeEntity>

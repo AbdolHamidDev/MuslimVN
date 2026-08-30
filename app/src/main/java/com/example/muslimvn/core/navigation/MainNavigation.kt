@@ -21,9 +21,20 @@ import com.example.muslimvn.presentation.screens.zakat.ZakatScreen
 
 @Composable
 fun MainNavigation(navController: NavHostController, modifier: Modifier = Modifier) {
+    val openFullPlayer: (String?) -> Unit = { mediaId ->
+        if (mediaId?.contains(":") == true) {
+            val parts = mediaId.split(":")
+            val surahNum = parts[0].toIntOrNull() ?: 1
+            val ayahNum = if (parts.size > 1) parts[1].toIntOrNull() ?: 1 else 1
+            navController.navigate(Screen.SurahDetail.createRoute(surahNum, ayahNum))
+        } else {
+            navController.navigate(Screen.PodcastPlayer.route)
+        }
+    }
+
     NavHost(
         navController = navController,
-        startDestination = Screen.Ibadah.route,
+        startDestination = Screen.Home.route,
         modifier = modifier,
         // Chuyển cảnh nhẹ nhàng: màn mới trượt lên + mờ dần hiện ra;
         // khi quay lại thì trượt xuống. Ngắn (<300ms) để không gây cảm giác chậm.
@@ -36,51 +47,53 @@ fun MainNavigation(navController: NavHostController, modifier: Modifier = Modifi
             fadeOut(tween(180)) + slideOutVertically(tween(260)) { it / 20 }
         }
     ) {
-        composable(Screen.Ibadah.route) {
+        composable(Screen.Home.route) {
             HomeScreen(
-                onQuranClick = { navController.navigate(Screen.Quran.route) },
-                onQiblaClick = { navController.navigate(Screen.Qibla.route) },
-                onHijriCalendarClick = { navController.navigate(Screen.HijriCalendar.route) },
-                onNamesOfAllahClick = { navController.navigate(Screen.NamesOfAllah.route) },
-                onZakatClick = { navController.navigate(Screen.Zakat.route) },
                 onPodcastClick = { navController.navigate(Screen.PodcastHome.route) },
-                onOpenFullPlayer = { navController.navigate(Screen.PodcastPlayer.route) },
-                onSettingsClick = { navController.navigate(Screen.Settings.route) },
-                onFeatureClick = { feature ->
-                    if (feature == "Azkar") {
-                        navController.navigate(Screen.Azkar.route)
-                    } else {
-                        navController.navigate("coming_soon/$feature")
-                    }
-                }
+                onScholarClick = { scholarId ->
+                    navController.navigate(Screen.ScholarDetail.createRoute(scholarId))
+                },
+                onVietnamScholarClick = { scholarId ->
+                    navController.navigate(Screen.VietnamScholarDetail.createRoute(scholarId))
+                },
+                onOpenFullPlayer = { openFullPlayer(null) }
             )
         }
         composable(Screen.Knowledge.route) {
             val category = remember {
                 RoadmapData.getKnowledgeCategory(
-                    onZakatClick = { navController.navigate(Screen.Zakat.route) },
-                    onPodcastClick = { navController.navigate(Screen.PodcastHome.route) },
-                    onFeatureClick = { title -> navController.navigate("coming_soon/$title") }
+                    onPodcastClick = { navController.navigate(Screen.PodcastHome.route) }
                 )
             }
             RoadmapCategoryScreen(title = "Kiến thức", category = category)
         }
         composable(Screen.Utilities.route) {
-            val category = remember {
-                RoadmapData.getUtilitiesCategory(
-                    onZakatClick = { navController.navigate(Screen.Zakat.route) },
-                    onFeatureClick = { title -> navController.navigate("coming_soon/$title") }
-                )
-            }
-            RoadmapCategoryScreen(title = "Tiện ích", category = category)
+            UtilitiesScreen(
+                onPrayerTimesClick = { /* Không điều hướng, UtilitiesScreen tự hiện BottomSheet */ },
+                onQiblaClick = { navController.navigate(Screen.Qibla.route) },
+                onHijriCalendarClick = { navController.navigate(Screen.HijriCalendar.route) },
+                onNamesOfAllahClick = { navController.navigate(Screen.NamesOfAllah.route) },
+                onZakatClick = { navController.navigate(Screen.Zakat.route) },
+                onPodcastClick = { navController.navigate(Screen.PodcastHome.route) },
+                onFeatureClick = { feature ->
+                    if (feature == "Azkar") {
+                        navController.navigate(Screen.Azkar.route)
+                    }
+                }
+            )
         }
         composable(Screen.Local.route) {
             val category = remember {
-                RoadmapData.getLocalCategory(
-                    onFeatureClick = { title -> navController.navigate("coming_soon/$title") }
-                )
+                RoadmapData.getLocalCategory()
             }
             RoadmapCategoryScreen(title = "Local Việt Nam", category = category)
+        }
+        composable(Screen.Tracker.route) {
+            TrackerScreen(
+                onQuranClick = { surahNumber, ayahNumber ->
+                    navController.navigate(Screen.SurahDetail.createRoute(surahNumber, ayahNumber))
+                }
+            )
         }
         composable("coming_soon/{title}") { backStackEntry ->
             val title = backStackEntry.arguments?.getString("title") ?: ""
@@ -91,15 +104,17 @@ fun MainNavigation(navController: NavHostController, modifier: Modifier = Modifi
         }
         composable(Screen.Quran.route) {
             QuranScreen(
-                onBackClick = { navController.popBackStack() },
-                onSurahClick = { surahNumber ->
-                    navController.navigate(Screen.SurahDetail.createRoute(surahNumber))
+                onSurahClick = { surahNumber, ayahNumber ->
+                    navController.navigate(Screen.SurahDetail.createRoute(surahNumber, ayahNumber))
                 },
-                onSettingsClick = { navController.navigate(Screen.QuranSettings.route) },
-                onOpenFullPlayer = { navController.navigate(Screen.PodcastPlayer.route) }
+                onSettingsClick = { navController.navigate(Screen.QuranSettings.createRoute()) },
+                onOpenFullPlayer = openFullPlayer
             )
         }
-        composable(Screen.QuranSettings.route) {
+        composable(
+            route = Screen.QuranSettings.route,
+            arguments = listOf(navArgument("surahNumber") { type = NavType.IntType; defaultValue = -1 })
+        ) {
             QuranSettingsScreen(onBackClick = { navController.popBackStack() })
         }
         composable(Screen.PrayerNotifications.route) {
@@ -119,28 +134,22 @@ fun MainNavigation(navController: NavHostController, modifier: Modifier = Modifi
         }
         composable(Screen.Settings.route) {
             SettingsScreen(
-                navController = navController,
                 onNavigateToQuranSettings = { navController.navigate(Screen.QuranSettings.route) },
-                onNavigateToPrayerNotifications = { navController.navigate(Screen.PrayerNotifications.route) },
-                onNavigateToProfile = { navController.navigate(Screen.Profile.route) }
-            )
-        }
-        composable(Screen.Profile.route) {
-            ProfileScreen(
-                onBackClick = { 
-                    navController.previousBackStackEntry?.savedStateHandle?.set("profile_updated", true)
-                    navController.popBackStack() 
-                }
+                onNavigateToPrayerNotifications = { navController.navigate(Screen.PrayerNotifications.route) }
             )
         }
         composable(
             route = Screen.SurahDetail.route,
-            arguments = listOf(navArgument("surahNumber") { type = NavType.IntType })
-        ) {
+            arguments = listOf(
+                navArgument("surahNumber") { type = NavType.IntType },
+                navArgument("startAyah") { type = NavType.IntType; defaultValue = 1 }
+            )
+        ) { backStackEntry ->
+            val surahNumber = backStackEntry.arguments?.getInt("surahNumber") ?: 1
             SurahDetailScreen(
                 onBackClick = { navController.popBackStack() },
-                onSettingsClick = { navController.navigate(Screen.QuranSettings.route) },
-                onOpenFullPlayer = { navController.navigate(Screen.PodcastPlayer.route) }
+                onSettingsClick = { navController.navigate(Screen.QuranSettings.createRoute(surahNumber)) },
+                onOpenFullPlayer = { openFullPlayer(null) }
             )
         }
 
@@ -151,7 +160,7 @@ fun MainNavigation(navController: NavHostController, modifier: Modifier = Modifi
                 onScholarClick = { scholarId ->
                     navController.navigate(Screen.ScholarDetail.createRoute(scholarId))
                 },
-                onOpenFullPlayer = { navController.navigate(Screen.PodcastPlayer.route) }
+                onOpenFullPlayer = { openFullPlayer(null) }
             )
         }
         composable(
@@ -160,11 +169,22 @@ fun MainNavigation(navController: NavHostController, modifier: Modifier = Modifi
         ) {
             ScholarDetailScreen(
                 onBackClick = { navController.popBackStack() },
-                onOpenFullPlayer = { navController.navigate(Screen.PodcastPlayer.route) }
+                onOpenFullPlayer = { openFullPlayer(null) }
             )
         }
         composable(Screen.PodcastPlayer.route) {
             PodcastPlayerScreen(onCloseClick = { navController.popBackStack() })
+        }
+
+        composable(
+            route = Screen.VietnamScholarDetail.route,
+            arguments = listOf(navArgument("scholarId") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val scholarId = backStackEntry.arguments?.getString("scholarId") ?: ""
+            VietnamScholarDetailScreen(
+                scholarId = scholarId,
+                onBackClick = { navController.popBackStack() }
+            )
         }
     }
 }

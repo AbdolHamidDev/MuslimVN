@@ -6,23 +6,62 @@ import com.example.muslimvn.data.local.AzkarDatabase
 import com.example.muslimvn.data.local.HijriCalendarDatabase
 import com.example.muslimvn.data.local.PodcastDatabase
 import com.example.muslimvn.data.local.QuranDatabase
+import com.example.muslimvn.data.local.TrackerDatabase
 import com.example.muslimvn.data.local.ZakatDatabase
 import com.example.muslimvn.data.local.dao.AzkarDao
 import com.example.muslimvn.data.local.dao.HijriCalendarDao
 import com.example.muslimvn.data.local.dao.PodcastEpisodeDao
 import com.example.muslimvn.data.local.dao.QuranDao
 import com.example.muslimvn.data.local.dao.ScholarDao
+import com.example.muslimvn.data.local.dao.TrackerDao
 import com.example.muslimvn.data.local.dao.ZakatDao
+import androidx.media3.database.DatabaseProvider
+import androidx.media3.database.StandaloneDatabaseProvider
+import androidx.media3.datasource.cache.LeastRecentlyUsedCacheEvictor
+import androidx.media3.datasource.cache.SimpleCache
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
+import java.io.File
 import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
 object DatabaseModule {
+    
+    @androidx.media3.common.util.UnstableApi
+    @Provides
+    @Singleton
+    fun provideMediaCache(
+        @ApplicationContext context: Context
+    ): SimpleCache {
+        val cacheDir = File(context.cacheDir, "media_cache")
+        val evictor = LeastRecentlyUsedCacheEvictor(200 * 1024 * 1024) // 200MB cache
+        val databaseProvider: DatabaseProvider = StandaloneDatabaseProvider(context)
+        return SimpleCache(cacheDir, evictor, databaseProvider)
+    }
+
+    @Provides
+    @Singleton
+    fun provideTrackerDatabase(
+        @ApplicationContext context: Context
+    ): TrackerDatabase {
+        return Room.databaseBuilder(
+            context,
+            TrackerDatabase::class.java,
+            TrackerDatabase.DATABASE_NAME
+        )
+            .fallbackToDestructiveMigration()
+            .build()
+    }
+
+    @Provides
+    @Singleton
+    fun provideTrackerDao(database: TrackerDatabase): TrackerDao {
+        return database.trackerDao
+    }
 
     @Provides
     @Singleton

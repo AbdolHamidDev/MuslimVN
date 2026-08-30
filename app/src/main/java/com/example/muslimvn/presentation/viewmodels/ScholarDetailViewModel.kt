@@ -12,6 +12,9 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import androidx.paging.PagingData
+import androidx.paging.cachedIn
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -31,8 +34,8 @@ class ScholarDetailViewModel @Inject constructor(
 
     data class UiState(
         val scholar: Scholar? = null,
-        val episodes: List<PodcastEpisode> = emptyList(),
         val isLoading: Boolean = true,
+        val totalEpisodesCount: Int = 0,
         /** Đang fetch RSS nền (hiển thị indicator mảnh trên đầu danh sách). */
         val isRefreshing: Boolean = false,
         /** Fetch RSS thất bại (offline/feed lỗi) — banner nhỏ + nút thử lại. */
@@ -50,13 +53,17 @@ class ScholarDetailViewModel @Inject constructor(
     val durationMs = audioPlayerManager.durationMs
     val playbackSpeed = audioPlayerManager.playbackSpeed
 
+    val episodesPagingData: Flow<PagingData<PodcastEpisode>> =
+        podcastRepository.getEpisodesByScholarPaging(scholarId)
+            .cachedIn(viewModelScope)
+
     init {
         viewModelScope.launch {
             _uiState.update { it.copy(scholar = podcastRepository.getScholarById(scholarId)) }
-            // Offline-first: phát dữ liệu cache NGAY, sau đó refresh nền RSS.
+            // Theo dõi số lượng tập để hiển thị ở header.
             launch {
                 podcastRepository.getEpisodesByScholar(scholarId).collect { episodes ->
-                    _uiState.update { it.copy(episodes = episodes, isLoading = false) }
+                    _uiState.update { it.copy(totalEpisodesCount = episodes.size, isLoading = false) }
                 }
             }
             refreshEpisodes()

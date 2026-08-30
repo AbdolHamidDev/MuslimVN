@@ -9,17 +9,17 @@ import androidx.media3.common.MediaMetadata
 import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
 import androidx.media3.exoplayer.ExoPlayer
+import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
+import androidx.media3.datasource.DefaultDataSource
+import androidx.media3.datasource.DefaultHttpDataSource
+import androidx.media3.datasource.cache.CacheDataSource
+import androidx.media3.datasource.cache.SimpleCache
+import androidx.media3.session.MediaSession
 import com.example.muslimvn.data.local.dao.PodcastEpisodeDao
 import dagger.hilt.android.qualifiers.ApplicationContext
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.delay
+import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.isActive
-import kotlinx.coroutines.launch
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -41,12 +41,15 @@ data class AudioPlayItem(
  * sống lâu hơn màn hình (mini-player chạy trên mọi tab) — ViewModel bị clear thì
  * tiến độ vẫn được ghi tiếp. Chỉ các mediaId của podcast mới được ghi DB.
  */
+@androidx.media3.common.util.UnstableApi
 @Singleton
 class AudioPlayerManager @Inject constructor(
     @ApplicationContext private val context: Context,
-    private val podcastEpisodeDao: PodcastEpisodeDao
+    private val podcastEpisodeDao: PodcastEpisodeDao,
+    private val simpleCache: SimpleCache
 ) {
     private var exoPlayer: ExoPlayer? = null
+    private var mediaSession: MediaSession? = null
     private val mainScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
     private var tickerJob: Job? = null
 
@@ -99,6 +102,7 @@ class AudioPlayerManager @Inject constructor(
         mediaId: String,
         title: String? = null,
         artist: String? = null,
+        artworkPath: String? = "icon/quran.png",
         onFinished: (() -> Unit)? = null
     ) {
         startPlayback(
@@ -107,7 +111,7 @@ class AudioPlayerManager @Inject constructor(
             startPositionMs = 0L,
             title = title,
             artist = artist,
-            artworkPath = "icon/quran.png",
+            artworkPath = artworkPath,
             isPodcast = false,
             onFinished = onFinished
         )
@@ -117,13 +121,23 @@ class AudioPlayerManager @Inject constructor(
     fun playList(
         items: List<AudioPlayItem>,
         startIndex: Int = 0,
-        isPodcast: Boolean = false
+        isPodcast: Boolean = false,
+        playWhenReady: Boolean = true
     ) {
         initializePlayer()
         onPlaybackFinished = null
         if (isPodcastSession && _currentMediaId.value != null) persistProgressNow()
 
         isPodcastSession = isPodcast
+        val firstItem = items.getOrNull(startIndex)
+        _currentMediaId.value = firstItem?.mediaId
+        _nowPlayingTitle.value = firstItem?.title
+        _nowPlayingArtist.value = firstItem?.artist
+        _nowPlayingArtworkPath.value = firstItem?.artworkPath?.let { path ->
+            if (path.startsWith("http") || path.startsWith("file")) path
+            else "file:///android_asset/${path.trimStart('/')}"
+        }
+
         val mediaItems = items.map { item ->
             val artworkUri = item.artworkPath?.let { path ->
                 if (path.startsWith("http")) Uri.parse(path)
@@ -137,16 +151,18 @@ class AudioPlayerManager @Inject constructor(
             
             MediaItem.Builder()
                 .setMediaId(item.mediaId)
-                .setUri(item.url)
+                .setUri(item.url.toAudioUri())
                 .setMediaMetadata(metadata)
                 .build()
         }
 
         exoPlayer?.apply {
+            stop() // Dừng hẳn và xoá buffer cũ để nạp URL mới hoàn toàn
+            clearMediaItems()
             setMediaItems(mediaItems, startIndex, 0L)
             setPlaybackSpeed(_playbackSpeed.value)
             prepare()
-            playWhenReady = true
+            this.playWhenReady = playWhenReady
         }
     }
 
@@ -214,15 +230,25 @@ class AudioPlayerManager @Inject constructor(
         clearNowPlaying()
     }
 
+    fun getExoPlayer(): ExoPlayer? = exoPlayer
+
+    fun getMediaSession(): MediaSession? = mediaSession
+
     /**
      * Giải phóng player. Nếu một phiên PODCAST đang hoạt động thì bỏ qua — tránh
      * trường hợp ViewModel tính năng khác (Quran) bị xoá và giết luôn nhạc podcast.
      */
     fun release() {
         if (isPodcastSession && _currentMediaId.value != null) return
+        releaseSession()
         exoPlayer?.release()
         exoPlayer = null
         clearNowPlaying()
+    }
+
+    fun releaseSession() {
+        mediaSession?.release()
+        mediaSession = null
     }
 
     // ── Nội bộ ──────────────────────────────────────────────────────────────────
@@ -251,7 +277,10 @@ class AudioPlayerManager @Inject constructor(
         _durationMs.value = 0L
         _nowPlayingTitle.value = title
         _nowPlayingArtist.value = artist
-        _nowPlayingArtworkPath.value = artworkPath
+        _nowPlayingArtworkPath.value = artworkPath?.let { path ->
+            if (path.startsWith("http") || path.startsWith("file")) path
+            else "file:///android_asset/${path.trimStart('/')}"
+        }
 
         exoPlayer?.apply {
             val artworkUri = artworkPath?.let { path ->
@@ -266,7 +295,7 @@ class AudioPlayerManager @Inject constructor(
             setMediaItem(
                 MediaItem.Builder()
                     .setMediaId(mediaId)
-                    .setUri(url)
+                    .setUri(url.toAudioUri())
                     .setMediaMetadata(metadata)
                     .build()
             )
@@ -279,13 +308,22 @@ class AudioPlayerManager @Inject constructor(
 
     private fun initializePlayer() {
         if (exoPlayer == null) {
-            exoPlayer = ExoPlayer.Builder(context).build().apply {
+            val httpDataSourceFactory = DefaultHttpDataSource.Factory()
+            val upstreamFactory = DefaultDataSource.Factory(context, httpDataSourceFactory)
+            val cacheDataSourceFactory = CacheDataSource.Factory()
+                .setCache(simpleCache)
+                .setUpstreamDataSourceFactory(upstreamFactory)
+                .setFlags(CacheDataSource.FLAG_IGNORE_CACHE_ON_ERROR)
+
+            exoPlayer = ExoPlayer.Builder(context)
+                .setMediaSourceFactory(DefaultMediaSourceFactory(context).setDataSourceFactory(cacheDataSourceFactory))
+                .build().apply {
                 addListener(object : Player.Listener {
                     override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
                         _currentMediaId.value = mediaItem?.mediaId
                         _nowPlayingTitle.value = mediaItem?.mediaMetadata?.title?.toString()
                         _nowPlayingArtist.value = mediaItem?.mediaMetadata?.artist?.toString()
-                        // Lưu ý: artworkUri là Uri, cần quản lý StateFlow cẩn thận nếu muốn hiển thị
+                        _nowPlayingArtworkPath.value = mediaItem?.mediaMetadata?.artworkUri?.toString()
                     }
 
                     override fun onIsPlayingChanged(isPlaying: Boolean) {
@@ -310,6 +348,7 @@ class AudioPlayerManager @Inject constructor(
                     }
                 })
             }
+            mediaSession = MediaSession.Builder(context, exoPlayer!!).build()
         }
     }
 
@@ -365,6 +404,14 @@ class AudioPlayerManager @Inject constructor(
         mainScope.launch(Dispatchers.IO) {
             runCatching { podcastEpisodeDao.updateLastPosition(episodeId, position) }
                 .onFailure { Log.w(TAG, "Không lưu được vị trí phát ($episodeId)", it) }
+        }
+    }
+
+    private fun String.toAudioUri(): Uri {
+        return if (startsWith("http") || startsWith("file") || startsWith("content")) {
+            Uri.parse(this)
+        } else {
+            Uri.fromFile(java.io.File(this))
         }
     }
 

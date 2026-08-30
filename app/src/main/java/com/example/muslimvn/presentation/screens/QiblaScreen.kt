@@ -2,14 +2,12 @@ package com.example.muslimvn.presentation.screens
 
 import android.Manifest
 import android.content.Context
-import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
 import android.os.VibrationEffect
 import android.os.Vibrator
 import android.os.VibratorManager
-import android.provider.Settings
 import android.hardware.SensorManager
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -24,7 +22,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Refresh
-import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -81,24 +78,19 @@ fun QiblaScreen(
 
         if (fineLocationGranted || coarseLocationGranted) {
             viewModel.onPermissionGranted()
+        } else {
+            launcher.launch(
+                arrayOf(
+                    Manifest.permission.ACCESS_FINE_LOCATION,
+                    Manifest.permission.ACCESS_COARSE_LOCATION
+                )
+            )
+            // Even if not granted yet, start loading with fallback
+            viewModel.loadLocationAndCalculateQibla()
         }
     }
 
-    if (!state.isPermissionGranted) {
-        PermissionRequestContent(
-            onBackClick = onBackClick,
-            onRequestPermission = {
-                launcher.launch(
-                    arrayOf(
-                        Manifest.permission.ACCESS_FINE_LOCATION,
-                        Manifest.permission.ACCESS_COARSE_LOCATION
-                    )
-                )
-            }
-        )
-    } else {
-        QiblaMainContent(state, onBackClick, viewModel)
-    }
+    QiblaMainContent(state, onBackClick, viewModel)
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -196,6 +188,11 @@ fun QiblaMainContent(
 
         LocationInfo(state)
 
+        if (state.isUsingDefaultLocation) {
+            Spacer(modifier = Modifier.height(8.dp))
+            DefaultLocationBanner()
+        }
+
         if (state.sensorAccuracy < SensorManager.SENSOR_STATUS_ACCURACY_MEDIUM) {
             Spacer(modifier = Modifier.height(8.dp))
             CalibrationWarning()
@@ -241,73 +238,27 @@ fun QiblaMainContent(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun PermissionRequestContent(
-    onBackClick: () -> Unit,
-    onRequestPermission: () -> Unit
-) {
-    val context = LocalContext.current
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text(stringResource(R.string.nav_qibla)) },
-                navigationIcon = {
-                    IconButton(onClick = onBackClick) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null)
-                    }
-                }
-            )
-        }
-    ) { padding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-                .padding(24.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
+fun DefaultLocationBanner() {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.5f),
+            contentColor = MaterialTheme.colorScheme.onSecondaryContainer
+        ),
+        shape = MaterialTheme.shapes.medium
+    ) {
+        Row(
+            modifier = Modifier.padding(12.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Icon(
-                imageVector = Icons.Default.LocationOn,
-                contentDescription = null,
-                modifier = Modifier.size(80.dp),
-                tint = MaterialTheme.colorScheme.primary
-            )
-            Spacer(modifier = Modifier.height(24.dp))
+            Icon(Icons.Default.LocationOn, contentDescription = null, modifier = Modifier.size(20.dp))
+            Spacer(modifier = Modifier.width(8.dp))
             Text(
-                text = stringResource(R.string.qibla_permission_rationale_title),
-                style = MaterialTheme.typography.headlineSmall,
-                fontWeight = FontWeight.Bold,
-                textAlign = TextAlign.Center
+                text = "Đang dùng vị trí mặc định (An Giang/TP.HCM). Cấp quyền vị trí để chính xác hơn.",
+                style = MaterialTheme.typography.bodySmall,
+                fontWeight = FontWeight.Medium
             )
-            Spacer(modifier = Modifier.height(12.dp))
-            Text(
-                text = stringResource(R.string.qibla_permission_rationale_desc),
-                style = MaterialTheme.typography.bodyMedium,
-                textAlign = TextAlign.Center,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-            Spacer(modifier = Modifier.height(32.dp))
-            Button(
-                onClick = onRequestPermission,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text(stringResource(R.string.action_grant_permission))
-            }
-            TextButton(
-                onClick = {
-                    val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
-                        data = Uri.fromParts("package", context.packageName, null)
-                    }
-                    context.startActivity(intent)
-                },
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Icon(Icons.Default.Settings, contentDescription = null)
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(stringResource(R.string.action_open_settings))
-            }
         }
     }
 }

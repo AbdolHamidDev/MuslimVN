@@ -95,7 +95,8 @@ fun PodcastHomeScreen(
         },
         bottomBar = {
             PodcastPlayerBarState(playerViewModel) { active ->
-                AnimatedVisibility(visible = active != null) {
+                val isQuran = active?.id?.contains(":") == true
+                AnimatedVisibility(visible = active != null && !isQuran) {
                     if (active != null) {
                         val playlist by playerViewModel.playlist.collectAsState()
                         MiniPlayerBar(

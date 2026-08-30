@@ -136,13 +136,7 @@ fun MuslimVNTheme(
     val context = LocalContext.current
     val colorScheme = when {
         dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
-            val base = if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
-            // ⚡ OVERRIDE DYNAMIC COLOR:
-            // Ép hệ thống tuân thủ kiến trúc White-on-Gray kể cả khi dùng Dynamic Color.
-            base.copy(
-                background = base.surfaceContainer,
-                surface = base.surfaceContainerLowest
-            )
+            if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
         }
         darkTheme -> DarkColorScheme
         else -> LightColorScheme

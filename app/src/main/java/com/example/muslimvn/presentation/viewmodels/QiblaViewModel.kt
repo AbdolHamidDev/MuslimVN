@@ -2,6 +2,7 @@ package com.example.muslimvn.presentation.viewmodels
 
 import android.hardware.GeomagneticField
 import android.hardware.SensorManager
+import android.location.Location
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.muslimvn.data.sensor.CompassSensorManager
@@ -33,39 +34,43 @@ class QiblaViewModel @Inject constructor(
 
     fun loadLocationAndCalculateQibla() {
         viewModelScope.launch {
-            val location = locationRepository.getCurrentLocation()
-            if (location != null) {
-                val bearing = QiblaUtils.calculateQiblaBearing(location.latitude, location.longitude).toFloat()
-                val distance = QiblaUtils.calculateDistanceToMecca(location.latitude, location.longitude)
-                
-                // Calculate Magnetic Declination
-                val geoField = GeomagneticField(
-                    location.latitude.toFloat(),
-                    location.longitude.toFloat(),
-                    location.altitude.toFloat(),
-                    System.currentTimeMillis()
-                )
-                val declination = geoField.declination
-                
-                // Adjusted bearing for Magnetic North
-                // Qibla bearing is relative to True North. 
-                // Magnetic North = True North - Declination
-                // So, to point to Mecca using a magnetic compass: 
-                // Relative Bearing = True Bearing - Magnetic Declination
-                val adjustedBearing = (bearing - declination + 360f) % 360f
+            _uiState.update { it.copy(isLoading = true) }
+            val location = locationRepository.getCurrentLocation() ?: createDefaultLocation()
+            val isUsingDefault = location.latitude == DEFAULT_LATITUDE && location.longitude == DEFAULT_LONGITUDE
 
-                _uiState.update { 
-                    it.copy(
-                        qiblaBearing = adjustedBearing,
-                        distanceToMecca = distance,
-                        userLatitude = location.latitude,
-                        userLongitude = location.longitude,
-                        isLoading = false
-                    )
-                }
-            } else {
-                _uiState.update { it.copy(error = "Could not get location", isLoading = false) }
+            val bearing = QiblaUtils.calculateQiblaBearing(location.latitude, location.longitude).toFloat()
+            val distance = QiblaUtils.calculateDistanceToMecca(location.latitude, location.longitude)
+            
+            // Calculate Magnetic Declination
+            val geoField = GeomagneticField(
+                location.latitude.toFloat(),
+                location.longitude.toFloat(),
+                location.altitude.toFloat(),
+                System.currentTimeMillis()
+            )
+            val declination = geoField.declination
+            
+            // Adjusted bearing for Magnetic North
+            val adjustedBearing = (bearing - declination + 360f) % 360f
+
+            _uiState.update { 
+                it.copy(
+                    qiblaBearing = adjustedBearing,
+                    distanceToMecca = distance,
+                    userLatitude = location.latitude,
+                    userLongitude = location.longitude,
+                    isUsingDefaultLocation = isUsingDefault,
+                    isLoading = false
+                )
             }
+        }
+    }
+
+    private fun createDefaultLocation(): Location {
+        return Location("fallback").apply {
+            latitude = DEFAULT_LATITUDE
+            longitude = DEFAULT_LONGITUDE
+            altitude = 0.0
         }
     }
 
@@ -94,7 +99,13 @@ class QiblaViewModel @Inject constructor(
         val userLongitude: Double = 0.0,
         val isLoading: Boolean = true,
         val isPermissionGranted: Boolean = false,
+        val isUsingDefaultLocation: Boolean = false,
         val error: String? = null,
         val sensorAccuracy: Int = SensorManager.SENSOR_STATUS_ACCURACY_HIGH
     )
+
+    companion object {
+        const val DEFAULT_LATITUDE = 10.7005
+        const val DEFAULT_LONGITUDE = 105.1147
+    }
 }

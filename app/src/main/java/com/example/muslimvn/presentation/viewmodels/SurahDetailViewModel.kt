@@ -5,11 +5,13 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.muslimvn.data.preferences.QuranDisplayMode
 import com.example.muslimvn.data.preferences.QuranPreferences
+import com.example.muslimvn.data.preferences.QuranViewMode
 import com.example.muslimvn.data.util.AudioPlayerManager
 import com.example.muslimvn.data.util.QuranAudioUrlBuilder
 import com.example.muslimvn.domain.usecases.GetSurahDetailUseCase
 import com.example.muslimvn.domain.usecases.SurahDetail
 import com.example.muslimvn.domain.usecases.ToggleBookmarkUseCase
+import com.example.muslimvn.domain.usecases.UpdateTrackerQuranUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -17,14 +19,17 @@ import javax.inject.Inject
 
 data class QuranUiSettings(
     val reciterIdentifier: String = "Alafasy_128kbps",
-    val fontSize: Float = 18f,
-    val displayMode: QuranDisplayMode = QuranDisplayMode.BOTH
+    val fontSize: Float = 24f,
+    val displayMode: QuranDisplayMode = QuranDisplayMode.BOTH,
+    val viewMode: QuranViewMode = QuranViewMode.LIST
 )
 
 @HiltViewModel
 class SurahDetailViewModel @Inject constructor(
-    private val getSurahDetailUseCase: GetSurahDetailUseCase,
-    private val toggleBookmarkUseCase: ToggleBookmarkUseCase,
+    private val getSurahDetailUseCase: com.example.muslimvn.domain.usecases.GetSurahDetailUseCase,
+    private val toggleBookmarkUseCase: com.example.muslimvn.domain.usecases.ToggleBookmarkUseCase,
+    private val updateTrackerQuranUseCase: com.example.muslimvn.domain.usecases.UpdateTrackerQuranUseCase,
+    private val getQuranAudioPlaylistUseCase: com.example.muslimvn.domain.usecases.GetQuranAudioPlaylistUseCase,
     private val audioPlayerManager: AudioPlayerManager,
     private val quranPreferences: QuranPreferences,
     private val quranRepository: com.example.muslimvn.domain.repository.QuranRepository,
@@ -32,10 +37,32 @@ class SurahDetailViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
-    private val surahNumber: Int = checkNotNull(savedStateHandle["surahNumber"])
+    private val initialSurahNumber: Int = checkNotNull(savedStateHandle["surahNumber"])
+    private val startAyah: Int = savedStateHandle["startAyah"] ?: 1
 
-    private val _state = MutableStateFlow<SurahDetailState>(SurahDetailState.Loading)
-    val state = _state.asStateFlow()
+    private val _surahNumberFlow = MutableStateFlow(initialSurahNumber)
+    private val _refreshTrigger = MutableSharedFlow<Unit>(replay = 1).apply { tryEmit(Unit) }
+
+    @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
+    val state: StateFlow<SurahDetailState> = combine(_surahNumberFlow, _refreshTrigger) { number, _ -> number }
+        .flatMapLatest { number ->
+            getSurahDetailUseCase(number).map { surahDetail ->
+                if (surahDetail != null) {
+                    _playlist.value = surahDetail.ayahs
+                    currentSurahName = surahDetail.surah.nameVietnamese
+                    
+                    // Cập nhật tracker khi đổi Surah (Chỉ khi load thành công)
+                    val aNum = if (number == initialSurahNumber) startAyah else 1
+                    updateTrackerForAyah(number, aNum, surahDetail.surah.nameVietnamese, surahDetail.surah.totalAyahs)
+                    
+                    SurahDetailState.Success(surahDetail)
+                } else {
+                    SurahDetailState.Error("Surah not found")
+                }
+            }
+        }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), SurahDetailState.Loading)
+
+    private var currentSurahName: String = ""
 
     val isPlaying = audioPlayerManager.isPlaying
     val isBuffering = audioPlayerManager.isBuffering
@@ -60,6 +87,12 @@ class SurahDetailViewModel @Inject constructor(
     private val _playlist = MutableStateFlow<List<com.example.muslimvn.domain.models.Ayah>>(emptyList())
     val playlist = _playlist.asStateFlow()
 
+    private val _downloadProgress = MutableStateFlow(0f)
+    val downloadProgress = _downloadProgress.asStateFlow()
+
+    private val _downloadedCount = MutableStateFlow(0)
+    val downloadedCount = _downloadedCount.asStateFlow()
+
     private val _currentTiming = MutableStateFlow<com.example.muslimvn.domain.models.VerseTiming?>(null)
     val playingWordIndex: StateFlow<Int?> = combine(positionMs, _currentTiming) { pos, timing ->
         timing?.segments?.find { pos in it.startTimeMs..it.endTimeMs }?.wordIndex
@@ -68,17 +101,85 @@ class SurahDetailViewModel @Inject constructor(
     val quranSettings = combine(
         quranPreferences.reciterIdentifier,
         quranPreferences.fontSize,
-        quranPreferences.displayMode
-    ) { reciter, fontSize, displayMode ->
-        QuranUiSettings(reciter, fontSize, displayMode)
+        quranPreferences.displayMode,
+        quranPreferences.viewMode
+    ) { reciter, fontSize, displayMode, viewMode ->
+        QuranUiSettings(reciter, fontSize, displayMode, viewMode)
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), QuranUiSettings())
 
-    init {
-        loadSurahDetail()
-        observeMediaTiming()
-        prefetchTiming()
-        observeTranslationProgress()
+    private val _currentMushafPage = MutableStateFlow(1)
+    val currentMushafPage = _currentMushafPage.asStateFlow()
+
+    // Tọa độ highlight cho Mushaf
+    @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
+    val ayahHighlightCoordinates: StateFlow<List<List<Int>>> = currentMediaId
+        .flatMapLatest { id ->
+            if (id != null && id.contains(":")) {
+                // Tự động lật trang nếu câu đang phát thuộc trang khác
+                syncMushafPageWithAudio(id)
+                flow { emit(quranRepository.getAyahCoordinates(id)) }
+            } else {
+                flow { emit(emptyList<List<Int>>()) }
+            }
+        }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    private fun syncMushafPageWithAudio(verseKey: String) {
+        viewModelScope.launch {
+            val parts = verseKey.split(":")
+            val s = parts[0].toIntOrNull() ?: return@launch
+            val a = parts[1].toIntOrNull() ?: return@launch
+            
+            val targetPage = quranRepository.getPageForAyah(s, a)
+            if (targetPage != _currentMushafPage.value) {
+                _currentMushafPage.value = targetPage
+            }
+        }
     }
+
+    private var lastVisibleAyah: Int = startAyah
+
+    init {
+        observeMediaTiming()
+        observeSurahAndReciterForTiming()
+        observeTranslationProgress()
+        observeDownloadStatus()
+    }
+
+    @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
+    private fun observeDownloadStatus() {
+        viewModelScope.launch {
+            combine(_surahNumberFlow, quranSettings.map { it.reciterIdentifier }.distinctUntilChanged()) { sNum, reciterId ->
+                sNum to reciterId
+            }
+                .flatMapLatest { (sNum, reciterIdentifier) ->
+                    val reciter = com.example.muslimvn.domain.models.availableReciters.find {
+                        it.identifier == reciterIdentifier
+                    } ?: com.example.muslimvn.domain.models.availableReciters[0]
+                    
+                    quranRepository.getDownloadedAyahsCount(sNum, reciter.quranComId)
+                }
+                .collect { count ->
+                    _downloadedCount.value = count
+                    val total = (state.value as? SurahDetailState.Success)?.surahDetail?.surah?.totalAyahs ?: 0
+                    if (total > 0) {
+                        _downloadProgress.value = count.toFloat() / total
+                    }
+                }
+        }
+    }
+
+    fun downloadSurah() {
+        viewModelScope.launch {
+            val settings = quranSettings.value
+            val reciter = com.example.muslimvn.domain.models.availableReciters.find {
+                it.identifier == settings.reciterIdentifier
+            } ?: com.example.muslimvn.domain.models.availableReciters[0]
+            
+            quranRepository.startSurahDownload(_surahNumberFlow.value, reciter.quranComId)
+        }
+    }
+
+    fun getStartAyah(): Int = startAyah
 
     private fun observeTranslationProgress() {
         translator.isDownloading
@@ -90,15 +191,27 @@ class SurahDetailViewModel @Inject constructor(
             .launchIn(viewModelScope)
     }
 
-    private fun prefetchTiming() {
+    @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
+    private fun observeSurahAndReciterForTiming() {
+        combine(_surahNumberFlow, quranSettings.map { it.reciterIdentifier }.distinctUntilChanged()) { sNum, reciterId ->
+            sNum to reciterId
+        }
+        .onEach { (sNum, reciterId) ->
+            if (reciterId.isNotEmpty()) {
+                prefetchTiming(sNum, reciterId)
+            }
+        }
+        .launchIn(viewModelScope)
+    }
+
+    private fun prefetchTiming(sNum: Int, reciterId: String) {
         viewModelScope.launch {
-            val settings = quranSettings.filter { it.reciterIdentifier.isNotEmpty() }.first()
             val reciter = com.example.muslimvn.domain.models.availableReciters.find { 
-                it.identifier == settings.reciterIdentifier 
+                it.identifier == reciterId 
             } ?: com.example.muslimvn.domain.models.availableReciters[0]
             
             _isSyncing.value = true
-            quranRepository.prefetchSurahTiming(surahNumber, reciter.quranComId) { progress ->
+            quranRepository.prefetchSurahTiming(sNum, reciter.quranComId) { progress ->
                 _syncProgress.value = progress
             }
             _isSyncing.value = false
@@ -107,38 +220,58 @@ class SurahDetailViewModel @Inject constructor(
 
     private fun observeMediaTiming() {
         viewModelScope.launch {
-            currentMediaId.collect { id ->
-                if (id != null && id.contains(":")) {
-                    val settings = quranSettings.value
-                    val reciter = com.example.muslimvn.domain.models.availableReciters.find { 
-                        it.identifier == settings.reciterIdentifier 
-                    } ?: com.example.muslimvn.domain.models.availableReciters[0]
-                    
-                    _currentTiming.value = quranRepository.getVerseTiming(id, reciter.quranComId)
-                } else {
-                    _currentTiming.value = null
+            combine(currentMediaId, quranSettings.map { it.reciterIdentifier }.distinctUntilChanged()) { id, _ -> id }
+                .collect { id ->
+                    if (id != null && id.contains(":")) {
+                        val settings = quranSettings.value
+                        val reciter = com.example.muslimvn.domain.models.availableReciters.find { 
+                            it.identifier == settings.reciterIdentifier 
+                        } ?: com.example.muslimvn.domain.models.availableReciters[0]
+                        
+                        _currentTiming.value = quranRepository.getVerseTiming(id, reciter.quranComId)
+                    } else {
+                        _currentTiming.value = null
+                    }
                 }
-            }
         }
     }
 
     fun retry() {
-        _state.value = SurahDetailState.Loading
-        loadSurahDetail()
-        prefetchTiming()
+        _refreshTrigger.tryEmit(Unit)
     }
 
-    private fun loadSurahDetail() {
-        getSurahDetailUseCase(surahNumber)
-            .onEach { surahDetail ->
-                if (surahDetail != null) {
-                    _state.value = SurahDetailState.Success(surahDetail)
-                    _playlist.value = surahDetail.ayahs
-                } else {
-                    _state.value = SurahDetailState.Error("Surah not found")
-                }
-            }
-            .launchIn(viewModelScope)
+    private fun calculateProgress(ayah: Int, total: Int): Float {
+        return if (total > 0) ayah.toFloat() / total.toFloat() else 0f
+    }
+
+    private fun updateTrackerForAyah(sNum: Int, aNum: Int, sName: String, total: Int) {
+        viewModelScope.launch {
+            updateTrackerQuranUseCase(
+                surahName = sName,
+                surahNumber = sNum,
+                ayahNumber = aNum,
+                progress = calculateProgress(aNum, total)
+            )
+        }
+    }
+
+    fun updateLastReadAyah(ayahNumber: Int) {
+        updateLastReadAyah(_surahNumberFlow.value, ayahNumber)
+    }
+
+    fun updateLastReadAyah(sNum: Int, aNum: Int) {
+        lastVisibleAyah = aNum
+        val currentState = state.value
+        if (currentState !is SurahDetailState.Success) return
+        
+        val currentSurah = currentState.surahDetail.surah
+        // Chỉ cập nhật nếu đúng Surah đang hiển thị (hoặc nếu ta cho phép cập nhật chéo)
+        val sName = if (sNum == currentSurah.number) currentSurah.nameVietnamese else ""
+        val total = if (sNum == currentSurah.number) currentSurah.totalAyahs else 0
+        
+        if (sName.isNotEmpty()) {
+            updateTrackerForAyah(sNum, aNum, sName, total)
+        }
     }
 
     fun toggleBookmark(ayahId: Int, isBookmarked: Boolean) {
@@ -149,36 +282,49 @@ class SurahDetailViewModel @Inject constructor(
         }
     }
 
-    fun playAyah(ayahNumber: Int) {
-        val currentState = _state.value
-        if (currentState !is SurahDetailState.Success) return
-        
-        val surah = currentState.surahDetail.surah
-        val settings = quranSettings.value
-        val mediaId = "${surah.number}:$ayahNumber"
-        
-        // Nếu đang phát đúng câu này rồi -> Chỉ toggle Play/Pause
-        if (currentMediaId.value == mediaId) {
-            if (isPlaying.value) audioPlayerManager.pause() else audioPlayerManager.resume()
-            return
-        }
+    fun playAyah(ayahNumber: Int, forceReload: Boolean = false, startPlaying: Boolean = true) {
+        viewModelScope.launch {
+            val currentState = state.value
+            if (currentState !is SurahDetailState.Success) return@launch
+            
+            val surah = currentState.surahDetail.surah
+            val settings = quranSettings.value
+            val mediaId = "${surah.number}:$ayahNumber"
+            
+            // Nếu đang phát đúng câu này rồi và không bắt buộc nạp lại -> Chỉ toggle Play/Pause
+            if (!forceReload && currentMediaId.value == mediaId) {
+                if (isPlaying.value) audioPlayerManager.pause() else audioPlayerManager.resume()
+                return@launch
+            }
 
-        // Nếu chuyển sang câu mới -> Nạp playlist mới (Gapless)
-        val items = currentState.surahDetail.ayahs.map { ayah ->
-            com.example.muslimvn.data.util.AudioPlayItem(
-                url = QuranAudioUrlBuilder.buildAyahUrl(surah.number, ayah.ayahNumber, settings.reciterIdentifier),
-                mediaId = "${surah.number}:${ayah.ayahNumber}",
-                title = "${surah.nameVietnamese} - Câu ${ayah.ayahNumber}",
-                artist = "Quran Recitation",
-                artworkPath = "icon/quran.png"
-            )
+            // Nếu buộc nạp lại khi đang phát, dừng tạm thời để chờ nạp
+            if (forceReload && isPlaying.value) {
+                audioPlayerManager.pause()
+            }
+
+            // Hiển thị trạng thái chuẩn bị (nếu cần)
+            _isSyncing.value = true
+
+            // Sử dụng UseCase để lấy playlist chuẩn (Gapless)
+            val items = getQuranAudioPlaylistUseCase(surah.number, settings.reciterIdentifier)
+            
+            _isSyncing.value = false
+            if (items.isNotEmpty()) {
+                audioPlayerManager.playList(items, startIndex = ayahNumber - 1, playWhenReady = startPlaying)
+            }
         }
-        
-        audioPlayerManager.playList(items, startIndex = ayahNumber - 1)
     }
 
     fun playContinuous(startAyahNumber: Int) {
         playAyah(startAyahNumber)
+    }
+
+    fun pauseAudio() {
+        audioPlayerManager.pause()
+    }
+
+    fun resumeAudio() {
+        audioPlayerManager.resume()
     }
 
     fun stopAudio() {
@@ -221,6 +367,53 @@ class SurahDetailViewModel @Inject constructor(
                 _translationState.value = TranslationState.Success
             } else {
                 _translationState.value = TranslationState.Error("Translation failed")
+            }
+        }
+    }
+
+    fun toggleViewMode() {
+        viewModelScope.launch {
+            val settings = quranSettings.value
+            val newMode = if (settings.viewMode == QuranViewMode.LIST) QuranViewMode.MUSHAF else QuranViewMode.LIST
+            
+            if (newMode == QuranViewMode.MUSHAF) {
+                // Sync List -> Mushaf
+                val ayahToSync = getAyahToSync()
+                val page = quranRepository.getPageForAyah(_surahNumberFlow.value, ayahToSync)
+                _currentMushafPage.value = page
+            } else {
+                // Sync Mushaf -> List (sẽ được xử lý ở Screen qua LaunchedEffect hoặc method này trả về target)
+            }
+            
+            quranPreferences.saveViewMode(newMode)
+        }
+    }
+
+    private fun getAyahToSync(): Int {
+        val playingId = currentMediaId.value
+        val sNum = _surahNumberFlow.value
+        if (playingId != null && playingId.startsWith("$sNum:")) {
+            return playingId.split(":")[1].toIntOrNull() ?: lastVisibleAyah
+        }
+        return lastVisibleAyah
+    }
+
+    fun onMushafPageChanged(page: Int) {
+        if (_currentMushafPage.value != page) {
+            _currentMushafPage.value = page
+            // Tùy chọn: Cập nhật tracker và Surah khi lật trang Mushaf
+            viewModelScope.launch {
+                val ayahs = quranRepository.getAyahsForPage(page)
+                if (ayahs.isNotEmpty()) {
+                    val parts = ayahs[0].split(":")
+                    val sNum = parts[0].toIntOrNull() ?: return@launch
+                    val aNum = parts[1].toIntOrNull() ?: 1
+                    
+                    if (sNum != _surahNumberFlow.value) {
+                        _surahNumberFlow.value = sNum
+                    }
+                    updateLastReadAyah(sNum, aNum)
+                }
             }
         }
     }

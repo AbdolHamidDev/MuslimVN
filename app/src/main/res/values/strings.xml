@@ -9,6 +9,7 @@
     <string name="nav_local">Local VN</string>
     <string name="nav_settings">Cài đặt</string>
     <string name="nav_quran">Quran</string>
+    <string name="nav_tracker">Tracker</string>
     <string name="nav_qibla">Qibla</string>
     <string name="nav_surah_detail">Chi tiết Surah</string>
 
@@ -122,6 +123,16 @@
     <string name="event_arafah">Ngày Arafah</string>
     <string name="event_eid_aladha">Eid al-Adha (Lễ hiến sinh)</string>
 
+    <!-- Tracker Screen -->
+    <string name="tracker_title">Tracker</string>
+    <string name="tracker_prayer_section">Cầu nguyện (Salah)</string>
+    <string name="tracker_quran_section">Đọc Quran</string>
+    <string name="tracker_azkar_section">Azkar</string>
+    <string name="tracker_last_read">Đọc lần cuối: %1$s</string>
+    <string name="tracker_surah_ayah">Surah %1$s, Ayah %2$d</string>
+    <string name="tracker_azkar_count">Số lượng Azkar: %1$d</string>
+    <string name="tracker_completion">Hoàn thành</string>
+
     <!-- Common UI states -->
     <string name="retry">Thử lại</string>
     <string name="loading_please_wait">Đang tải, vui lòng đợi…</string>
@@ -160,7 +171,7 @@
     <!-- Podcast học giả Islam -->
     <string name="nav_podcast">Podcast</string>
     <string name="podcast_title">Podcast Học Giả Islam</string>
-    <string name="podcast_featured_scholars">Học giả nổi bật</string>
+    <string name="podcast_featured_scholars">Học giả thế giới</string>
     <string name="podcast_all_scholars">Tất cả học giả</string>
     <string name="podcast_category_all">Tất cả</string>
     <string name="podcast_episodes_title">Các tập phát</string>
@@ -247,4 +258,9 @@
     <string name="adhan_voice_mansoor">Mansoor Az Zahrani</string>
     <string name="adhan_voice_rabeh">Rabeh Ibn Darah</string>
     <string name="save_settings">Lưu cài đặt</string>
+
+    <!-- Quran Download -->
+    <string name="quran_download_notification_channel">Tải Quran</string>
+    <string name="quran_download_notification_title">Đang tải Quran</string>
+    <string name="quran_download_notification_content">Đang tải học giả: %1$s</string>
 </resources>

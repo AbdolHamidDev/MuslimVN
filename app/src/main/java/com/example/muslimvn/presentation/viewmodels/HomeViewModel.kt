@@ -10,11 +10,9 @@ import androidx.lifecycle.viewModelScope
 import com.example.muslimvn.core.utils.AdhanScheduler
 import com.example.muslimvn.domain.models.PrayerReminder
 import com.example.muslimvn.domain.models.PrayerTimes
-import com.example.muslimvn.domain.models.UserData
-import com.example.muslimvn.domain.models.UserProfile
-import com.example.muslimvn.domain.repository.AuthRepository
+import com.example.muslimvn.domain.models.Scholar
+import com.example.muslimvn.domain.repository.PodcastRepository
 import com.example.muslimvn.domain.repository.SettingsRepository
-import com.example.muslimvn.domain.repository.UserRepository
 import com.example.muslimvn.domain.usecases.GetHijriDateOffsetUseCase
 import com.example.muslimvn.domain.usecases.GetPrayerTimesUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -24,8 +22,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.flatMapLatest
-import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -34,14 +30,11 @@ import javax.inject.Inject
 data class HomeUiState(
     val prayerTimes: PrayerTimes? = null,
     val reminders: Map<String, PrayerReminder> = emptyMap(),
-    val userData: UserData? = null,
-    val userProfile: UserProfile? = null,
+    val featuredScholars: List<Scholar> = emptyList(),
     val isLoading: Boolean = true,
     val error: String? = null,
     val isLocationPermissionGranted: Boolean = false,
-    val isNotificationPermissionGranted: Boolean = true,
-    /** Người dùng đã bấm "Để sau" với card xin quyền chưa. */
-    val isPermissionCardDismissed: Boolean = false
+    val isNotificationPermissionGranted: Boolean = true
 )
 
 @HiltViewModel
@@ -50,8 +43,7 @@ class HomeViewModel @Inject constructor(
     private val getPrayerTimesUseCase: GetPrayerTimesUseCase,
     private val getHijriDateOffsetUseCase: GetHijriDateOffsetUseCase,
     private val settingsRepository: SettingsRepository,
-    private val authRepository: AuthRepository,
-    private val userRepository: UserRepository,
+    private val podcastRepository: PodcastRepository,
     private val adhanScheduler: AdhanScheduler
 ) : ViewModel() {
 
@@ -70,7 +62,16 @@ class HomeViewModel @Inject constructor(
         refreshPrayerTimes()
         startCountdownTimer()
         observeReminders()
-        observeUser()
+        loadFeaturedScholars()
+    }
+
+    private fun loadFeaturedScholars() {
+        viewModelScope.launch {
+            podcastRepository.initializeData()
+            podcastRepository.getScholars().collect { list ->
+                _uiState.update { it.copy(featuredScholars = list.filter { s -> s.featured }) }
+            }
+        }
     }
 
     private fun observeReminders() {
@@ -125,25 +126,6 @@ class HomeViewModel @Inject constructor(
         ContextCompat.checkSelfPermission(appContext, permission) ==
             PackageManager.PERMISSION_GRANTED
 
-    /**
-     * Nhận kết quả xin quyền từ màn hình: quyền vị trí quyết định độ chính xác
-     * giờ cầu nguyện; quyền thông báo quyết định Adhan có thể hiển thị hay không
-     * (bắt buộc từ Android 13+).
-     */
-    fun onPermissionsResult(locationGranted: Boolean, notificationsGranted: Boolean) {
-        _uiState.update {
-            it.copy(
-                isLocationPermissionGranted = locationGranted,
-                isNotificationPermissionGranted = notificationsGranted
-            )
-        }
-        refreshPrayerTimes()
-    }
-
-    fun dismissPermissionCard() {
-        _uiState.update { it.copy(isPermissionCardDismissed = true) }
-    }
-
     fun refreshPrayerTimes() {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, error = null) }
@@ -161,29 +143,6 @@ class HomeViewModel @Inject constructor(
             } catch (e: Exception) {
                 _uiState.update { it.copy(error = e.localizedMessage ?: "Unknown error", isLoading = false) }
             }
-        }
-    }
-
-    @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
-    private fun observeUser() {
-        viewModelScope.launch {
-            authRepository.currentUser.collect { user ->
-                _uiState.update { it.copy(userData = user) }
-            }
-        }
-        
-        viewModelScope.launch {
-            authRepository.currentUser
-                .flatMapLatest { user ->
-                    if (user != null) {
-                        userRepository.getUserProfile(user.uid)
-                    } else {
-                        flowOf(null)
-                    }
-                }
-                .collect { profile ->
-                    _uiState.update { it.copy(userProfile = profile) }
-                }
         }
     }
 

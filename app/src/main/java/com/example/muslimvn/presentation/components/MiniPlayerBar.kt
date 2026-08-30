@@ -140,7 +140,6 @@ fun MiniPlayerBar(
                             modifier = Modifier
                                 .size(48.dp)
                                 .clip(RoundedCornerShape(8.dp))
-                                .background(MaterialTheme.colorScheme.surfaceVariant)
                         )
                         Column(
                             modifier = Modifier

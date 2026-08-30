@@ -2,7 +2,8 @@ package com.example.muslimvn.domain.models
 
 data class VerseTiming(
     val verseKey: String,
-    val segments: List<WordSegment>
+    val segments: List<WordSegment>,
+    val audioUrl: String? = null
 )
 
 data class WordSegment(

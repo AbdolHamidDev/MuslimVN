@@ -61,19 +61,13 @@ abstract class RepositoryModule {
 
     @Binds
     @Singleton
-    abstract fun bindAuthRepository(
-        authRepositoryImpl: AuthRepositoryImpl
-    ): AuthRepository
-
-    @Binds
-    @Singleton
-    abstract fun bindUserRepository(
-        userRepositoryImpl: UserRepositoryImpl
-    ): UserRepository
-
-    @Binds
-    @Singleton
     abstract fun bindAzkarRepository(
         azkarRepositoryImpl: AzkarRepositoryImpl
     ): AzkarRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindTrackerRepository(
+        trackerRepositoryImpl: TrackerRepositoryImpl
+    ): TrackerRepository
 }

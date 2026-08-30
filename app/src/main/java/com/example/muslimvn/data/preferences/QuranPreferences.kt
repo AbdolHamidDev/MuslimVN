@@ -14,6 +14,10 @@ enum class QuranDisplayMode {
     BOTH, ARABIC_ONLY, TRANSLATION_ONLY
 }
 
+enum class QuranViewMode {
+    LIST, MUSHAF
+}
+
 @Singleton
 class QuranPreferences @Inject constructor(
     @QuranDataStore private val dataStore: DataStore<Preferences>
@@ -22,6 +26,9 @@ class QuranPreferences @Inject constructor(
         val RECITER_IDENTIFIER = stringPreferencesKey("reciter_identifier")
         val FONT_SIZE = floatPreferencesKey("font_size")
         val DISPLAY_MODE = stringPreferencesKey("display_mode")
+        val VIEW_MODE = stringPreferencesKey("view_mode")
+        val HAS_SELECTED_RECITER = booleanPreferencesKey("has_selected_reciter")
+        fun downloadStatusKey(reciterId: Int) = stringPreferencesKey("download_status_$reciterId")
     }
 
     val reciterIdentifier: Flow<String> = dataStore.data
@@ -31,11 +38,18 @@ class QuranPreferences @Inject constructor(
             preferences[Keys.RECITER_IDENTIFIER] ?: "Alafasy_128kbps"
         }
 
+    val hasSelectedReciter: Flow<Boolean> = dataStore.data
+        .catch { exception ->
+            if (exception is IOException) emit(emptyPreferences()) else throw exception
+        }.map { preferences ->
+            preferences[Keys.HAS_SELECTED_RECITER] ?: false
+        }
+
     val fontSize: Flow<Float> = dataStore.data
         .catch { exception ->
             if (exception is IOException) emit(emptyPreferences()) else throw exception
         }.map { preferences ->
-            preferences[Keys.FONT_SIZE] ?: 18f
+            preferences[Keys.FONT_SIZE] ?: 24f
         }
 
     val displayMode: Flow<QuranDisplayMode> = dataStore.data
@@ -50,9 +64,35 @@ class QuranPreferences @Inject constructor(
             }
         }
 
+    val viewMode: Flow<QuranViewMode> = dataStore.data
+        .catch { exception ->
+            if (exception is IOException) emit(emptyPreferences()) else throw exception
+        }.map { preferences ->
+            val modeName = preferences[Keys.VIEW_MODE] ?: QuranViewMode.LIST.name
+            try {
+                QuranViewMode.valueOf(modeName)
+            } catch (e: IllegalArgumentException) {
+                QuranViewMode.LIST
+            }
+        }
+
+    fun getDownloadStatus(reciterId: Int): Flow<String> = dataStore.data
+        .catch { exception ->
+            if (exception is IOException) emit(emptyPreferences()) else throw exception
+        }.map { preferences ->
+            preferences[Keys.downloadStatusKey(reciterId)] ?: "IDLE"
+        }
+
+    suspend fun saveDownloadStatus(reciterId: Int, status: String) {
+        dataStore.edit { preferences ->
+            preferences[Keys.downloadStatusKey(reciterId)] = status
+        }
+    }
+
     suspend fun saveReciterIdentifier(identifier: String) {
         dataStore.edit { preferences ->
             preferences[Keys.RECITER_IDENTIFIER] = identifier
+            preferences[Keys.HAS_SELECTED_RECITER] = true
         }
     }
 
@@ -65,6 +105,12 @@ class QuranPreferences @Inject constructor(
     suspend fun saveDisplayMode(mode: QuranDisplayMode) {
         dataStore.edit { preferences ->
             preferences[Keys.DISPLAY_MODE] = mode.name
+        }
+    }
+
+    suspend fun saveViewMode(mode: QuranViewMode) {
+        dataStore.edit { preferences ->
+            preferences[Keys.VIEW_MODE] = mode.name
         }
     }
 }

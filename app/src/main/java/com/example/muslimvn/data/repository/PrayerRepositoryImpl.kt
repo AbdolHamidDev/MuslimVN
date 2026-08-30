@@ -42,6 +42,14 @@ class PrayerRepositoryImpl @Inject constructor(
         var nextPrayerTime = adhanPrayerTimes.timeForPrayer(nextPrayer)
         var nextPrayerName = nextPrayer?.name ?: "NONE"
 
+        val currentPrayerType = adhanPrayerTimes.currentPrayer()
+        var previousPrayerTime = adhanPrayerTimes.timeForPrayer(currentPrayerType)
+        val currentPrayerName = if (currentPrayerType != Prayer.NONE && currentPrayerType != Prayer.SUNRISE) {
+            PrayerName.fromAdhanName(currentPrayerType.name)
+        } else {
+            null
+        }
+
         // Nếu hôm nay đã hết các giờ cầu nguyện (sau Isha), mốc tiếp theo là Fajr ngày mai
         if ((nextPrayer == Prayer.NONE) || (nextPrayerTime == null)) {
             val tomorrow = Calendar.getInstance().apply {
@@ -52,6 +60,17 @@ class PrayerRepositoryImpl @Inject constructor(
             nextPrayer = Prayer.FAJR
             nextPrayerTime = tomorrowTimes.fajr
             nextPrayerName = nextPrayer.name
+            
+            // Nếu hiện tại là sau Isha, thì previous chính là Isha hôm nay
+            previousPrayerTime = adhanPrayerTimes.isha
+        } else if (currentPrayerType == Prayer.NONE || previousPrayerTime == null) {
+            // Nếu hiện tại chưa đến Fajr, thì previous là Isha ngày hôm qua
+            val yesterday = Calendar.getInstance().apply {
+                time = date
+                add(Calendar.DAY_OF_YEAR, -1)
+            }
+            val yesterdayTimes = AdhanPrayerTimes(coordinates, DateComponents.from(yesterday.time), params)
+            previousPrayerTime = yesterdayTimes.isha
         }
 
         return PrayerTimes(
@@ -64,6 +83,9 @@ class PrayerRepositoryImpl @Inject constructor(
             nextPrayerName = PrayerName.fromAdhanName(nextPrayerName),
             nextPrayerTime = nextPrayerTime ?: Date(),
             nextPrayerCountdown = formatCountdown(nextPrayerTime ?: Date()),
+            previousPrayerTime = previousPrayerTime ?: Date(),
+            currentPrayerName = currentPrayerName,
+            isCurrentPrayerActive = currentPrayerName != null
         )
     }
 

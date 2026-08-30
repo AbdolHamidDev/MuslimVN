@@ -13,12 +13,24 @@ interface QuranApiService {
         @Query("audio") recitationId: Int
     ): VerseAudioResponse
 
+    @GET("verses/by_chapter/{chapterNumber}")
+    suspend fun getChapterWithAudio(
+        @Path("chapterNumber") chapterNumber: Int,
+        @Query("words") words: Boolean = true,
+        @Query("audio") recitationId: Int,
+        @Query("per_page") perPage: Int = 300
+    ): ChapterAudioResponse
+
     @GET("tafsirs/{tafsirId}/by_ayah/{verseKey}")
     suspend fun getTafsir(
         @Path("tafsirId") tafsirId: Int,
         @Path("verseKey") verseKey: String
     ): TafsirResponse
 }
+
+data class ChapterAudioResponse(
+    val verses: List<VerseWithAudio>
+)
 
 data class VerseWithAudio(
     @SerializedName("verse_key") val verseKey: String,

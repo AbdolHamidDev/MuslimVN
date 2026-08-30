@@ -26,6 +26,9 @@ interface PodcastRepository {
     /** Flow tập phát của một học giả — phát lại tức thì từ cache Room. */
     fun getEpisodesByScholar(scholarId: String): Flow<List<PodcastEpisode>>
 
+    /** Paging: Tải danh sách tập theo từng trang để tối ưu hiệu năng. */
+    fun getEpisodesByScholarPaging(scholarId: String): Flow<androidx.paging.PagingData<PodcastEpisode>>
+
     /**
      * Fetch + parse RSS feed của học giả rồi ghi đè cache trong Room.
      * @return Result số lượng tập sau khi merge; failure khi offline/feed lỗi

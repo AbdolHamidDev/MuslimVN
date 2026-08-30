@@ -11,14 +11,8 @@ data class PrayerTimes(
     val isha: Date,
     val nextPrayerName: String,
     val nextPrayerTime: Date,
-    val nextPrayerCountdown: String
+    val nextPrayerCountdown: String,
+    val previousPrayerTime: Date = Date(),
+    val currentPrayerName: String? = null,
+    val isCurrentPrayerActive: Boolean = false
 )
-
-enum class PrayerType(val displayName: String) {
-    FAJR("Fajr"),
-    SUNRISE("Sunrise"),
-    DHUHR("Dhuhr"),
-    ASR("Asr"),
-    MAGHRIB("Maghrib"),
-    ISHA("Isha")
-}

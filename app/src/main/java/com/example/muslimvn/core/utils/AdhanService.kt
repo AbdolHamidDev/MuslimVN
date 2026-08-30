@@ -9,6 +9,7 @@ import android.os.IBinder
 import androidx.core.app.NotificationCompat
 import com.example.muslimvn.R
 import com.example.muslimvn.core.di.NotificationModule
+import com.example.muslimvn.presentation.screens.StopAdhanActivity
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 
@@ -44,14 +45,25 @@ class AdhanService : Service() {
             this, 0, stopIntent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
+        // Full-screen intent for alarm-like behavior
+        val fullScreenIntent = Intent(this, StopAdhanActivity::class.java).apply {
+            putExtra(EXTRA_PRAYER_NAME, prayerName)
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_NO_USER_ACTION
+        }
+        val fullScreenPendingIntent = PendingIntent.getActivity(
+            this, 0, fullScreenIntent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+
         val notification = NotificationCompat.Builder(this, NotificationModule.ADHAN_CHANNEL_ID)
             .setSmallIcon(R.mipmap.ic_launcher)
             .setContentTitle("Adhan: $prayerName")
             .setContentText("Đã đến giờ cầu nguyện. Nhấn để dừng Adhan.")
             .setPriority(NotificationCompat.PRIORITY_MAX)
             .setCategory(NotificationCompat.CATEGORY_ALARM)
+            .setFullScreenIntent(fullScreenPendingIntent, true)
             .addAction(android.R.drawable.ic_media_pause, "Dừng Adhan", stopPendingIntent)
             .setOngoing(true)
+            .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
             .build()
 
         startForeground(NOTIFICATION_ID, notification)
@@ -81,6 +93,7 @@ class AdhanService : Service() {
     override fun onDestroy() {
         mediaPlayer?.release()
         mediaPlayer = null
+        sendBroadcast(Intent(ACTION_ADHAN_STOPPED))
         super.onDestroy()
     }
 
@@ -90,6 +103,7 @@ class AdhanService : Service() {
         const val EXTRA_PRAYER_NAME = "EXTRA_PRAYER_NAME"
         const val EXTRA_ADHAN_FILE = "EXTRA_ADHAN_FILE"
         const val ACTION_STOP_ADHAN = "ACTION_STOP_ADHAN"
+        const val ACTION_ADHAN_STOPPED = "com.example.muslimvn.ACTION_ADHAN_STOPPED"
         private const val NOTIFICATION_ID = 3001
     }
 }

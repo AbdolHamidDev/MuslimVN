@@ -1,6 +1,8 @@
 package com.example.muslimvn
 
 import android.app.Application
+import androidx.hilt.work.HiltWorkerFactory
+import androidx.work.Configuration
 import com.example.muslimvn.domain.repository.PodcastRepository
 import com.example.muslimvn.domain.repository.QuranRepository
 import dagger.hilt.android.HiltAndroidApp
@@ -10,13 +12,21 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltAndroidApp
-class MuslimApplication : Application() {
+class MuslimApplication : Application(), Configuration.Provider {
 
     @Inject
     lateinit var quranRepository: QuranRepository
 
     @Inject
     lateinit var podcastRepository: PodcastRepository
+
+    @Inject
+    lateinit var workerFactory: HiltWorkerFactory
+
+    override val workManagerConfiguration: Configuration
+        get() = Configuration.Builder()
+            .setWorkerFactory(workerFactory)
+            .build()
 
     override fun onCreate() {
         super.onCreate()

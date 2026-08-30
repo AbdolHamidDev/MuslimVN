@@ -83,7 +83,7 @@
       "title": "Tiến Sĩ & Giáo Sư Quốc Tế",
       "bio": "Người sáng lập Đại học Islam Trực tuyến, chuyên về Aqidah và giáo dục.",
       "avatar": "images/podcast/bilal-philips.webp",
-      "rssUrl": "https://muslimcentral.com/audio/bilal-philips/feed/",
+      "rssUrl": "https://rss.muslimcentral.com/bilal-philips.rss",
       "tags": [
         "fiqh"
       ]
@@ -94,7 +94,7 @@
       "title": "Học Giả Islam & Triết Gia",
       "bio": "Đồng sáng lập Trường Đại học Zaytuna, nổi tiếng với tư duy triết học sâu sắc.",
       "avatar": "images/podcast/hamza-yusuf.webp",
-      "rssUrl": "https://muslimcentral.com/audio/hamza-yusuf/feed/",
+      "rssUrl": "https://rss.muslimcentral.com/hamza-yusuf.rss",
       "tags": [
         "aqidah",
         "tazkiyah"
@@ -106,7 +106,7 @@
       "title": "Giám Đốc Viện Qalam",
       "bio": "Chuyên về Tafsir, Fiqh và đào tạo giảng viên Islam thực tế.",
       "avatar": "images/podcast/abdul-nasir-jangda.webp",
-      "rssUrl": "https://muslimcentral.com/audio/abdul-nasir-jangda/feed/",
+      "rssUrl": "https://rss.muslimcentral.com/abdul-nasir-jangda.rss",
       "tags": [
         "tafsir"
       ]
@@ -117,7 +117,7 @@
       "title": "Diễn Giả & Nhà Giáo Dục Islam",
       "bio": "Giảng dạy thực tế với logic mạnh mẽ, truyền cảm hứng cho thanh niên.",
       "avatar": "images/podcast/wahaj-tarin.webp",
-      "rssUrl": "https://muslimcentral.com/audio/wahaj-tarin/feed/",
+      "rssUrl": "https://rss.muslimcentral.com/wahaj-tarin.rss",
       "tags": [
         "contemporary"
       ]
@@ -128,7 +128,7 @@
       "title": "Diễn Giả Truyền Cảm Hứng",
       "bio": "Phong cách đầy cảm xúc, truyền tải thông điệp Islam sâu sắc.",
       "avatar": "images/podcast/mohamed-hoblos.webp",
-      "rssUrl": "https://muslimcentral.com/audio/muhammad-hoblos/feed/",
+      "rssUrl": "https://rss.muslimcentral.com/muhammad-hoblos.rss",
       "tags": [
         "inspiration"
       ]

@@ -1,11 +1,19 @@
 package com.example.muslimvn
 
+import android.Manifest
+import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.content.ContextCompat
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.compose.animation.AnimatedVisibility
+import javax.inject.Inject
+import androidx.annotation.OptIn
+import androidx.media3.common.util.UnstableApi
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
@@ -30,12 +38,26 @@ import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
+
+    @OptIn(UnstableApi::class)
+    @Inject
+    lateinit var quranPlayerCoordinator: com.example.muslimvn.data.util.QuranPlayerCoordinator
+
     override fun onCreate(savedInstanceState: Bundle?) {
         installSplashScreen()
         super.onCreate(savedInstanceState)
         // Bật edge-to-edge TRƯỚC setContent {}: cửa sổ vẽ tràn cả status/navigation bar,
         // status bar trong suốt, nội dung app trôi liền mạch phía sau system indicators.
         enableEdgeToEdge()
+
+        // Xin quyền thông báo ngay khi vào app (Android 13+)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+                val launcher = registerForActivityResult(ActivityResultContracts.RequestPermission()) { _ -> }
+                launcher.launch(Manifest.permission.POST_NOTIFICATIONS)
+            }
+        }
+
         setContent {
             val settingsViewModel: SettingsViewModel = hiltViewModel()
             val themeMode by settingsViewModel.appTheme.collectAsState()

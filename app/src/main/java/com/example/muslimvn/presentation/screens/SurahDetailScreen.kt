@@ -25,6 +25,7 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLayoutDirection
@@ -41,6 +42,7 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.muslimvn.R
 import com.example.muslimvn.data.preferences.QuranDisplayMode
+import com.example.muslimvn.data.preferences.QuranViewMode
 import com.example.muslimvn.domain.models.Ayah
 import com.example.muslimvn.domain.usecases.SurahDetail
 import com.example.muslimvn.presentation.components.ErrorState
@@ -52,10 +54,17 @@ import com.example.muslimvn.presentation.viewmodels.QuranUiSettings
 import com.example.muslimvn.presentation.viewmodels.TafsirState
 import com.example.muslimvn.presentation.viewmodels.TranslationState
 import com.example.muslimvn.presentation.viewmodels.SurahDetailState
+import com.example.muslimvn.presentation.components.MushafView
+import androidx.compose.ui.layout.ContentScale
 import com.example.muslimvn.presentation.viewmodels.SurahDetailViewModel
 import com.example.muslimvn.ui.theme.extendedTypography
+import coil.compose.AsyncImage
+import com.example.muslimvn.presentation.components.toAndroidAssetUri
+import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.StateFlow
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, kotlinx.coroutines.FlowPreview::class)
 @Composable
 fun SurahDetailScreen(
     onBackClick: () -> Unit,
@@ -69,16 +78,59 @@ fun SurahDetailScreen(
     val isPlaying by viewModel.isPlaying.collectAsState()
     val isBuffering by viewModel.isBuffering.collectAsState()
     val currentMediaId by viewModel.currentMediaId.collectAsState()
-    val playingWordIndex by viewModel.playingWordIndex.collectAsState()
     val isSyncing by viewModel.isSyncing.collectAsState()
     val syncProgress by viewModel.syncProgress.collectAsState()
+    val downloadProgress by viewModel.downloadProgress.collectAsState()
+    val downloadedCount by viewModel.downloadedCount.collectAsState()
     val tafsirState by viewModel.tafsirState.collectAsState()
     val translationState by viewModel.translationState.collectAsState()
     val currentTafsirAyah by viewModel.currentTafsirAyah.collectAsState()
+    val currentMushafPage by viewModel.currentMushafPage.collectAsState()
     val context = LocalContext.current
 
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
     val lazyListState = rememberLazyListState()
+    
+    // Cuộn tới Ayah bắt đầu khi lần đầu mở (Google Style: Seamless transition)
+    LaunchedEffect(state) {
+        if (state is SurahDetailState.Success) {
+            val startAyah = viewModel.getStartAyah()
+            if (startAyah > 1) {
+                // Header là index 0, Bismillah là index 1 (nếu có), nên startAyah index thường là startAyah hoặc startAyah + 1
+                val surah = (state as SurahDetailState.Success).surahDetail.surah
+                val hasBismillah = surah.number != 1 && surah.number != 9
+                val targetIndex = if (hasBismillah) startAyah + 1 else startAyah
+                if (targetIndex < lazyListState.layoutInfo.totalItemsCount) {
+                    lazyListState.scrollToItem(targetIndex)
+                }
+            }
+        }
+    }
+
+    // Theo dõi scroll để cập nhật Tracker (Deep sync) - Thêm debounce để tránh lag khi cuộn nhanh
+    LaunchedEffect(lazyListState) {
+        snapshotFlow { lazyListState.firstVisibleItemIndex }
+            .distinctUntilChanged()
+            .debounce(1000) // Đợi 1 giây sau khi ngừng cuộn mới cập nhật DB
+            .collect { index ->
+                if (state is SurahDetailState.Success) {
+                    val surah = (state as SurahDetailState.Success).surahDetail.surah
+                    val hasBismillah = surah.number != 1 && surah.number != 9
+                    // Index 0: Header
+                    // Index 1: Bismillah (nếu có)
+                    // Index >= 1: Ayahs
+                    val ayahNumber = when {
+                        index == 0 -> 1
+                        hasBismillah && index == 1 -> 1
+                        hasBismillah -> index - 1
+                        else -> index
+                    }
+                    if (ayahNumber >= 1 && ayahNumber <= surah.totalAyahs) {
+                        viewModel.updateLastReadAyah(ayahNumber)
+                    }
+                }
+            }
+    }
     
     var selectedAyah by remember { mutableStateOf<Ayah?>(null) }
     val sheetState = rememberModalBottomSheetState()
@@ -113,7 +165,7 @@ fun SurahDetailScreen(
     Scaffold(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
-            LargeTopAppBar(
+            TopAppBar(
                 title = {
                     if (state is SurahDetailState.Success) {
                         Text(
@@ -138,11 +190,83 @@ fun SurahDetailScreen(
                         )
                     }
                     if (state is SurahDetailState.Success) {
-                        IconButton(onClick = { viewModel.playContinuous(1) }) {
-                            Icon(Icons.Default.PlayArrow, contentDescription = stringResource(R.string.play_all))
+                        val surah = (state as SurahDetailState.Success).surahDetail.surah
+                        val isThisSurahPlaying = currentMediaId?.startsWith("${surah.number}:") == true
+                        val isFullyDownloaded = downloadedCount >= surah.totalAyahs && surah.totalAyahs > 0
+
+                        if (!isFullyDownloaded) {
+                            Box(contentAlignment = Alignment.Center) {
+                                if (downloadProgress > 0 && downloadProgress < 1) {
+                                    CircularProgressIndicator(
+                                        progress = { downloadProgress },
+                                        modifier = Modifier.size(32.dp),
+                                        strokeWidth = 2.dp,
+                                        color = MaterialTheme.colorScheme.primary
+                                    )
+                                }
+                                IconButton(onClick = { viewModel.downloadSurah() }) {
+                                    Icon(
+                                        imageVector = Icons.Default.Download,
+                                        contentDescription = "Tải xuống",
+                                        tint = if (downloadProgress > 0) MaterialTheme.colorScheme.primary else LocalContentColor.current
+                                    )
+                                }
+                            }
+                        } else {
+                            Icon(
+                                imageVector = Icons.Default.DownloadDone,
+                                contentDescription = "Đã tải xuống",
+                                modifier = Modifier.padding(12.dp),
+                                tint = MaterialTheme.colorScheme.primary
+                            )
+                        }
+
+                        IconButton(onClick = { 
+                            if (isThisSurahPlaying) {
+                                if (isPlaying) viewModel.pauseAudio() else viewModel.resumeAudio()
+                            } else {
+                                viewModel.playContinuous(1)
+                            }
+                        }) {
+                            val reciter = com.example.muslimvn.domain.models.availableReciters.find {
+                                it.identifier == quranSettings.reciterIdentifier
+                            }
+
+                            Box(contentAlignment = Alignment.Center) {
+                                if (reciter != null) {
+                                    AsyncImage(
+                                        model = reciter.imageUrl.toAndroidAssetUri(),
+                                        contentDescription = null,
+                                        contentScale = ContentScale.Crop,
+                                        modifier = Modifier
+                                            .size(32.dp)
+                                            .clip(CircleShape)
+                                            .alpha(if (isThisSurahPlaying && isPlaying) 0.7f else 1.0f)
+                                    )
+                                }
+                                Icon(
+                                    imageVector = if (isThisSurahPlaying && isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
+                                    contentDescription = stringResource(R.string.play_all),
+                                    tint = if (reciter != null) Color.White else LocalContentColor.current
+                                )
+                            }
                         }
                     }
-                    IconButton(onClick = onSettingsClick) {
+
+                    IconButton(onClick = { viewModel.toggleViewMode() }) {
+                        Icon(
+                            imageVector = if (quranSettings.viewMode == QuranViewMode.LIST)
+                                Icons.AutoMirrored.Filled.MenuBook else Icons.Default.List,
+                            contentDescription = "Chuyển chế độ xem"
+                        )
+                    }
+
+                    IconButton(onClick = {
+                        onSettingsClick()
+                        // Hoặc nếu muốn truyền tham số trực tiếp:
+                        // navController.navigate(Screen.QuranSettings.createRoute(surah.number))
+                        // Nhưng ở đây onSettingsClick là lambda từ MainNavigation
+                    }) {
                         Icon(Icons.Default.Settings, contentDescription = null)
                     }
                 },
@@ -151,11 +275,11 @@ fun SurahDetailScreen(
         },
         bottomBar = {
             PodcastPlayerBarState(playerViewModel) { active ->
-                androidx.compose.animation.AnimatedVisibility(visible = active != null) {
+                val isQuran = active?.id?.contains(":") == true
+                androidx.compose.animation.AnimatedVisibility(visible = active != null && !isQuran) {
                     if (active != null) {
                         val playlist by playerViewModel.playlist.collectAsState()
-                        val isQuran = active.id.contains(":")
-                        
+
                         MiniPlayerBar(
                             title = active.title,
                             subtitle = active.subtitle,
@@ -170,30 +294,9 @@ fun SurahDetailScreen(
                             onCycleSpeed = playerViewModel::cyclePlaybackSpeed,
                             onOpenFullPlayer = onOpenFullPlayer,
                             currentMediaId = active.id,
-                            playlist = if (isQuran && state is SurahDetailState.Success) {
-                                val sNumber = (state as SurahDetailState.Success).surahDetail.surah.number
-                                (state as SurahDetailState.Success).surahDetail.ayahs.map { ayah ->
-                                    com.example.muslimvn.domain.models.PodcastEpisode(
-                                        id = "${sNumber}:${ayah.ayahNumber}",
-                                        scholarId = sNumber.toString(),
-                                        title = "Câu ${ayah.ayahNumber}",
-                                        audioUrl = "",
-                                        artworkUrl = "icon/quran.png",
-                                        duration = 0,
-                                        pubDate = 0,
-                                        description = "",
-                                        isDownloaded = false,
-                                        lastPositionMs = 0
-                                    )
-                                }
-                            } else playlist,
+                            playlist = playlist,
                             onPlayEpisode = { episode ->
-                                if (isQuran) {
-                                    val ayahNum = episode.id.split(":").getOrNull(1)?.toIntOrNull() ?: 1
-                                    viewModel.playAyah(ayahNum)
-                                } else {
-                                    playerViewModel.playEpisode(episode)
-                                }
+                                playerViewModel.playEpisode(episode)
                             }
                         )
                     }
@@ -222,48 +325,59 @@ fun SurahDetailScreen(
                 }
                 is SurahDetailState.Success -> {
                     val surahDetail = currentState.surahDetail
-                    LazyColumn(
-                        state = lazyListState,
-                        modifier = Modifier.fillMaxSize(),
-                        contentPadding = PaddingValues(16.dp)
-                    ) {
-                        item {
-                            SurahHeader(surahDetail.surah.nameArabic, surahDetail.surah.nameVietnamese)
-                        }
-                        
-                        if (surahDetail.surah.number != 1 && surahDetail.surah.number != 9) {
+                    
+                    if (quranSettings.viewMode == QuranViewMode.MUSHAF) {
+                        MushafView(
+                            initialPage = currentMushafPage,
+                            onPageChanged = viewModel::onMushafPageChanged,
+                            modifier = Modifier.fillMaxSize()
+                        )
+                    } else {
+                        LazyColumn(
+                            state = lazyListState,
+                            modifier = Modifier.fillMaxSize(),
+                            contentPadding = PaddingValues(16.dp)
+                        ) {
                             item {
-                                Box(
-                                    modifier = Modifier.fillMaxWidth().padding(vertical = 24.dp),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Text(
-                                        text = "بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ",
-                                        style = MaterialTheme.extendedTypography.arabicHeading,
-                                        fontSize = (quranSettings.fontSize * 1.2).sp,
-                                        color = MaterialTheme.colorScheme.primary
-                                    )
+                                SurahHeader(surahDetail.surah.nameArabic, surahDetail.surah.nameVietnamese)
+                            }
+                            
+                            if (surahDetail.surah.number != 1 && surahDetail.surah.number != 9) {
+                                item {
+                                    Box(
+                                        modifier = Modifier.fillMaxWidth().padding(vertical = 24.dp),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Text(
+                                            text = "بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ",
+                                            style = MaterialTheme.extendedTypography.arabicHeading,
+                                            fontSize = (quranSettings.fontSize * 1.2).sp,
+                                            color = MaterialTheme.colorScheme.primary
+                                        )
+                                    }
                                 }
                             }
-                        }
-                        
-                        items(surahDetail.ayahs, key = { it.id }) { ayah ->
-                            val isAyahPlaying = currentMediaId == "${surahDetail.surah.number}:${ayah.ayahNumber}"
-                            val currentPlayingWordIndex = if (isAyahPlaying) playingWordIndex else null
                             
-                            AyahItem(
-                                ayah = ayah,
-                                fontSize = quranSettings.fontSize,
-                                displayMode = quranSettings.displayMode,
-                                isPlaying = isAyahPlaying && isPlaying,
-                                isBuffering = isAyahPlaying && isBuffering,
-                                playingWordIndex = currentPlayingWordIndex,
-                                isAnyAyahPlaying = isPlaying && currentMediaId != null,
-                                onClick = { selectedAyah = ayah }
-                            )
-                            HorizontalDivider(
-                                color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f)
-                            )
+                            items(surahDetail.ayahs, key = { it.id }) { ayah ->
+                                val isAyahPlaying = currentMediaId == "${surahDetail.surah.number}:${ayah.ayahNumber}"
+                                
+                                AyahItem(
+                                    ayah = ayah,
+                                    fontSize = quranSettings.fontSize,
+                                    displayMode = quranSettings.displayMode,
+                                    isPlaying = isAyahPlaying && isPlaying,
+                                    isBuffering = isAyahPlaying && isBuffering,
+                                    playingWordIndexFlow = viewModel.playingWordIndex,
+                                    isAyahPlaying = isAyahPlaying,
+                                    isAnyAyahPlaying = isPlaying && currentMediaId != null,
+                                    onClick = { selectedAyah = ayah }
+                                )
+                                HorizontalDivider(
+                                    modifier = Modifier.padding(horizontal = 16.dp),
+                                    thickness = 0.5.dp,
+                                    color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
+                                )
+                            }
                         }
                     }
                 }
@@ -614,10 +728,12 @@ fun AyahItem(
     displayMode: QuranDisplayMode,
     isPlaying: Boolean,
     isBuffering: Boolean,
-    playingWordIndex: Int? = null,
+    playingWordIndexFlow: StateFlow<Int?>,
+    isAyahPlaying: Boolean,
     isAnyAyahPlaying: Boolean = false,
     onClick: () -> Unit
 ) {
+    val playingWordIndex by if (isAyahPlaying) playingWordIndexFlow.collectAsState() else remember { mutableStateOf<Int?>(null) }
     // Focus Effect: Chỉ mờ khi CÓ audio đang phát toàn cục. Nếu không phát gì, tất cả đều rõ nét (Alpha 1.0)
     val itemAlpha by animateFloatAsState(
         targetValue = if (isAnyAyahPlaying && !isPlaying) 0.4f else 1.0f,
@@ -638,7 +754,7 @@ fun AyahItem(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .alpha(itemAlpha)
+            .graphicsLayer { alpha = itemAlpha }
             .clip(RoundedCornerShape(16.dp))
             .background(containerColor)
             .clickable { onClick() }
@@ -777,8 +893,11 @@ private fun WordItem(
         color = color,
         modifier = Modifier
             .padding(horizontal = 3.dp) // Tăng nhẹ khoảng cách ngang giữa các từ
-            .alpha(alpha)
-            .scale(scale)
+            .graphicsLayer {
+                this.alpha = alpha
+                scaleX = scale
+                scaleY = scale
+            }
     )
 }
 

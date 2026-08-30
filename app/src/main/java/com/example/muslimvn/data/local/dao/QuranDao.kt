@@ -2,6 +2,7 @@ package com.example.muslimvn.data.local.dao
 
 import androidx.room.*
 import com.example.muslimvn.data.local.entities.AyahEntity
+import com.example.muslimvn.data.local.entities.DownloadedAyahEntity
 import com.example.muslimvn.data.local.entities.SurahEntity
 import com.example.muslimvn.data.local.entities.TafsirEntity
 import com.example.muslimvn.data.local.entities.VerseTimingEntity
@@ -9,7 +10,36 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface QuranDao {
-    // ... existing methods ...
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertDownloadedAyah(downloadedAyah: DownloadedAyahEntity)
+
+    @Query("SELECT * FROM downloaded_ayahs WHERE verseKey = :verseKey AND reciterId = :reciterId")
+    suspend fun getDownloadedAyah(verseKey: String, reciterId: Int): DownloadedAyahEntity?
+
+    @Query("SELECT localPath FROM downloaded_ayahs WHERE verseKey = :verseKey AND reciterId = :reciterId")
+    fun getDownloadedAyahPathFlow(verseKey: String, reciterId: Int): Flow<String?>
+
+    @Query("SELECT COUNT(*) FROM downloaded_ayahs WHERE verseKey LIKE :surahNumber || ':%' AND reciterId = :reciterId")
+    suspend fun getDownloadedAyahsCount(surahNumber: Int, reciterId: Int): Int
+
+    @Query("SELECT COUNT(*) FROM downloaded_ayahs WHERE verseKey LIKE :surahNumber || ':%' AND reciterId = :reciterId")
+    fun getDownloadedAyahsCountFlow(surahNumber: Int, reciterId: Int): Flow<Int>
+
+    @Query("SELECT COUNT(*) FROM downloaded_ayahs WHERE reciterId = :reciterId")
+    fun getTotalDownloadedAyahsCount(reciterId: Int): Flow<Int>
+
+    @Query("SELECT COUNT(*) FROM downloaded_ayahs WHERE reciterId = :reciterId")
+    suspend fun getTotalDownloadedAyahsCountSync(reciterId: Int): Int
+
+    @Query("DELETE FROM downloaded_ayahs WHERE reciterId = :reciterId")
+    suspend fun deleteAllDownloadedAyahs(reciterId: Int)
+
+    @Query("DELETE FROM downloaded_ayahs WHERE verseKey LIKE :surahNumber || ':%' AND reciterId = :reciterId")
+    suspend fun deleteSurahDownloadedAyahs(surahNumber: Int, reciterId: Int)
+
+    @Query("SELECT * FROM downloaded_ayahs WHERE verseKey LIKE :surahNumber || ':%' AND reciterId = :reciterId")
+    suspend fun getDownloadedAyahsForSurah(surahNumber: Int, reciterId: Int): List<DownloadedAyahEntity>
+    
     @Query("SELECT * FROM surahs ORDER BY number ASC")
     fun getAllSurahs(): Flow<List<SurahEntity>>
 
@@ -40,6 +70,12 @@ interface QuranDao {
 
     @Query("SELECT * FROM verse_timings WHERE verseKey = :verseKey AND reciterId = :reciterId")
     suspend fun getVerseTiming(verseKey: String, reciterId: Int): VerseTimingEntity?
+
+    @Query("SELECT * FROM verse_timings WHERE verseKey LIKE :surahNumber || ':%' AND reciterId = :reciterId")
+    suspend fun getVerseTimingsForSurah(surahNumber: Int, reciterId: Int): List<VerseTimingEntity>
+
+    @Query("SELECT COUNT(*) FROM verse_timings WHERE verseKey LIKE :surahNumber || ':%' AND reciterId = :reciterId")
+    suspend fun getVerseTimingCountForSurah(surahNumber: Int, reciterId: Int): Int
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertVerseTiming(timing: VerseTimingEntity)

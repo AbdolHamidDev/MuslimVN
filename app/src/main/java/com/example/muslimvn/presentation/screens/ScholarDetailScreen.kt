@@ -51,6 +51,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.paging.LoadState
+import androidx.paging.compose.collectAsLazyPagingItems
 import coil.compose.AsyncImage
 import com.example.muslimvn.R
 import com.example.muslimvn.domain.models.PodcastEpisode
@@ -80,6 +82,7 @@ fun ScholarDetailScreen(
     playerViewModel: PodcastPlayerViewModel = hiltViewModel()
 ) {
     val state by viewModel.uiState.collectAsState()
+    val episodes = viewModel.episodesPagingData.collectAsLazyPagingItems()
 
     Scaffold(
         topBar = {
@@ -103,7 +106,8 @@ fun ScholarDetailScreen(
         },
         bottomBar = {
             PodcastPlayerBarState(playerViewModel) { active ->
-                AnimatedVisibility(visible = active != null) {
+                val isQuran = active?.id?.contains(":") == true
+                AnimatedVisibility(visible = active != null && !isQuran) {
                     if (active != null) {
                         val playlist by playerViewModel.playlist.collectAsState()
                         MiniPlayerBar(
@@ -142,7 +146,7 @@ fun ScholarDetailScreen(
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 item(key = "header") {
-                    ScholarHeader(scholar = state.scholar, episodeCount = state.episodes.size)
+                    ScholarHeader(scholar = state.scholar, episodeCount = state.totalEpisodesCount)
                 }
                 if (state.isRefreshing) {
                     item(key = "refreshing") {
@@ -162,7 +166,17 @@ fun ScholarDetailScreen(
                         modifier = Modifier.padding(horizontal = 16.dp)
                     )
                 }
-                if (!state.isLoading && state.episodes.isEmpty() && !state.isRefreshing && !state.offlineError) {
+                
+                // Loading state cho trang đầu tiên của Paging
+                if (episodes.loadState.refresh is LoadState.Loading && state.totalEpisodesCount == 0) {
+                    item {
+                        Box(modifier = Modifier.fillMaxWidth().padding(24.dp), contentAlignment = Alignment.Center) {
+                            CircularProgressIndicator()
+                        }
+                    }
+                }
+
+                if (episodes.itemCount == 0 && !state.isLoading && !state.isRefreshing && episodes.loadState.refresh is LoadState.NotLoading) {
                     item(key = "empty") {
                         EmptyState(
                             message = stringResource(R.string.podcast_empty_episodes),
@@ -170,15 +184,31 @@ fun ScholarDetailScreen(
                         )
                     }
                 }
-                items(state.episodes, key = { it.id }) { episode ->
-                    EpisodeRow(
-                        episode = episode,
-                        scholarName = state.scholar?.name,
-                        isCurrent = viewModel.currentEpisodeId.collectAsState().value == episode.id,
-                        isPlaying = viewModel.isPlaying.collectAsState().value,
-                        isBuffering = viewModel.isBuffering.collectAsState().value,
-                        onPlayPause = { viewModel.onPlayPauseClicked(episode, state.scholar?.name) }
-                    )
+                
+                items(
+                    count = episodes.itemCount,
+                    key = { index -> episodes[index]?.id ?: "placeholder_$index" }
+                ) { index ->
+                    val episode = episodes[index]
+                    if (episode != null) {
+                        EpisodeRow(
+                            episode = episode,
+                            scholarName = state.scholar?.name,
+                            isCurrent = viewModel.currentEpisodeId.collectAsState().value == episode.id,
+                            isPlaying = viewModel.isPlaying.collectAsState().value,
+                            isBuffering = viewModel.isBuffering.collectAsState().value,
+                            onPlayPause = { viewModel.onPlayPauseClicked(episode, state.scholar?.name) }
+                        )
+                    }
+                }
+
+                // Loading state cho tải thêm trang (Append)
+                if (episodes.loadState.append is LoadState.Loading) {
+                    item {
+                        Box(modifier = Modifier.fillMaxWidth().padding(16.dp), contentAlignment = Alignment.Center) {
+                            CircularProgressIndicator(modifier = Modifier.size(32.dp))
+                        }
+                    }
                 }
             }
         }
