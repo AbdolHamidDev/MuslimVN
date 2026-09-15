@@ -1,33 +1,37 @@
 package com.example.muslimvn.data.repository
 
+import android.net.Uri
 import com.example.muslimvn.core.utils.TimeUtils
 import com.example.muslimvn.domain.models.YoutubeVideo
 import com.example.muslimvn.domain.models.YoutubeVideoDetail
 import com.example.muslimvn.domain.repository.StreamDownloadInfo
 import com.example.muslimvn.domain.repository.VideoAndAudioStreamInfo
 import com.example.muslimvn.domain.repository.YoutubeRepository
-import com.example.muslimvn.data.util.YoutubeRssParser
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.withContext
-import org.schabi.newpipe.extractor.InfoItem
 import org.schabi.newpipe.extractor.MediaFormat
 import org.schabi.newpipe.extractor.ServiceList
+import org.schabi.newpipe.extractor.channel.ChannelInfo
+import org.schabi.newpipe.extractor.channel.tabs.ChannelTabInfo
+import org.schabi.newpipe.extractor.channel.tabs.ChannelTabs
+import org.schabi.newpipe.extractor.linkhandler.ListLinkHandler
+import org.schabi.newpipe.extractor.stream.AudioStream
+import org.schabi.newpipe.extractor.stream.AudioTrackType
 import org.schabi.newpipe.extractor.stream.DeliveryMethod
+import org.schabi.newpipe.extractor.stream.StreamInfo
 import org.schabi.newpipe.extractor.stream.StreamInfoItem
 import kotlin.collections.filterIsInstance
 import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-class YoutubeRepositoryImpl @Inject constructor(
-    private val rssParser: YoutubeRssParser
-) : YoutubeRepository {
+class YoutubeRepositoryImpl @Inject constructor() : YoutubeRepository {
 
     private val videoCache = java.util.concurrent.ConcurrentHashMap<String, Pair<List<YoutubeVideo>, Long>>()
-    private val playlistExtractors = java.util.concurrent.ConcurrentHashMap<String, org.schabi.newpipe.extractor.playlist.PlaylistExtractor>()
+    private val channelVideoTabs = java.util.concurrent.ConcurrentHashMap<String, ListLinkHandler>()
     private val nextPages = java.util.concurrent.ConcurrentHashMap<String, org.schabi.newpipe.extractor.Page>()
     private val CACHE_DURATION_MS = 30 * 60 * 1000L // 30 minutes cache
 
@@ -41,80 +45,21 @@ class YoutubeRepositoryImpl @Inject constructor(
 
         try {
             val service = ServiceList.YouTube
-            val cleanedUrl = channelUrl.substringBefore("/videos")
-                .substringBefore("/streams")
-                .substringBefore("/shorts")
-                .trimEnd('/')
+            // Standard NewPipe flow: resolve the channel, then load its official
+            // Videos tab. Locale is taken from NewPipe.init(), not URL parameters.
+            val channelInfo = ChannelInfo.getInfo(service, channelUrl)
+            val videosTab = channelInfo.tabs.firstOrNull { tab ->
+                tab.contentFilters.firstOrNull() == ChannelTabs.VIDEOS
+            } ?: throw IllegalStateException("Kênh không có tab video")
+            val videosInfo = ChannelTabInfo.getInfo(service, videosTab)
 
-            val localizedChannelUrl = "$cleanedUrl/videos?hl=vi-VN&gl=VN"
-            val linkHandler = service.getChannelLHFactory().fromUrl(localizedChannelUrl)
-            val extractor = service.getChannelExtractor(linkHandler)
-            extractor.fetchPage()
+            channelVideoTabs[channelUrl] = videosTab
+            videosInfo.nextPage?.let { nextPages[channelUrl] = it }
+                ?: nextPages.remove(channelUrl)
 
-            val rawId = extractor.id
-            val channelId = if (rawId.startsWith("UC")) rawId else "UC-lHJZr3Gqxm24_Vd_AJ5Yw"
-
-            val allItems = mutableListOf<InfoItem>()
-
-            val rssResult = rssParser.fetchVideos(channelId)
-            val latestVideo = rssResult.getOrNull()?.firstOrNull()
-            val latestVideoId = latestVideo?.id ?: "dQw4w9WgXcQ"
-
-            // Ưu tiên tải dữ liệu từ Playlist Uploads vì URL chuẩn sẽ tự động tương thích với locale
-            try {
-                val playlistId = "UU" + channelId.drop(2)
-                val uploadsPlaylistUrl = "https://www.youtube.com/playlist?list=$playlistId&hl=vi-VN&gl=VN"
-                val playlistLinkHandler = service.getPlaylistLHFactory().fromUrl(uploadsPlaylistUrl)
-                val playlistExtractor = service.getPlaylistExtractor(playlistLinkHandler)
-                playlistExtractor.fetchPage()
-
-                val initialPage = playlistExtractor.getInitialPage()
-                allItems.addAll(initialPage.items)
-
-                playlistExtractors[channelUrl] = playlistExtractor
-                initialPage.nextPage?.let { nextPages[channelUrl] = it } ?: nextPages.remove(channelUrl)
-            } catch (e: Exception) {
-                // Rơi xuống dùng RSS nếu các Extractor bị thất bại
-            }
-
-            val videos = if (allItems.isNotEmpty()) {
-                allItems
-                    .filterIsInstance<StreamInfoItem>()
-                    .map { item ->
-                        val url = item.url ?: ""
-                        val timestamp = item.uploadDate?.instant?.toEpochMilli() ?: 0L
-                        val formattedDate = if (timestamp > 0) {
-                            TimeUtils.getRelativeTimeSpanString(timestamp)
-                        } else {
-                            ""
-                        }
-
-                        val videoId = url.substringAfter("v=", "").substringBefore("&")
-                        val rawThumbnail = item.thumbnails.maxByOrNull { it.width * it.height }?.url
-                            ?: item.thumbnails.lastOrNull()?.url
-                            ?: ""
-                        val bestThumbnail = if (videoId.isNotEmpty()) {
-                            "https://img.youtube.com/vi/$videoId/maxresdefault.jpg"
-                        } else if (rawThumbnail.isNotEmpty()) {
-                            rawThumbnail.replace("hqdefault.jpg", "maxresdefault.jpg")
-                        } else {
-                            ""
-                        }
-
-                        YoutubeVideo(
-                            id = videoId,
-                            title = item.name ?: "Untitled",
-                            thumbnailUrl = bestThumbnail,
-                            uploaderName = item.uploaderName ?: "",
-                            duration = item.duration,
-                            viewCount = item.viewCount,
-                            uploadDate = formattedDate,
-                            videoUrl = url
-                        )
-                    }
-            } else {
-                rssResult.getOrNull() ?: emptyList()
-            }
+            val videos = videosInfo.relatedItems
+                .filterIsInstance<StreamInfoItem>()
+                .map { it.toYoutubeVideo() }
 
             if (videos.isNotEmpty()) {
                 videoCache[channelUrl] = Pair(videos, System.currentTimeMillis())
@@ -128,10 +73,10 @@ class YoutubeRepositoryImpl @Inject constructor(
 
     override suspend fun loadMoreVideos(channelUrl: String): Result<List<YoutubeVideo>> = withContext(Dispatchers.IO) {
         runCatching {
-            val playlistExtractor = playlistExtractors[channelUrl] ?: return@runCatching emptyList()
+            val videosTab = channelVideoTabs[channelUrl] ?: return@runCatching emptyList()
             val nextPage = nextPages[channelUrl] ?: return@runCatching emptyList()
 
-            val page = playlistExtractor.getPage(nextPage)
+            val page = ChannelTabInfo.getMoreItems(ServiceList.YouTube, videosTab, nextPage)
             if (page.nextPage != null) {
                 nextPages[channelUrl] = page.nextPage!!
             } else {
@@ -140,49 +85,16 @@ class YoutubeRepositoryImpl @Inject constructor(
 
             page.items
                 .filterIsInstance<StreamInfoItem>()
-                .map { item ->
-                    val url = item.url ?: ""
-                    val timestamp = item.uploadDate?.instant?.toEpochMilli() ?: 0L
-                    val formattedDate = if (timestamp > 0) {
-                        TimeUtils.getRelativeTimeSpanString(timestamp)
-                    } else {
-                        ""
-                    }
-
-                    val videoId = url.substringAfter("v=", "").substringBefore("&")
-                    val rawThumbnail = item.thumbnails.maxByOrNull { it.width * it.height }?.url
-                        ?: item.thumbnails.lastOrNull()?.url
-                        ?: ""
-                    val bestThumbnail = if (videoId.isNotEmpty()) {
-                        "https://img.youtube.com/vi/$videoId/maxresdefault.jpg"
-                    } else if (rawThumbnail.isNotEmpty()) {
-                        rawThumbnail.replace("hqdefault.jpg", "maxresdefault.jpg")
-                    } else {
-                        ""
-                    }
-
-                    YoutubeVideo(
-                        id = videoId,
-                        title = item.name ?: "Untitled",
-                        thumbnailUrl = bestThumbnail,
-                        uploaderName = item.uploaderName ?: "",
-                        duration = item.duration,
-                        viewCount = item.viewCount,
-                        uploadDate = formattedDate,
-                        videoUrl = url
-                    )
-                }
+                .map { it.toYoutubeVideo() }
         }
     }
 
     override fun getVideoStreamUrl(videoUrl: String): Flow<Result<String>> = flow {
         try {
             val service = ServiceList.YouTube
-            val linkHandler = service.getStreamLHFactory().fromUrl(videoUrl)
-            val extractor = service.getStreamExtractor(linkHandler)
-            extractor.fetchPage()
+            val streamInfo = StreamInfo.getInfo(service, videoUrl)
 
-            val streams = extractor.videoStreams
+            val streams = streamInfo.videoStreams
             val streamUrl = streams
                 .filter { it.deliveryMethod == DeliveryMethod.PROGRESSIVE_HTTP }
                 .maxByOrNull { it.height }?.content
@@ -198,26 +110,16 @@ class YoutubeRepositoryImpl @Inject constructor(
     override fun getAudioStreamUrl(videoUrl: String): Flow<Result<String>> = flow {
         try {
             val service = ServiceList.YouTube
-            val linkHandler = service.getStreamLHFactory().fromUrl(videoUrl)
-            val extractor = service.getStreamExtractor(linkHandler)
-            extractor.fetchPage()
+            val streamInfo = StreamInfo.getInfo(service, videoUrl)
 
-            // Ưu tiên luồng progressive_http (luồng MP4 chứa audio đầy đủ, không bị YouTube bóp tốc độ)
-            val progressiveStream = extractor.videoStreams
-                .filter { it.deliveryMethod == DeliveryMethod.PROGRESSIVE_HTTP }
-                .minByOrNull { it.height }
-                ?: extractor.videoStreams.firstOrNull()
+            val audioStreams = streamInfo.audioStreams
+            // YouTube có thể trả track DUBBED (giọng AI) cùng với track ORIGINAL. Chọn
+            // ORIGINAL trước bitrate để tệp podcast luôn giữ tiếng/giọng của video gốc.
+            val m4aAudio = selectOriginalM4aAudioStream(audioStreams)
+                ?: throw Exception("Không tìm thấy luồng âm thanh M4A phù hợp")
 
-            val audioStreams = extractor.audioStreams
-            val bestAudio = audioStreams
-                .filter { it.format == MediaFormat.M4A || it.format?.name?.equals("M4A", ignoreCase = true) == true }
-                .maxByOrNull { it.averageBitrate }
-                ?: audioStreams.maxByOrNull { it.averageBitrate }
-                ?: audioStreams.firstOrNull()
-
-            val audioUrl = progressiveStream?.content
-                ?: bestAudio?.content
-                ?: throw Exception("Không tìm thấy luồng âm thanh phù hợp")
+            val audioUrl = m4aAudio.content
+                ?: throw Exception("URL luồng âm thanh M4A trống")
 
             emit(Result.success(audioUrl))
         } catch (e: Exception) {
@@ -228,13 +130,11 @@ class YoutubeRepositoryImpl @Inject constructor(
     override fun getMediaStreamInfo(videoUrl: String): Flow<Result<VideoAndAudioStreamInfo>> = flow {
         try {
             val service = ServiceList.YouTube
-            val linkHandler = service.getStreamLHFactory().fromUrl(videoUrl)
-            val extractor = service.getStreamExtractor(linkHandler)
-            extractor.fetchPage()
+            val streamInfo = StreamInfo.getInfo(service, videoUrl)
 
-            val durationSeconds = extractor.length
+            val durationSeconds = streamInfo.duration
 
-            val videoStreams = extractor.videoStreams
+            val videoStreams = streamInfo.videoStreams
             val bestVideoStream = videoStreams
                 .filter { it.deliveryMethod == DeliveryMethod.PROGRESSIVE_HTTP }
                 .maxByOrNull { it.height }
@@ -247,20 +147,13 @@ class YoutubeRepositoryImpl @Inject constructor(
                 StreamDownloadInfo(bestVideoStream.content, size)
             } else null
 
-            val progressiveAudioStream = videoStreams
-                .filter { it.deliveryMethod == DeliveryMethod.PROGRESSIVE_HTTP }
-                .minByOrNull { it.height }
-                ?: videoStreams.firstOrNull()
+            val audioStreams = streamInfo.audioStreams
+            // Dùng cùng lựa chọn ORIGINAL với getAudioStreamUrl() để dung lượng trong
+            // dialog khớp track M4A thực tế sẽ được tải.
+            val m4aAudioStream = selectOriginalM4aAudioStream(audioStreams)
 
-            val audioStreams = extractor.audioStreams
-            val bestAudioStream = audioStreams
-                .filter { it.format == MediaFormat.M4A || it.format?.name?.equals("M4A", ignoreCase = true) == true }
-                .maxByOrNull { it.averageBitrate }
-                ?: audioStreams.maxByOrNull { it.averageBitrate }
-                ?: audioStreams.firstOrNull()
-
-            val selectedAudioContent = progressiveAudioStream?.content ?: bestAudioStream?.content
-            val selectedAudioBitrate = progressiveAudioStream?.bitrate ?: bestAudioStream?.averageBitrate ?: 0
+            val selectedAudioContent = m4aAudioStream?.content
+            val selectedAudioBitrate = m4aAudioStream?.averageBitrate ?: 0
 
             val audioInfo = if (!selectedAudioContent.isNullOrEmpty()) {
                 val size = if (selectedAudioBitrate > 0 && durationSeconds > 0) {
@@ -275,57 +168,49 @@ class YoutubeRepositoryImpl @Inject constructor(
         }
     }.flowOn(Dispatchers.IO)
 
+    private fun selectOriginalM4aAudioStream(audioStreams: List<AudioStream>): AudioStream? {
+        val m4aStreams = audioStreams.filter {
+            it.format == MediaFormat.M4A || it.format?.name?.equals("M4A", ignoreCase = true) == true
+        }
+        return m4aStreams
+            .filter { it.audioTrackType == AudioTrackType.ORIGINAL }
+            .maxByOrNull { it.averageBitrate }
+            // Old videos may not expose a track type. In that case accept the unspecified track,
+            // but never prefer an explicitly dubbed or descriptive one.
+            ?: m4aStreams
+                .filter { it.audioTrackType != AudioTrackType.DUBBED && it.audioTrackType != AudioTrackType.DESCRIPTIVE }
+                .maxByOrNull { it.averageBitrate }
+            ?: m4aStreams.maxByOrNull { it.averageBitrate }
+    }
+
     override fun getVideoDetail(videoUrl: String): Flow<Result<YoutubeVideoDetail>> = flow {
         try {
             val service = ServiceList.YouTube
-            // Thêm tham số hl=vi-VN và gl=VN để gợi ý YouTube trả về tiếng Việt
-            val localizedUrl = if (videoUrl.contains("?")) "$videoUrl&hl=vi-VN&gl=VN" else "$videoUrl?hl=vi-VN&gl=VN"
-            val linkHandler = service.getStreamLHFactory().fromUrl(localizedUrl)
-            val extractor = service.getStreamExtractor(linkHandler)
-            extractor.fetchPage()
+            val streamInfo = StreamInfo.getInfo(service, videoUrl)
 
-            val relatedItems = (extractor.relatedItems?.items ?: emptyList<InfoItem>())
-                .filterIsInstance<StreamInfoItem>()
-                .map { item ->
-                    val url = item.url ?: ""
-                    val videoId = url.substringAfter("v=", "").substringBefore("&")
-                    val rawThumbnail = item.thumbnails.maxByOrNull { it.width * it.height }?.url
-                        ?: item.thumbnails.lastOrNull()?.url
-                        ?: ""
-                    val bestThumbnail = if (videoId.isNotEmpty()) {
-                        "https://img.youtube.com/vi/$videoId/maxresdefault.jpg"
-                    } else if (rawThumbnail.isNotEmpty()) {
-                        rawThumbnail.replace("hqdefault.jpg", "maxresdefault.jpg")
-                    } else ""
+            val relatedItems = mutableListOf<YoutubeVideo>()
+            for (item in streamInfo.relatedItems.filterIsInstance<StreamInfoItem>()) {
+                relatedItems += item.toYoutubeVideo(includeUploadDate = false)
+            }
 
-                    YoutubeVideo(
-                        id = videoId,
-                        title = item.name ?: "Untitled",
-                        thumbnailUrl = bestThumbnail,
-                        uploaderName = item.uploaderName ?: "",
-                        duration = item.duration,
-                        viewCount = item.viewCount,
-                        uploadDate = "",
-                        videoUrl = url
-                    )
-                }
-
-            val videoId = videoUrl.substringAfter("v=", "").substringBefore("&")
-            val avatars = extractor.uploaderAvatars
-            val avatarUrl = if (!avatars.isNullOrEmpty()) {
+            val videoId = streamInfo.id
+            val avatars = streamInfo.uploaderAvatars
+            val avatarUrl = if (avatars.isNotEmpty()) {
                 avatars.maxByOrNull { it.width * it.height }?.url ?: avatars.first().url
             } else ""
+            val thumbnailUrl = streamInfo.thumbnails
+                .maxByOrNull { it.width * it.height }?.url.orEmpty()
 
             val detail = YoutubeVideoDetail(
                 id = videoId,
-                title = extractor.name ?: "",
-                description = extractor.description?.content ?: "",
-                uploadDateTimestamp = extractor.uploadDate?.instant?.toEpochMilli() ?: 0L,
-                viewCount = extractor.viewCount,
+                title = streamInfo.name.orEmpty(),
+                description = streamInfo.description?.content.orEmpty(),
+                uploadDateTimestamp = streamInfo.uploadDate?.instant?.toEpochMilli() ?: 0L,
+                viewCount = streamInfo.viewCount,
                 videoUrl = videoUrl,
-                thumbnailUrl = "https://img.youtube.com/vi/$videoId/maxresdefault.jpg",
-                uploaderName = extractor.uploaderName ?: "",
-                uploaderUrl = extractor.uploaderUrl ?: "",
+                thumbnailUrl = thumbnailUrl,
+                uploaderName = streamInfo.uploaderName.orEmpty(),
+                uploaderUrl = streamInfo.uploaderUrl.orEmpty(),
                 uploaderAvatarUrl = avatarUrl,
                 relatedVideos = relatedItems
             )
@@ -334,4 +219,36 @@ class YoutubeRepositoryImpl @Inject constructor(
             emit(Result.failure(e))
         }
     }.flowOn(Dispatchers.IO)
+
+    private fun StreamInfoItem.toYoutubeVideo(includeUploadDate: Boolean = true): YoutubeVideo {
+        val url = url.orEmpty()
+        val timestamp = uploadDate?.instant?.toEpochMilli() ?: 0L
+        val formattedDate = if (includeUploadDate && timestamp > 0) {
+            TimeUtils.getRelativeTimeSpanString(timestamp)
+        } else {
+            ""
+        }
+        val videoId = videoIdFromUrl(url)
+        val rawThumbnail = thumbnails.maxByOrNull { it.width * it.height }?.url
+            ?: thumbnails.lastOrNull()?.url.orEmpty()
+        return YoutubeVideo(
+            id = videoId,
+            title = name ?: "Untitled",
+            // Use exactly the thumbnail URL selected by NewPipe. A constructed
+            // maxres URL is not guaranteed to exist for every YouTube video.
+            thumbnailUrl = rawThumbnail,
+            uploaderName = uploaderName.orEmpty(),
+            duration = duration,
+            viewCount = viewCount,
+            uploadDate = formattedDate,
+            videoUrl = url
+        )
+    }
+
+    private fun videoIdFromUrl(url: String): String {
+        val uri = Uri.parse(url)
+        return uri.getQueryParameter("v")
+            ?: uri.lastPathSegment.orEmpty()
+    }
+
 }

@@ -8,6 +8,7 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -17,10 +18,16 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
+import androidx.compose.ui.input.nestedscroll.NestedScrollSource
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.compose.ui.zIndex
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.ui.PlayerView
@@ -36,6 +43,8 @@ fun PortraitLayout(
     isLoadingPlayer: Boolean,
     playerError: String?,
     exoPlayer: ExoPlayer,
+    videoAspectRatio: Float,
+    isPortraitVideo: Boolean,
     onToggleFullscreen: () -> Unit,
     onVideoClick: (YoutubeVideo) -> Unit,
     onDownloadClick: () -> Unit,
@@ -47,6 +56,7 @@ fun PortraitLayout(
     val activity = context as? Activity
     val coroutineScope = rememberCoroutineScope()
     var isControllerVisible by remember { mutableStateOf(false) }
+    val listState = rememberLazyListState()
 
     val onFeatureNotReady: (String) -> Unit = { featureName ->
         coroutineScope.launch {
@@ -66,12 +76,68 @@ fun PortraitLayout(
         }
     }
 
-    Column(modifier = modifier.fillMaxSize()) {
+    BoxWithConstraints(modifier = modifier.fillMaxSize()) {
+        val density = LocalDensity.current
+        // Video ngang vẫn dùng đúng aspect ratio stream; video dọc thu về 16:9.
+        val collapsedAspectRatio = if (isPortraitVideo) 16f / 9f else videoAspectRatio.coerceIn(1f, 4f)
+        val collapsedHeightPx = with(density) { (maxWidth / collapsedAspectRatio).toPx() }
+        val expandedHeightPx = maxOf(
+            collapsedHeightPx,
+            with(density) { maxHeight.toPx() } * PORTRAIT_EXPANDED_HEIGHT_FRACTION
+        )
+        var playerHeightPx by remember(
+            isPortraitVideo,
+            expandedHeightPx,
+            collapsedHeightPx
+        ) {
+            mutableFloatStateOf(if (isPortraitVideo) expandedHeightPx else collapsedHeightPx)
+        }
+
+        val playerScrollConnection = remember(
+            isPortraitVideo,
+            expandedHeightPx,
+            collapsedHeightPx,
+            listState
+        ) {
+            object : NestedScrollConnection {
+                override fun onPreScroll(available: Offset, source: NestedScrollSource): Offset {
+                    if (!isPortraitVideo) return Offset.Zero
+
+                    val deltaY = available.y
+                    val consumedY = when {
+                        // Cuộn lên: thu player trước rồi mới cuộn nội dung.
+                        deltaY < 0f && playerHeightPx > collapsedHeightPx ->
+                            maxOf(deltaY, collapsedHeightPx - playerHeightPx)
+                        // Chỉ giãn player khi danh sách đã quay lại vị trí đầu.
+                        deltaY > 0f &&
+                            listState.firstVisibleItemIndex == 0 &&
+                            listState.firstVisibleItemScrollOffset == 0 &&
+                            playerHeightPx < expandedHeightPx ->
+                            minOf(deltaY, expandedHeightPx - playerHeightPx)
+                        else -> 0f
+                    }
+                    if (consumedY != 0f) {
+                        playerHeightPx = (playerHeightPx + consumedY)
+                            .coerceIn(collapsedHeightPx, expandedHeightPx)
+                    }
+                    return Offset(0f, consumedY)
+                }
+            }
+        }
+
+        val playerHeight = with(density) { playerHeightPx.toDp() }
+
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .nestedScroll(playerScrollConnection)
+        ) {
         // Video Player Area
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .aspectRatio(16 / 9f)
+                .height(playerHeight)
+                .zIndex(1f)
                 .background(Color.Black),
             contentAlignment = Alignment.Center
         ) {
@@ -89,6 +155,7 @@ fun PortraitLayout(
                         PlayerView(ctx).apply {
                             player = exoPlayer
                             useController = true
+                            resizeMode = androidx.media3.ui.AspectRatioFrameLayout.RESIZE_MODE_FIT
                             setBackgroundColor(android.graphics.Color.BLACK)
                             setControllerVisibilityListener(
                                 PlayerView.ControllerVisibilityListener { visibility ->
@@ -125,10 +192,10 @@ fun PortraitLayout(
         // Content Area
         LazyColumn(
             modifier = Modifier
-                .fillMaxWidth()
-                .weight(1f)
+                .fillMaxSize()
                 .background(MaterialTheme.colorScheme.surface),
-            contentPadding = PaddingValues(bottom = 16.dp)
+            state = listState,
+            contentPadding = PaddingValues(top = playerHeight, bottom = 16.dp)
         ) {
             item {
                 VideoInfoSection(
@@ -193,5 +260,8 @@ fun PortraitLayout(
                 )
             }
         }
+        }
     }
 }
+
+private const val PORTRAIT_EXPANDED_HEIGHT_FRACTION = 0.70f

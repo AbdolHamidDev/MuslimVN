@@ -124,7 +124,7 @@ val MaterialTheme.extendedColors: ExtendedColors
 @Composable
 fun MuslimVNTheme(
     themeMode: AppTheme = AppTheme.FOLLOW_SYSTEM,
-    dynamicColor: Boolean = true,
+    dynamicColor: Boolean = false,
     content: @Composable () -> Unit
 ) {
     val darkTheme = when (themeMode) {

@@ -3,6 +3,7 @@ package com.example.muslimvn.core.di
 import com.example.muslimvn.BuildConfig
 import com.example.muslimvn.data.remote.AladhanApiService
 import com.example.muslimvn.data.remote.QuranApiService
+import com.example.muslimvn.data.remote.HadeethEncApiService
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import dagger.Module
@@ -29,6 +30,10 @@ annotation class QuranRetrofit
 @Retention(AnnotationRetention.BINARY)
 annotation class IslamHouseRetrofit
 
+@Qualifier
+@Retention(AnnotationRetention.BINARY)
+annotation class HadeethEncRetrofit
+
 @Module
 @InstallIn(SingletonComponent::class)
 object NetworkModule {
@@ -36,6 +41,7 @@ object NetworkModule {
     private const val ALADHAN_BASE_URL = "https://api.aladhan.com/"
     private const val QURAN_COM_BASE_URL = "https://api.quran.com/api/v4/"
     private const val ISLAMHOUSE_BASE_URL = "https://api3.islamhouse.com/"
+    private const val HADEETH_ENC_BASE_URL = "https://hadeethenc.com/"
 
     @Provides
     @Singleton
@@ -91,6 +97,16 @@ object NetworkModule {
 
     @Provides
     @Singleton
+    @HadeethEncRetrofit
+    fun provideHadeethEncRetrofit(client: OkHttpClient, gson: Gson): Retrofit =
+        Retrofit.Builder()
+            .baseUrl(HADEETH_ENC_BASE_URL)
+            .client(client)
+            .addConverterFactory(GsonConverterFactory.create(gson))
+            .build()
+
+    @Provides
+    @Singleton
     fun provideAladhanApiService(@AladhanRetrofit retrofit: Retrofit): AladhanApiService =
         retrofit.create(AladhanApiService::class.java)
 
@@ -103,4 +119,9 @@ object NetworkModule {
     @Singleton
     fun provideIslamHouseApiService(@IslamHouseRetrofit retrofit: Retrofit): com.example.muslimvn.data.remote.IslamHouseApiService =
         retrofit.create(com.example.muslimvn.data.remote.IslamHouseApiService::class.java)
+
+    @Provides
+    @Singleton
+    fun provideHadeethEncApiService(@HadeethEncRetrofit retrofit: Retrofit): HadeethEncApiService =
+        retrofit.create(HadeethEncApiService::class.java)
 }

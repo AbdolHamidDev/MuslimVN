@@ -32,6 +32,7 @@ import java.io.File
 fun DownloadedVideosScreen(
     onBackClick: () -> Unit,
     onVideoClick: (String, String, String) -> Unit, // localPath, title, uploader
+    onAudioPlayerClick: () -> Unit = {},
     viewModel: DownloadedVideosViewModel = hiltViewModel()
 ) {
     val downloadedVideos by viewModel.downloadedVideos.collectAsState()
@@ -123,7 +124,10 @@ fun DownloadedVideosScreen(
                             items(downloadedAudios, key = { it.id }) { audio ->
                                 DownloadedAudioItem(
                                     audio = audio,
-                                    onClick = { viewModel.playAudio(audio) },
+                                    onClick = {
+                                        viewModel.playAudio(audio)
+                                        onAudioPlayerClick()
+                                    },
                                     onDelete = { viewModel.deleteVideo(audio.id) }
                                 )
                             }

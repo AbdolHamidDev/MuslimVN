@@ -4,17 +4,11 @@ import android.app.Activity
 import android.content.pm.ActivityInfo
 import androidx.activity.compose.BackHandler
 import androidx.annotation.OptIn
-import androidx.compose.animation.core.Animatable
-import androidx.compose.animation.core.Spring
-import androidx.compose.animation.core.spring
-import androidx.compose.foundation.gestures.detectVerticalDragGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -26,7 +20,6 @@ import com.example.muslimvn.presentation.screens.youtube.components.DownloadOpti
 import com.example.muslimvn.presentation.screens.youtube.components.FullscreenPlayer
 import com.example.muslimvn.presentation.screens.youtube.components.PortraitLayout
 import com.example.muslimvn.presentation.viewmodels.YoutubePlayerViewModel
-import kotlinx.coroutines.launch
 
 @OptIn(UnstableApi::class)
 @ExperimentalMaterial3Api
@@ -42,31 +35,33 @@ fun YoutubePlayerDetailScreen(
     val isFullscreen by playerManager.isFullscreen.collectAsState()
     val isLoadingPlayer by playerManager.isLoading.collectAsState()
     val playerError by playerManager.error.collectAsState()
+    val videoAspectRatio by playerManager.videoAspectRatio.collectAsState()
+    val isPortraitVideo by playerManager.isPortraitVideo.collectAsState()
 
     val context = LocalContext.current
     val activity = context as? Activity
     val exoPlayer = playerManager.exoPlayer
 
-    // Handle orientation & fullscreen
-    LaunchedEffect(isFullscreen) {
-        if (isFullscreen) {
+    // Video dọc dùng toàn màn hình theo chiều dọc; video ngang mới xoay ngang.
+    LaunchedEffect(isFullscreen, isPortraitVideo) {
+        if (isFullscreen && !isPortraitVideo) {
             activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
         } else {
             activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
         }
     }
 
-    val handleMinimize: () -> Unit = {
+    val handleBack: () -> Unit = {
         if (isFullscreen) {
             playerManager.setFullscreen(false)
         } else {
-            playerManager.minimize()
+            playerManager.stop()
             onBackClick()
         }
     }
 
     BackHandler {
-        handleMinimize()
+        handleBack()
     }
 
     val lifecycleOwner = LocalLifecycleOwner.current
@@ -85,8 +80,6 @@ fun YoutubePlayerDetailScreen(
         }
     }
 
-    var dragOffset by remember { mutableStateOf(0f) }
-    val coroutineScope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
 
     Scaffold(
@@ -97,57 +90,6 @@ fun YoutubePlayerDetailScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(if (isFullscreen) PaddingValues(0.dp) else padding)
-                .offset(y = dragOffset.dp)
-                .graphicsLayer {
-                    val progress = (dragOffset / 400f).coerceIn(0f, 1f)
-                    alpha = 1f - (progress * 0.4f)
-                    scaleX = 1f - (progress * 0.08f)
-                    scaleY = 1f - (progress * 0.08f)
-                }
-                .pointerInput(Unit) {
-                    detectVerticalDragGestures(
-                        onVerticalDrag = { _, dragAmount ->
-                            if (!isFullscreen) {
-                                dragOffset = (dragOffset + dragAmount).coerceAtLeast(0f)
-                            }
-                        },
-                        onDragEnd = {
-                            if (!isFullscreen) {
-                                if (dragOffset > 140f) {
-                                    handleMinimize()
-                                } else {
-                                    coroutineScope.launch {
-                                        val anim = Animatable(dragOffset)
-                                        anim.animateTo(
-                                            targetValue = 0f,
-                                            animationSpec = spring(
-                                                dampingRatio = Spring.DampingRatioNoBouncy,
-                                                stiffness = Spring.StiffnessLow
-                                            )
-                                        ) {
-                                            dragOffset = value
-                                        }
-                                    }
-                                }
-                            }
-                            dragOffset = 0f
-                        },
-                        onDragCancel = {
-                            if (!isFullscreen) {
-                                coroutineScope.launch {
-                                    val anim = Animatable(dragOffset)
-                                    anim.animateTo(
-                                        targetValue = 0f,
-                                        animationSpec = spring(stiffness = Spring.StiffnessLow)
-                                    ) {
-                                        dragOffset = value
-                                    }
-                                }
-                            }
-                            dragOffset = 0f
-                        }
-                    )
-                }
         ) {
             if (isFullscreen) {
                 FullscreenPlayer(
@@ -162,6 +104,8 @@ fun YoutubePlayerDetailScreen(
                     isLoadingPlayer = isLoadingPlayer,
                     playerError = playerError,
                     exoPlayer = exoPlayer,
+                    videoAspectRatio = videoAspectRatio,
+                    isPortraitVideo = isPortraitVideo,
                     onToggleFullscreen = { playerManager.toggleFullscreen() },
                     onVideoClick = { video ->
                         viewModel.selectVideo(video.videoUrl, video.title)

@@ -57,6 +57,7 @@ import com.example.muslimvn.domain.util.HijriCalendarUtils
 import com.example.muslimvn.domain.util.HijriMonthNames
 import com.example.muslimvn.presentation.components.*
 import com.example.muslimvn.presentation.viewmodels.HomeViewModel
+import com.example.muslimvn.presentation.viewmodels.DailyReminderViewModel
 import com.example.muslimvn.presentation.viewmodels.PodcastPlayerViewModel
 import java.text.SimpleDateFormat
 import java.time.LocalDate
@@ -72,9 +73,12 @@ fun HomeScreen(
     onPodcastClick: () -> Unit = {},
     onScholarClick: (String) -> Unit = {},
     onVietnamScholarClick: (String) -> Unit = {},
+    onDailyReminderClick: (String) -> Unit = {},
     onOpenFullPlayer: () -> Unit = {},
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val dailyReminderViewModel: DailyReminderViewModel = hiltViewModel()
+    val dailyReminderState by dailyReminderViewModel.uiState.collectAsState()
     var showPrayerSheet by remember { mutableStateOf(false) }
     var selectedPrayerForReminder by remember { mutableStateOf<String?>(null) }
     
@@ -148,6 +152,13 @@ fun HomeScreen(
                 }
 
                 item {
+                    DailyReminderSection(
+                        state = dailyReminderState,
+                        onStoryClick = { onDailyReminderClick(it.id) }
+                    )
+                }
+
+                item {
                     VietnamScholarsSection(
                         onScholarClick = { scholar ->
                             onVietnamScholarClick(scholar.id)
@@ -202,6 +213,14 @@ fun HomeScreen(
                             ErrorState(message = uiState.error ?: stringResource(R.string.prayer_times_error), onRetry = viewModel::refreshPrayerTimes, modifier = Modifier.fillParentMaxSize())
                         }
                     }
+                }
+                // This stream loads independently: a location/API issue in Prayer Time must not
+                // prevent a cached or newly fetched reminder from being read.
+                item {
+                    DailyReminderSection(
+                        state = dailyReminderState,
+                        onStoryClick = { onDailyReminderClick(it.id) }
+                    )
                 }
             }
         }

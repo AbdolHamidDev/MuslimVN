@@ -68,9 +68,9 @@ fun DownloadOptionDialog(
                     onClick = onDownloadVideoClick
                 )
 
-                // Option 2: Audio (MP3)
+                // Option 2: Audio (M4A)
                 DownloadOptionItem(
-                    title = "Âm thanh (MP3 / Podcast)",
+                    title = "Âm thanh (M4A / Podcast)",
                     subtitle = "Nghe nhạc nền tiết kiệm dung lượng & pin",
                     icon = Icons.Default.Headset,
                     sizeBytes = audioSizeBytes,

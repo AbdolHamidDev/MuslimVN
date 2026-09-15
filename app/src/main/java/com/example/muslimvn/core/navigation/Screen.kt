@@ -44,6 +44,13 @@ sealed class Screen(val route: String, @StringRes val titleResId: Int, val icon:
         fun createRoute(scholarId: String) = "scholar_detail/$scholarId"
     }
     object PodcastPlayer : Screen("podcast_player", R.string.nav_podcast, Icons.Default.Podcasts)
+    object DailyReminder : Screen(
+        route = "daily_reminder/{hadithId}",
+        titleResId = R.string.nav_home,
+        icon = Icons.Default.AutoStories
+    ) {
+        fun createRoute(hadithId: String) = "daily_reminder/${android.net.Uri.encode(hadithId)}"
+    }
 
     object VietnamScholarDetail : Screen(
         route = "vietnam_scholar_detail/{scholarId}",

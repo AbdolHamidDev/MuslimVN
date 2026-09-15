@@ -201,23 +201,6 @@ fun GosalyAhmadScreen(
                     .padding(bottom = 24.dp)
             )
 
-            val barViewModel: com.example.muslimvn.presentation.viewmodels.YouTubePlayerBarViewModel = hiltViewModel()
-            val playerManager = barViewModel.playerManager
-            val currentUrl by playerManager.currentVideoUrl.collectAsState()
-            val title by playerManager.videoTitle.collectAsState()
-
-            com.example.muslimvn.presentation.components.YouTubeMiniPlayer(
-                playerManager = playerManager,
-                onExpand = {
-                    playerManager.expand()
-                    if (currentUrl != null) {
-                        onVideoClick(currentUrl!!, title, "", "https://www.youtube.com/@gosalyahmad-Unofficial")
-                    }
-                },
-                modifier = Modifier
-                    .align(Alignment.BottomEnd)
-                    .padding(end = 16.dp, bottom = 90.dp)
-            )
         }
     }
 }

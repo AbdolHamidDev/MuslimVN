@@ -40,6 +40,7 @@ fun FullscreenPlayer(
                     PlayerView(ctx).apply {
                         player = exoPlayer
                         useController = true
+                        resizeMode = androidx.media3.ui.AspectRatioFrameLayout.RESIZE_MODE_FIT
                         setBackgroundColor(android.graphics.Color.BLACK)
                         setControllerVisibilityListener(
                             PlayerView.ControllerVisibilityListener { visibility ->

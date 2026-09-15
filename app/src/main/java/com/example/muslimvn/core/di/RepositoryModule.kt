@@ -82,4 +82,10 @@ abstract class RepositoryModule {
     abstract fun bindIslamHouseRepository(
         islamHouseRepositoryImpl: IslamHouseRepositoryImpl
     ): IslamHouseRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindHadithRepository(
+        hadithRepositoryImpl: HadithRepositoryImpl
+    ): HadithRepository
 }

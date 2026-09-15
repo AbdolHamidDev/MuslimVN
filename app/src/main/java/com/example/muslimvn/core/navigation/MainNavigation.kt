@@ -59,7 +59,19 @@ fun MainNavigation(navController: NavHostController, modifier: Modifier = Modifi
                 onVietnamScholarClick = { scholarId ->
                     navController.navigate(Screen.VietnamScholarDetail.createRoute(scholarId))
                 },
+                onDailyReminderClick = { hadithId ->
+                    navController.navigate(Screen.DailyReminder.createRoute(hadithId))
+                },
                 onOpenFullPlayer = { openFullPlayer(null) }
+            )
+        }
+        composable(
+            route = Screen.DailyReminder.route,
+            arguments = listOf(navArgument("hadithId") { type = NavType.StringType })
+        ) { backStackEntry ->
+            DailyReminderViewerScreen(
+                initialHadithId = backStackEntry.arguments?.getString("hadithId").orEmpty(),
+                onBackClick = { navController.popBackStack() }
             )
         }
         composable(Screen.Knowledge.route) {
@@ -147,6 +159,9 @@ fun MainNavigation(navController: NavHostController, modifier: Modifier = Modifi
                 onBackClick = { navController.popBackStack() },
                 onVideoClick = { fileUri, title, uploader ->
                     navController.navigate(Screen.YoutubePlayer.createRoute(fileUri, title, uploader))
+                },
+                onAudioPlayerClick = {
+                    navController.navigate(Screen.PodcastPlayer.route)
                 }
             )
         }

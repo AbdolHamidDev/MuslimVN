@@ -3,9 +3,9 @@ package com.example.muslimvn.core.network
 import org.schabi.newpipe.extractor.downloader.Downloader
 import org.schabi.newpipe.extractor.downloader.Request
 import org.schabi.newpipe.extractor.downloader.Response
+import org.schabi.newpipe.extractor.exceptions.ReCaptchaException
 import okhttp3.OkHttpClient
 import okhttp3.RequestBody.Companion.toRequestBody
-import java.io.IOException
 
 class NewPipeDownloader(private val client: OkHttpClient) : Downloader() {
 
@@ -15,36 +15,39 @@ class NewPipeDownloader(private val client: OkHttpClient) : Downloader() {
         val headers = request.headers()
         val dataToSend = request.dataToSend()
 
+        val requestBody = dataToSend?.toRequestBody()
         val okHttpRequestBuilder = okhttp3.Request.Builder()
             .url(url)
-            .header("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36")
-            .header("Accept-Language", "vi-VN,vi;q=0.9,en-US;q=0.8,en;q=0.7")
+            .method(method, requestBody)
+            // Let NewPipe supply its localization and service-specific headers.
+            // This is the same header precedence used by NewPipe's DownloaderImpl.
+            .addHeader("User-Agent", USER_AGENT)
             .apply {
                 headers.forEach { (name, values) ->
-                    if (name.equals("Accept-Language", ignoreCase = true)) return@forEach
+                    removeHeader(name)
                     values.forEach { value ->
                         addHeader(name, value)
                     }
                 }
             }
 
-        if (method == "GET") {
-            okHttpRequestBuilder.get()
-        } else if (method == "POST") {
-            okHttpRequestBuilder.post(dataToSend?.toRequestBody() ?: "".toRequestBody())
+        client.newCall(okHttpRequestBuilder.build()).execute().use { okHttpResponse ->
+            if (okHttpResponse.code == 429) {
+                throw ReCaptchaException("YouTube yêu cầu xác minh reCAPTCHA", url)
+            }
+
+            return Response(
+                okHttpResponse.code,
+                okHttpResponse.message,
+                okHttpResponse.headers.toMultimap(),
+                okHttpResponse.body?.string(),
+                okHttpResponse.request.url.toString()
+            )
         }
+    }
 
-        val okHttpResponse = client.newCall(okHttpRequestBuilder.build()).execute()
-
-        if (okHttpResponse.code >= 400) {
-            val responseCode = okHttpResponse.code
-            okHttpResponse.close()
-            throw IOException("Invalid response code: $responseCode")
-        }
-
-        val body = okHttpResponse.body?.string()
-        val responseHeaders = okHttpResponse.headers.toMultimap()
-
-        return Response(okHttpResponse.code, okHttpResponse.message, responseHeaders, body, url)
+    private companion object {
+        const val USER_AGENT =
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:140.0) Gecko/20100101 Firefox/140.0"
     }
 }

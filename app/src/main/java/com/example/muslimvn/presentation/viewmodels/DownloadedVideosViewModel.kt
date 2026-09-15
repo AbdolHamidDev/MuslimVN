@@ -24,7 +24,11 @@ class DownloadedVideosViewModel @Inject constructor(
 
     val downloadedVideos: StateFlow<List<DownloadedVideoEntity>> = downloadManager.allDownloadedVideos
         .map { list ->
-            list.filter { it.mediaType != "AUDIO" && !it.localFilePath.endsWith(".mp3") }
+            list.filter {
+                it.mediaType != "AUDIO" &&
+                    !it.localFilePath.endsWith(".mp3") &&
+                    !it.localFilePath.endsWith(".m4a")
+            }
         }
         .stateIn(
             scope = viewModelScope,
@@ -34,7 +38,11 @@ class DownloadedVideosViewModel @Inject constructor(
 
     val downloadedAudios: StateFlow<List<DownloadedVideoEntity>> = downloadManager.allDownloadedVideos
         .map { list ->
-            list.filter { it.mediaType == "AUDIO" || it.localFilePath.endsWith(".mp3") }
+            list.filter {
+                it.mediaType == "AUDIO" ||
+                    it.localFilePath.endsWith(".mp3") ||
+                    it.localFilePath.endsWith(".m4a")
+            }
         }
         .stateIn(
             scope = viewModelScope,

@@ -5,6 +5,7 @@ import androidx.annotation.OptIn
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MediaMetadata
 import androidx.media3.common.Player
+import androidx.media3.common.VideoSize
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.session.MediaSession
@@ -48,19 +49,35 @@ class YouTubePlayerManager @Inject constructor(
     private val _error = MutableStateFlow<String?>(null)
     val error: StateFlow<String?> = _error.asStateFlow()
 
-    private val _isMinimized = MutableStateFlow(false)
-    val isMinimized: StateFlow<Boolean> = _isMinimized.asStateFlow()
-
     private val _isFullscreen = MutableStateFlow(false)
     val isFullscreen: StateFlow<Boolean> = _isFullscreen.asStateFlow()
 
     private val _isPlaying = MutableStateFlow(false)
     val isPlaying: StateFlow<Boolean> = _isPlaying.asStateFlow()
 
+    /** Tỉ lệ khung hình thật của stream. Mặc định 16:9 trong lúc chưa có metadata. */
+    private val _videoAspectRatio = MutableStateFlow(DEFAULT_VIDEO_ASPECT_RATIO)
+    val videoAspectRatio: StateFlow<Float> = _videoAspectRatio.asStateFlow()
+
+    private val _isPortraitVideo = MutableStateFlow(false)
+    val isPortraitVideo: StateFlow<Boolean> = _isPortraitVideo.asStateFlow()
+
     init {
         exoPlayer.addListener(object : Player.Listener {
             override fun onIsPlayingChanged(isPlaying: Boolean) {
                 _isPlaying.value = isPlaying
+            }
+
+            override fun onVideoSizeChanged(videoSize: VideoSize) {
+                val width = videoSize.width
+                val height = videoSize.height
+                if (width <= 0 || height <= 0) return
+
+                val aspectRatio = (width.toFloat() * videoSize.pixelWidthHeightRatio) / height
+                _videoAspectRatio.value = aspectRatio
+                // Dùng ngưỡng thay vì so sánh chính xác để vẫn nhận diện đúng 9:16
+                // khi stream có pixel aspect ratio không phải 1:1.
+                _isPortraitVideo.value = aspectRatio < 1f
             }
         })
         mediaSession?.release()
@@ -73,7 +90,6 @@ class YouTubePlayerManager @Inject constructor(
         val isSameVideo = _currentVideoUrl.value == videoUrl && exoPlayer.playbackState != Player.STATE_IDLE
         
         if (isSameVideo) {
-            _isMinimized.value = false
             // Cập nhật metadata nếu cần
             if (title != _videoTitle.value || channelName.isNotEmpty()) {
                 val metadata = MediaMetadata.Builder()
@@ -89,9 +105,11 @@ class YouTubePlayerManager @Inject constructor(
         _currentVideoUrl.value = videoUrl
         _videoTitle.value = title
         _thumbnailUrl.value = thumbnailUrl
-        _isMinimized.value = false
         _isLoading.value = true
         _error.value = null
+        // Tránh giữ tỉ lệ của video trước trong lúc stream mới đang tải.
+        _videoAspectRatio.value = DEFAULT_VIDEO_ASPECT_RATIO
+        _isPortraitVideo.value = false
 
         val isLocalFile = videoUrl.startsWith("file://") || videoUrl.startsWith("/")
 
@@ -145,14 +163,6 @@ class YouTubePlayerManager @Inject constructor(
         }
     }
 
-    fun minimize() {
-        _isMinimized.value = true
-    }
-
-    fun expand() {
-        _isMinimized.value = false
-    }
-
     fun toggleFullscreen() {
         _isFullscreen.value = !_isFullscreen.value
     }
@@ -164,8 +174,11 @@ class YouTubePlayerManager @Inject constructor(
     fun stop() {
         exoPlayer.stop()
         _currentVideoUrl.value = null
-        _isMinimized.value = false
     }
 
     fun getMediaSession(): MediaSession? = mediaSession
+
+    private companion object {
+        const val DEFAULT_VIDEO_ASPECT_RATIO = 16f / 9f
+    }
 }
