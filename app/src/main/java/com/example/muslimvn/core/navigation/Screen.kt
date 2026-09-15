@@ -28,6 +28,7 @@ sealed class Screen(val route: String, @StringRes val titleResId: Int, val icon:
             if (surahNumber != null) "quran_settings?surahNumber=$surahNumber" else "quran_settings"
     }
     object PrayerNotifications : Screen("prayer_notifications", R.string.nav_settings, Icons.Default.Notifications)
+    object DownloadedVideos : Screen("downloaded_videos", R.string.nav_settings, Icons.Default.Download)
     object SurahDetail : Screen("surah_detail/{surahNumber}/{startAyah}", R.string.nav_surah_detail, Icons.Default.Menu) {
         fun createRoute(surahNumber: Int, startAyah: Int = 1) = "surah_detail/$surahNumber/$startAyah"
     }
@@ -50,6 +51,37 @@ sealed class Screen(val route: String, @StringRes val titleResId: Int, val icon:
         icon = Icons.Default.Person
     ) {
         fun createRoute(scholarId: String) = "vietnam_scholar_detail/$scholarId"
+    }
+
+    object YoutubePlayer : Screen(
+        route = "youtube_player?videoUrl={videoUrl}&videoTitle={videoTitle}&channelName={channelName}&channelUrl={channelUrl}",
+        titleResId = R.string.nav_podcast,
+        icon = Icons.Default.PlayArrow
+    ) {
+        fun createRoute(
+            videoUrl: String,
+            videoTitle: String,
+            channelName: String = "",
+            channelUrl: String = ""
+        ): String {
+            val encodedUrl = android.net.Uri.encode(videoUrl)
+            val encodedTitle = android.net.Uri.encode(videoTitle)
+            val encodedChannelName = android.net.Uri.encode(channelName)
+            val encodedChannelUrl = android.net.Uri.encode(channelUrl)
+            return "youtube_player?videoUrl=$encodedUrl&videoTitle=$encodedTitle&channelName=$encodedChannelName&channelUrl=$encodedChannelUrl"
+        }
+    }
+
+    object DocumentReader : Screen(
+        route = "document_reader?url={url}&title={title}",
+        titleResId = R.string.nav_podcast,
+        icon = Icons.Default.Description
+    ) {
+        fun createRoute(url: String, title: String): String {
+            val encodedUrl = android.net.Uri.encode(url)
+            val encodedTitle = android.net.Uri.encode(title)
+            return "document_reader?url=$encodedUrl&title=$encodedTitle"
+        }
     }
 }
 

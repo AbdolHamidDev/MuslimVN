@@ -25,12 +25,17 @@ annotation class AladhanRetrofit
 @Retention(AnnotationRetention.BINARY)
 annotation class QuranRetrofit
 
+@Qualifier
+@Retention(AnnotationRetention.BINARY)
+annotation class IslamHouseRetrofit
+
 @Module
 @InstallIn(SingletonComponent::class)
 object NetworkModule {
 
     private const val ALADHAN_BASE_URL = "https://api.aladhan.com/"
     private const val QURAN_COM_BASE_URL = "https://api.quran.com/api/v4/"
+    private const val ISLAMHOUSE_BASE_URL = "https://api3.islamhouse.com/"
 
     @Provides
     @Singleton
@@ -76,6 +81,16 @@ object NetworkModule {
 
     @Provides
     @Singleton
+    @IslamHouseRetrofit
+    fun provideIslamHouseRetrofit(client: OkHttpClient, gson: Gson): Retrofit =
+        Retrofit.Builder()
+            .baseUrl(ISLAMHOUSE_BASE_URL)
+            .client(client)
+            .addConverterFactory(GsonConverterFactory.create(gson))
+            .build()
+
+    @Provides
+    @Singleton
     fun provideAladhanApiService(@AladhanRetrofit retrofit: Retrofit): AladhanApiService =
         retrofit.create(AladhanApiService::class.java)
 
@@ -83,4 +98,9 @@ object NetworkModule {
     @Singleton
     fun provideQuranApiService(@QuranRetrofit retrofit: Retrofit): QuranApiService =
         retrofit.create(QuranApiService::class.java)
+
+    @Provides
+    @Singleton
+    fun provideIslamHouseApiService(@IslamHouseRetrofit retrofit: Retrofit): com.example.muslimvn.data.remote.IslamHouseApiService =
+        retrofit.create(com.example.muslimvn.data.remote.IslamHouseApiService::class.java)
 }

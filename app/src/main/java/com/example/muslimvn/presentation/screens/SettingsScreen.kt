@@ -26,6 +26,7 @@ import com.example.muslimvn.presentation.viewmodels.SettingsViewModel
 fun SettingsScreen(
     onNavigateToQuranSettings: () -> Unit,
     onNavigateToPrayerNotifications: () -> Unit,
+    onNavigateToDownloadedVideos: () -> Unit,
     viewModel: SettingsViewModel = hiltViewModel()
 ) {
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
@@ -62,6 +63,14 @@ fun SettingsScreen(
                 }
 
                 item { PreferenceHeader(title = "Nội dung & Thông báo") }
+                item {
+                    PreferenceItem(
+                        title = "Video đã tải về",
+                        subtitle = "Xem lại và quản lý video offline",
+                        icon = Icons.Default.Download,
+                        onClick = onNavigateToDownloadedVideos
+                    )
+                }
                 item {
                     PreferenceItem(
                         title = "Cài đặt Quran",

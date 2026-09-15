@@ -27,7 +27,8 @@ data class VietnamScholar(
     val id: String,
     val name: String,
     val role: String,
-    val avatarPath: String
+    val avatarPath: String,
+    val youtubeUrl: String? = null
 )
 
 val vietnamScholarsList = listOf(
@@ -35,13 +36,15 @@ val vietnamScholarsList = listOf(
         id = "mach_zen",
         name = "Mách Zên",
         role = "Học giả Islam",
-        avatarPath = "images/featured_scholars_vietnam/mach_zen.webp"
+        avatarPath = "images/featured_scholars_vietnam/mach_zen.webp",
+        youtubeUrl = "https://www.youtube.com/@islamlavn/videos"
     ),
     VietnamScholar(
         id = "gosaly_ahmad",
         name = "Gosaly Ahmad",
         role = "Học giả Islam",
-        avatarPath = "images/featured_scholars_vietnam/Gosaly_Ahmad.webp"
+        avatarPath = "images/featured_scholars_vietnam/Gosaly_Ahmad.webp",
+        youtubeUrl = "https://www.youtube.com/@gosalyahmad-Unofficial"
     )
 )
 

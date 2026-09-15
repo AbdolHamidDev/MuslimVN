@@ -18,7 +18,10 @@ import com.example.muslimvn.presentation.RoadmapData
 import com.example.muslimvn.presentation.components.ComingSoonScreen
 import com.example.muslimvn.presentation.screens.*
 import com.example.muslimvn.presentation.screens.zakat.ZakatScreen
+import androidx.compose.material3.ExperimentalMaterial3Api
 
+@OptIn(ExperimentalMaterial3Api::class)
+@androidx.media3.common.util.UnstableApi
 @Composable
 fun MainNavigation(navController: NavHostController, modifier: Modifier = Modifier) {
     val openFullPlayer: (String?) -> Unit = { mediaId ->
@@ -135,7 +138,16 @@ fun MainNavigation(navController: NavHostController, modifier: Modifier = Modifi
         composable(Screen.Settings.route) {
             SettingsScreen(
                 onNavigateToQuranSettings = { navController.navigate(Screen.QuranSettings.route) },
-                onNavigateToPrayerNotifications = { navController.navigate(Screen.PrayerNotifications.route) }
+                onNavigateToPrayerNotifications = { navController.navigate(Screen.PrayerNotifications.route) },
+                onNavigateToDownloadedVideos = { navController.navigate(Screen.DownloadedVideos.route) }
+            )
+        }
+        composable(Screen.DownloadedVideos.route) {
+            DownloadedVideosScreen(
+                onBackClick = { navController.popBackStack() },
+                onVideoClick = { fileUri, title, uploader ->
+                    navController.navigate(Screen.YoutubePlayer.createRoute(fileUri, title, uploader))
+                }
             )
         }
         composable(
@@ -183,6 +195,43 @@ fun MainNavigation(navController: NavHostController, modifier: Modifier = Modifi
             val scholarId = backStackEntry.arguments?.getString("scholarId") ?: ""
             VietnamScholarDetailScreen(
                 scholarId = scholarId,
+                onBackClick = { navController.popBackStack() },
+                onVideoClick = { videoUrl, videoTitle, channelName, channelUrl ->
+                    navController.navigate(Screen.YoutubePlayer.createRoute(videoUrl, videoTitle, channelName, channelUrl))
+                },
+                onDocumentClick = { url, title ->
+                    navController.navigate(Screen.DocumentReader.createRoute(url, title))
+                },
+                onOpenFullPlayer = { navController.navigate(Screen.PodcastPlayer.route) }
+            )
+        }
+
+        composable(
+            route = Screen.YoutubePlayer.route,
+            arguments = listOf(
+                navArgument("videoUrl") { type = NavType.StringType },
+                navArgument("videoTitle") { type = NavType.StringType; defaultValue = "" },
+                navArgument("channelName") { type = NavType.StringType; defaultValue = "" },
+                navArgument("channelUrl") { type = NavType.StringType; defaultValue = "" }
+            )
+        ) {
+            YoutubePlayerDetailScreen(
+                onBackClick = { navController.popBackStack() }
+            )
+        }
+
+        composable(
+            route = Screen.DocumentReader.route,
+            arguments = listOf(
+                navArgument("url") { type = NavType.StringType },
+                navArgument("title") { type = NavType.StringType; defaultValue = "" }
+            )
+        ) { backStackEntry ->
+            val url = backStackEntry.arguments?.getString("url") ?: ""
+            val title = backStackEntry.arguments?.getString("title") ?: ""
+            DocumentReaderScreen(
+                url = url,
+                title = title,
                 onBackClick = { navController.popBackStack() }
             )
         }

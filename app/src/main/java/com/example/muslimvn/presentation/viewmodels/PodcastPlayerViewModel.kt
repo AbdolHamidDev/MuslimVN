@@ -78,6 +78,10 @@ class PodcastPlayerViewModel @Inject constructor(
 
     fun skipToNext() {
         val currentId = currentEpisodeId.value ?: return
+        if (currentId.startsWith("islamhouse_")) {
+            audioPlayerManager.skipToNext()
+            return
+        }
         val list = _playlist.value
         val currentIndex = list.indexOfFirst { it.id == currentId }
         if (currentIndex != -1 && currentIndex < list.size - 1) {
@@ -87,6 +91,10 @@ class PodcastPlayerViewModel @Inject constructor(
 
     fun skipToPrevious() {
         val currentId = currentEpisodeId.value ?: return
+        if (currentId.startsWith("islamhouse_")) {
+            audioPlayerManager.skipToPrevious()
+            return
+        }
         val list = _playlist.value
         val currentIndex = list.indexOfFirst { it.id == currentId }
         if (currentIndex > 0) {

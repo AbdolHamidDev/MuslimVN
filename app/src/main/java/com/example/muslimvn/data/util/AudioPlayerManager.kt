@@ -215,6 +215,14 @@ class AudioPlayerManager @Inject constructor(
         return next
     }
 
+    fun skipToNext() {
+        exoPlayer?.seekToNextMediaItem()
+    }
+
+    fun skipToPrevious() {
+        exoPlayer?.seekToPreviousMediaItem()
+    }
+
     fun pause() {
         exoPlayer?.pause()
         if (isPodcastSession) persistProgressNow()

@@ -70,4 +70,16 @@ abstract class RepositoryModule {
     abstract fun bindTrackerRepository(
         trackerRepositoryImpl: TrackerRepositoryImpl
     ): TrackerRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindYoutubeRepository(
+        youtubeRepositoryImpl: YoutubeRepositoryImpl
+    ): YoutubeRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindIslamHouseRepository(
+        islamHouseRepositoryImpl: IslamHouseRepositoryImpl
+    ): IslamHouseRepository
 }

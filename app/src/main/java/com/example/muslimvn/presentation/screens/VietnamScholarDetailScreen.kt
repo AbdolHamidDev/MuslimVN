@@ -1,55 +1,44 @@
 package com.example.muslimvn.presentation.screens
 
-import androidx.compose.foundation.layout.*
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
+import com.example.muslimvn.presentation.screens.vietnamscholars.GosalyAhmadScreen
+import com.example.muslimvn.presentation.screens.vietnamscholars.MachZenScreen
 
-@OptIn(ExperimentalMaterial3Api::class)
+/**
+ * Màn hình cha (Parent Router Screen) điều phối nội dung chi tiết cho từng học giả Việt Nam.
+ * Mỗi học giả sẽ có file và logic xử lý dữ liệu riêng biệt (YouTube, Facebook, Tài liệu, v.v.).
+ */
+@androidx.media3.common.util.UnstableApi
 @Composable
 fun VietnamScholarDetailScreen(
     scholarId: String,
-    onBackClick: () -> Unit
+    onBackClick: () -> Unit,
+    onVideoClick: (String, String, String, String) -> Unit,
+    onDocumentClick: (String, String) -> Unit,
+    onOpenFullPlayer: () -> Unit
 ) {
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Chi tiết học giả") },
-                navigationIcon = {
-                    IconButton(onClick = onBackClick) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Quay lại"
-                        )
-                    }
-                }
+    when (scholarId) {
+        "mach_zen" -> {
+            MachZenScreen(
+                onBackClick = onBackClick,
+                onVideoClick = onVideoClick,
+                onDocumentClick = onDocumentClick,
+                onOpenFullPlayer = onOpenFullPlayer
             )
         }
-    ) { padding ->
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding),
-            contentAlignment = Alignment.Center
-        ) {
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Text(
-                    text = "Học giả: $scholarId",
-                    style = MaterialTheme.typography.headlineSmall,
-                    fontWeight = FontWeight.Bold
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-                Text(
-                    text = "Nội dung đang được cập nhật...",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
+        "gosaly_ahmad" -> {
+            GosalyAhmadScreen(
+                onBackClick = onBackClick,
+                onVideoClick = onVideoClick,
+                onOpenFullPlayer = onOpenFullPlayer
+            )
+        }
+        else -> {
+            GosalyAhmadScreen(
+                onBackClick = onBackClick,
+                onVideoClick = onVideoClick,
+                onOpenFullPlayer = onOpenFullPlayer
+            )
         }
     }
 }

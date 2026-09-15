@@ -159,4 +159,24 @@ object DatabaseModule {
     fun provideAzkarDao(database: AzkarDatabase): AzkarDao {
         return database.azkarDao
     }
+
+    @Provides
+    @Singleton
+    fun provideDownloadedVideoDatabase(
+        @ApplicationContext context: Context
+    ): com.example.muslimvn.data.local.DownloadedVideoDatabase {
+        return androidx.room.Room.databaseBuilder(
+            context,
+            com.example.muslimvn.data.local.DownloadedVideoDatabase::class.java,
+            com.example.muslimvn.data.local.DownloadedVideoDatabase.DATABASE_NAME
+        )
+            .fallbackToDestructiveMigration()
+            .build()
+    }
+
+    @Provides
+    @Singleton
+    fun provideDownloadedVideoDao(database: com.example.muslimvn.data.local.DownloadedVideoDatabase): com.example.muslimvn.data.local.dao.DownloadedVideoDao {
+        return database.downloadedVideoDao
+    }
 }
