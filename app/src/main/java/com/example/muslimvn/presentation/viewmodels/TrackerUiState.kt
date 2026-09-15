@@ -35,5 +35,5 @@ data class TrackerUiState(
     val prayers: List<PrayerTrackerState> = emptyList(),
     val quran: QuranTrackerState = QuranTrackerState(),
     val azkar: AzkarTrackerState = AzkarTrackerState(),
-    val isLoading: Boolean = false
+    val isLoading: Boolean = true
 )

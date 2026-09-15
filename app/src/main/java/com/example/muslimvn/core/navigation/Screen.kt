@@ -5,7 +5,9 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.LibraryBooks
 import androidx.compose.material.icons.automirrored.filled.MenuBook
 import androidx.compose.material.icons.filled.*
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.unit.dp
 import com.example.muslimvn.R
 
 sealed class Screen(val route: String, @StringRes val titleResId: Int, val icon: ImageVector) {
@@ -99,3 +101,6 @@ val bottomNavItems = listOf(
     Screen.Utilities,
     Screen.Settings
 )
+
+/** Vùng an toàn để nội dung có thể cuộn hết lên trên floating navigation dock. */
+val LocalFloatingNavigationDockInset = staticCompositionLocalOf { 0.dp }

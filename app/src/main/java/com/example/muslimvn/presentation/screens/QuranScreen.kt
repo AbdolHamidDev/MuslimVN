@@ -26,6 +26,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
+import com.example.muslimvn.core.navigation.LocalFloatingNavigationDockInset
 import com.example.muslimvn.R
 import com.example.muslimvn.domain.models.Surah
 import com.example.muslimvn.domain.models.availableReciters
@@ -33,6 +34,7 @@ import com.example.muslimvn.presentation.components.EmptyState
 import com.example.muslimvn.presentation.components.MiniPlayerBar
 import com.example.muslimvn.presentation.components.PodcastPlayerBarState
 import com.example.muslimvn.presentation.components.ReciterSelectionDialog
+import com.example.muslimvn.presentation.components.ShimmerPlaceholder
 import com.example.muslimvn.presentation.components.bouncyClick
 import com.example.muslimvn.presentation.components.formatSpeedLabel
 import com.example.muslimvn.presentation.components.toAndroidAssetUri
@@ -136,7 +138,7 @@ fun QuranScreen(
             if (surahs.isEmpty()) {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     if (searchQuery.isBlank()) {
-                        CircularProgressIndicator()
+                        QuranLoadingSkeleton()
                     } else {
                         EmptyState(
                             message = stringResource(R.string.search_no_results),
@@ -151,7 +153,7 @@ fun QuranScreen(
                     ?: availableReciters[0]
 
                 LazyColumn(
-                    contentPadding = PaddingValues(bottom = 16.dp),
+                    contentPadding = PaddingValues(bottom = 16.dp + LocalFloatingNavigationDockInset.current),
                     modifier = Modifier.fillMaxSize()
                 ) {
                     items(surahs, key = { it.number }) { surah ->
@@ -166,6 +168,18 @@ fun QuranScreen(
                     }
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun QuranLoadingSkeleton() {
+    Column(
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        repeat(6) {
+            ShimmerPlaceholder(modifier = Modifier.fillMaxWidth().height(72.dp))
         }
     }
 }

@@ -26,8 +26,10 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.example.muslimvn.core.navigation.LocalFloatingNavigationDockInset
 import com.example.muslimvn.R
 import com.example.muslimvn.presentation.viewmodels.*
+import com.example.muslimvn.presentation.components.ShimmerPlaceholder
 import com.example.muslimvn.ui.theme.MuslimVNTheme
 import java.text.SimpleDateFormat
 import java.util.*
@@ -77,11 +79,15 @@ fun TrackerContent(
             )
         }
     ) { innerPadding ->
+        if (uiState.isLoading && uiState.prayers.isEmpty()) {
+            TrackerLoadingSkeleton(modifier = Modifier.padding(innerPadding))
+            return@Scaffold
+        }
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding),
-            contentPadding = PaddingValues(bottom = 24.dp)
+            contentPadding = PaddingValues(bottom = 24.dp + LocalFloatingNavigationDockInset.current)
         ) {
             // Weekly Calendar Strip
             item {
@@ -145,6 +151,20 @@ fun TrackerContent(
                     )
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun TrackerLoadingSkeleton(modifier: Modifier = Modifier) {
+    Column(
+        modifier = modifier.fillMaxSize().padding(horizontal = 16.dp, vertical = 12.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        ShimmerPlaceholder(modifier = Modifier.fillMaxWidth().height(64.dp))
+        ShimmerPlaceholder(modifier = Modifier.fillMaxWidth().height(136.dp))
+        repeat(4) {
+            ShimmerPlaceholder(modifier = Modifier.fillMaxWidth().height(76.dp))
         }
     }
 }

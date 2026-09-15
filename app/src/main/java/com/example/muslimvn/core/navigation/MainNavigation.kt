@@ -1,6 +1,7 @@
 package com.example.muslimvn.core.navigation
 
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
@@ -24,6 +25,8 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 @androidx.media3.common.util.UnstableApi
 @Composable
 fun MainNavigation(navController: NavHostController, modifier: Modifier = Modifier) {
+    val topLevelRoutes = remember { bottomNavItems.map { it.route } }
+    fun topLevelIndex(route: String?) = topLevelRoutes.indexOf(route)
     val openFullPlayer: (String?) -> Unit = { mediaId ->
         if (mediaId?.contains(":") == true) {
             val parts = mediaId.split(":")
@@ -39,13 +42,41 @@ fun MainNavigation(navController: NavHostController, modifier: Modifier = Modifi
         navController = navController,
         startDestination = Screen.Home.route,
         modifier = modifier,
-        // Chuyển cảnh nhẹ nhàng: màn mới trượt lên + mờ dần hiện ra;
-        // khi quay lại thì trượt xuống. Ngắn (<300ms) để không gây cảm giác chậm.
+        // Các tab cấp cao dùng một swipe ngang nhẹ theo hướng tab; các màn con
+        // vẫn giữ motion dọc như trước.
         enterTransition = {
-            fadeIn(tween(260)) + slideInVertically(tween(260)) { it / 20 }
+            val fromIndex = topLevelIndex(initialState.destination.route)
+            val toIndex = topLevelIndex(targetState.destination.route)
+            if (fromIndex >= 0 && toIndex >= 0) {
+                slideIntoContainer(
+                    towards = if (toIndex > fromIndex) {
+                        AnimatedContentTransitionScope.SlideDirection.Left
+                    } else {
+                        AnimatedContentTransitionScope.SlideDirection.Right
+                    },
+                    animationSpec = tween(220)
+                )
+            } else {
+                fadeIn(tween(260)) + slideInVertically(tween(260)) { it / 20 }
+            }
         },
-        exitTransition = { fadeOut(tween(180)) },
-        popEnterTransition = { fadeIn(tween(260)) },
+        exitTransition = {
+            val fromIndex = topLevelIndex(initialState.destination.route)
+            val toIndex = topLevelIndex(targetState.destination.route)
+            if (fromIndex >= 0 && toIndex >= 0) {
+                slideOutOfContainer(
+                    towards = if (toIndex > fromIndex) {
+                        AnimatedContentTransitionScope.SlideDirection.Left
+                    } else {
+                        AnimatedContentTransitionScope.SlideDirection.Right
+                    },
+                    animationSpec = tween(220)
+                )
+            } else fadeOut(tween(180))
+        },
+        popEnterTransition = {
+            fadeIn(tween(260))
+        },
         popExitTransition = {
             fadeOut(tween(180)) + slideOutVertically(tween(260)) { it / 20 }
         }

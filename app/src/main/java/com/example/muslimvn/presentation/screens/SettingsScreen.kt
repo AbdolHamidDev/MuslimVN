@@ -18,6 +18,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.muslimvn.R
+import com.example.muslimvn.core.navigation.LocalFloatingNavigationDockInset
 import com.example.muslimvn.domain.models.AppTheme
 import com.example.muslimvn.presentation.viewmodels.SettingsViewModel
 
@@ -47,7 +48,10 @@ fun SettingsScreen(
         }
     ) { innerPadding ->
         Box(modifier = Modifier.fillMaxSize().padding(innerPadding)) {
-            LazyColumn(modifier = Modifier.fillMaxSize()) {
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(bottom = LocalFloatingNavigationDockInset.current)
+            ) {
                 item { PreferenceHeader(title = "Giao diện") }
                 item {
                     PreferenceItem(

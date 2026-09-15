@@ -49,6 +49,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import coil.compose.AsyncImage
 import com.example.muslimvn.R
+import com.example.muslimvn.core.navigation.LocalFloatingNavigationDockInset
 import com.example.muslimvn.domain.models.PrayerName
 import com.example.muslimvn.domain.models.PrayerReminder
 import com.example.muslimvn.domain.models.PrayerTimes
@@ -135,7 +136,9 @@ fun HomeScreen(
 { padding ->
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(bottom = padding.calculateBottomPadding()),
+            contentPadding = PaddingValues(
+                bottom = padding.calculateBottomPadding() + LocalFloatingNavigationDockInset.current
+            ),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             val prayerTimes = uiState.prayerTimes
@@ -208,7 +211,7 @@ fun HomeScreen(
                 item {
                     Box(modifier = Modifier.padding(horizontal = 16.dp)) {
                         if (uiState.isLoading) {
-                            LoadingIndicator(label = stringResource(R.string.loading_please_wait), modifier = Modifier.fillParentMaxSize())
+                            HomeLoadingSkeleton()
                         } else {
                             ErrorState(message = uiState.error ?: stringResource(R.string.prayer_times_error), onRetry = viewModel::refreshPrayerTimes, modifier = Modifier.fillParentMaxSize())
                         }
@@ -224,6 +227,15 @@ fun HomeScreen(
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun HomeLoadingSkeleton() {
+    Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+        ShimmerPlaceholder(modifier = Modifier.fillMaxWidth().height(190.dp))
+        ShimmerPlaceholder(modifier = Modifier.fillMaxWidth().height(112.dp))
+        ShimmerPlaceholder(modifier = Modifier.fillMaxWidth().height(112.dp))
     }
 }
 
