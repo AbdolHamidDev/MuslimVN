@@ -457,34 +457,26 @@ fun MachZenScreen(
                     .padding(bottom = 24.dp)
             )
 
-            // Audio Mini Player logic
+            // Audio Mini Player logic - CHỈ hiển thị âm thanh riêng của Mách Zên (islamhouse_)
             PodcastPlayerBarState(playerViewModel) { active ->
-                val isQuran = active?.id?.contains(":") == true
-                if (active != null && !isQuran) {
-                    val dbPlaylist by playerViewModel.playlist.collectAsState()
-                    val isIslamHouse = active.id.startsWith("islamhouse_")
-                    
-                    // Map IslamHouse documents to PodcastEpisode model for the MiniPlayer playlist
-                    val currentPlaylist = if (isIslamHouse) {
-                        uiState.documents
-                            .filter { it.fileExtension?.uppercase() == "MP3" }
-                            .map { doc ->
-                                PodcastEpisode(
-                                    id = "islamhouse_${doc.id}",
-                                    scholarId = "mach_zen",
-                                    title = doc.title,
-                                    audioUrl = doc.downloadUrl ?: "",
-                                    artworkUrl = "images/featured_scholars_vietnam/mach_zen.webp",
-                                    duration = 0L,
-                                    pubDate = doc.addDate?.times(1000) ?: 0L,
-                                    description = doc.description ?: "",
-                                    isDownloaded = false,
-                                    lastPositionMs = 0L
-                                )
-                            }
-                    } else {
-                        dbPlaylist
-                    }
+                val isIslamHouse = active != null && active.id.startsWith("islamhouse_")
+                if (isIslamHouse && active != null) {
+                    val currentPlaylist = uiState.documents
+                        .filter { it.fileExtension?.equals("MP3", ignoreCase = true) == true && !it.downloadUrl.isNullOrBlank() }
+                        .map { doc ->
+                            PodcastEpisode(
+                                id = "islamhouse_${doc.id}",
+                                scholarId = "mach_zen",
+                                title = doc.title,
+                                audioUrl = doc.downloadUrl ?: "",
+                                artworkUrl = "images/featured_scholars_vietnam/mach_zen.webp",
+                                duration = 0L,
+                                pubDate = doc.addDate?.times(1000) ?: 0L,
+                                description = doc.description ?: "",
+                                isDownloaded = false,
+                                lastPositionMs = 0L
+                            )
+                        }
 
                     Box(modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 80.dp)) {
                         MiniPlayerBar(
@@ -503,12 +495,8 @@ fun MachZenScreen(
                             currentMediaId = active.id,
                             playlist = currentPlaylist,
                             onPlayEpisode = { ep ->
-                                if (isIslamHouse) {
-                                    val doc = uiState.documents.find { "islamhouse_${it.id}" == ep.id }
-                                    if (doc != null) viewModel.playAudioDocument(doc)
-                                } else {
-                                    playerViewModel.playEpisode(ep)
-                                }
+                                val doc = uiState.documents.find { "islamhouse_${it.id}" == ep.id }
+                                if (doc != null) viewModel.playAudioDocument(doc)
                             }
                         )
                     }

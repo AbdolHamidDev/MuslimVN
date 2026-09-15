@@ -24,16 +24,21 @@ class IslamHouseRepositoryImpl @Inject constructor(
         try {
             val response = apiService.getAuthorItems(authorId = authorId, page = page)
             val items = response.data.orEmpty().map { item ->
-                val primaryAttachment = item.attachments?.firstOrNull()
+                val attachments = item.attachments.orEmpty()
+                val audioAttachment = attachments.find {
+                    val ext = it.extensionType?.lowercase()
+                    ext == "mp3" || ext == "wav" || ext == "m4a" || ext == "aac"
+                } ?: attachments.firstOrNull()
+
                 ScholarDocument(
                     id = item.id,
                     title = item.title ?: "Không có tiêu đề",
                     type = item.type ?: "document",
                     description = item.description,
                     addDate = item.addDate,
-                    fileExtension = primaryAttachment?.extensionType,
-                    fileSize = primaryAttachment?.size,
-                    downloadUrl = primaryAttachment?.url,
+                    fileExtension = audioAttachment?.extensionType ?: item.type,
+                    fileSize = audioAttachment?.size,
+                    downloadUrl = audioAttachment?.url,
                     detailUrl = item.apiUrl,
                     imageUrl = item.image
                 )
@@ -58,16 +63,21 @@ class IslamHouseRepositoryImpl @Inject constructor(
         return try {
             val response = apiService.getAuthorItems(authorId = authorId, page = page)
             val items = response.data.orEmpty().map { item ->
-                val primaryAttachment = item.attachments?.firstOrNull()
+                val attachments = item.attachments.orEmpty()
+                val audioAttachment = attachments.find {
+                    val ext = it.extensionType?.lowercase()
+                    ext == "mp3" || ext == "wav" || ext == "m4a" || ext == "aac"
+                } ?: attachments.firstOrNull()
+
                 ScholarDocument(
                     id = item.id,
                     title = item.title ?: "Không có tiêu đề",
                     type = item.type ?: "document",
                     description = item.description,
                     addDate = item.addDate,
-                    fileExtension = primaryAttachment?.extensionType,
-                    fileSize = primaryAttachment?.size,
-                    downloadUrl = primaryAttachment?.url,
+                    fileExtension = audioAttachment?.extensionType ?: item.type,
+                    fileSize = audioAttachment?.size,
+                    downloadUrl = audioAttachment?.url,
                     detailUrl = item.apiUrl,
                     imageUrl = item.image
                 )

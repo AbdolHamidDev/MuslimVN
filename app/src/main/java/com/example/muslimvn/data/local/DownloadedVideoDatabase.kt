@@ -7,7 +7,7 @@ import com.example.muslimvn.data.local.entities.DownloadedVideoEntity
 
 @Database(
     entities = [DownloadedVideoEntity::class],
-    version = 1,
+    version = 2,
     exportSchema = false
 )
 abstract class DownloadedVideoDatabase : RoomDatabase() {

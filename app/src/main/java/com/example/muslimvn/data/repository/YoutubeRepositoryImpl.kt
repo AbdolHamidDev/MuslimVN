@@ -3,6 +3,8 @@ package com.example.muslimvn.data.repository
 import com.example.muslimvn.core.utils.TimeUtils
 import com.example.muslimvn.domain.models.YoutubeVideo
 import com.example.muslimvn.domain.models.YoutubeVideoDetail
+import com.example.muslimvn.domain.repository.StreamDownloadInfo
+import com.example.muslimvn.domain.repository.VideoAndAudioStreamInfo
 import com.example.muslimvn.domain.repository.YoutubeRepository
 import com.example.muslimvn.data.util.YoutubeRssParser
 import kotlinx.coroutines.Dispatchers
@@ -11,6 +13,7 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.withContext
 import org.schabi.newpipe.extractor.InfoItem
+import org.schabi.newpipe.extractor.MediaFormat
 import org.schabi.newpipe.extractor.ServiceList
 import org.schabi.newpipe.extractor.stream.DeliveryMethod
 import org.schabi.newpipe.extractor.stream.StreamInfoItem
@@ -187,6 +190,86 @@ class YoutubeRepositoryImpl @Inject constructor(
                 ?: throw Exception("Không tìm thấy luồng phát phù hợp")
 
             emit(Result.success(streamUrl))
+        } catch (e: Exception) {
+            emit(Result.failure(e))
+        }
+    }.flowOn(Dispatchers.IO)
+
+    override fun getAudioStreamUrl(videoUrl: String): Flow<Result<String>> = flow {
+        try {
+            val service = ServiceList.YouTube
+            val linkHandler = service.getStreamLHFactory().fromUrl(videoUrl)
+            val extractor = service.getStreamExtractor(linkHandler)
+            extractor.fetchPage()
+
+            // Ưu tiên luồng progressive_http (luồng MP4 chứa audio đầy đủ, không bị YouTube bóp tốc độ)
+            val progressiveStream = extractor.videoStreams
+                .filter { it.deliveryMethod == DeliveryMethod.PROGRESSIVE_HTTP }
+                .minByOrNull { it.height }
+                ?: extractor.videoStreams.firstOrNull()
+
+            val audioStreams = extractor.audioStreams
+            val bestAudio = audioStreams
+                .filter { it.format == MediaFormat.M4A || it.format?.name?.equals("M4A", ignoreCase = true) == true }
+                .maxByOrNull { it.averageBitrate }
+                ?: audioStreams.maxByOrNull { it.averageBitrate }
+                ?: audioStreams.firstOrNull()
+
+            val audioUrl = progressiveStream?.content
+                ?: bestAudio?.content
+                ?: throw Exception("Không tìm thấy luồng âm thanh phù hợp")
+
+            emit(Result.success(audioUrl))
+        } catch (e: Exception) {
+            emit(Result.failure(e))
+        }
+    }.flowOn(Dispatchers.IO)
+
+    override fun getMediaStreamInfo(videoUrl: String): Flow<Result<VideoAndAudioStreamInfo>> = flow {
+        try {
+            val service = ServiceList.YouTube
+            val linkHandler = service.getStreamLHFactory().fromUrl(videoUrl)
+            val extractor = service.getStreamExtractor(linkHandler)
+            extractor.fetchPage()
+
+            val durationSeconds = extractor.length
+
+            val videoStreams = extractor.videoStreams
+            val bestVideoStream = videoStreams
+                .filter { it.deliveryMethod == DeliveryMethod.PROGRESSIVE_HTTP }
+                .maxByOrNull { it.height }
+                ?: videoStreams.firstOrNull()
+
+            val videoInfo = if (bestVideoStream != null && !bestVideoStream.content.isNullOrEmpty()) {
+                val size = if (bestVideoStream.bitrate > 0 && durationSeconds > 0) {
+                    (bestVideoStream.bitrate.toLong() / 8L) * durationSeconds
+                } else 0L
+                StreamDownloadInfo(bestVideoStream.content, size)
+            } else null
+
+            val progressiveAudioStream = videoStreams
+                .filter { it.deliveryMethod == DeliveryMethod.PROGRESSIVE_HTTP }
+                .minByOrNull { it.height }
+                ?: videoStreams.firstOrNull()
+
+            val audioStreams = extractor.audioStreams
+            val bestAudioStream = audioStreams
+                .filter { it.format == MediaFormat.M4A || it.format?.name?.equals("M4A", ignoreCase = true) == true }
+                .maxByOrNull { it.averageBitrate }
+                ?: audioStreams.maxByOrNull { it.averageBitrate }
+                ?: audioStreams.firstOrNull()
+
+            val selectedAudioContent = progressiveAudioStream?.content ?: bestAudioStream?.content
+            val selectedAudioBitrate = progressiveAudioStream?.bitrate ?: bestAudioStream?.averageBitrate ?: 0
+
+            val audioInfo = if (!selectedAudioContent.isNullOrEmpty()) {
+                val size = if (selectedAudioBitrate > 0 && durationSeconds > 0) {
+                    (selectedAudioBitrate.toLong() / 8L) * durationSeconds
+                } else 0L
+                StreamDownloadInfo(selectedAudioContent, size)
+            } else null
+
+            emit(Result.success(VideoAndAudioStreamInfo(videoInfo, audioInfo)))
         } catch (e: Exception) {
             emit(Result.failure(e))
         }

@@ -6,9 +6,12 @@ import java.util.Locale
 
 /** Bộ hàm định dạng dùng chung cho tính năng Podcast. */
 
-/** Đường dẫn asset -> URI mà Coil hiểu, ví dụ "images/podcast/x.webp" -> "file:///android_asset/images/podcast/x.webp". */
-fun String.toAndroidAssetUri(): String =
-    if (startsWith("file://") || startsWith("http")) this else "file:///android_asset/${trimStart('/')}"
+/** Đường dẫn asset / file / URL -> URI hợp lệ mà Coil và ExoPlayer hiểu. */
+fun String.toAndroidAssetUri(): String = when {
+    startsWith("file://") || startsWith("http://") || startsWith("https://") || startsWith("content://") -> this
+    startsWith("/") -> "file://$this"
+    else -> "file:///android_asset/${trimStart('/')}"
+}
 
 /** ms -> "M:SS" hoặc "H:MM:SS"; trả "--:--" nếu chưa biết thời lượng. */
 fun formatDurationMs(durationMs: Long): String {

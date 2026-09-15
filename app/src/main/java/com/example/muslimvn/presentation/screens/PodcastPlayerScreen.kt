@@ -4,6 +4,7 @@ import android.graphics.Bitmap
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
+import androidx.compose.foundation.interaction.collectIsDraggedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -116,22 +117,24 @@ fun PodcastPlayerScreen(
     val currentArtworkPath = artworkPath
     LaunchedEffect(currentArtworkPath) {
         if (currentArtworkPath != null) {
-            val request = ImageRequest.Builder(context)
-                .data(currentArtworkPath.toAndroidAssetUri())
-                .allowHardware(false)
-                .size(200, 200)
-                .build()
-            
-            val result = context.imageLoader.execute(request)
-            if (result is coil.request.SuccessResult) {
-                val bitmap = (result.drawable as? android.graphics.drawable.BitmapDrawable)?.bitmap
-                if (bitmap != null) {
-                    val palette = withContext(Dispatchers.Default) {
-                        Palette.from(bitmap).generate()
-                    }
-                    palette.dominantSwatch?.let { swatch ->
-                        dominantColor = Color(swatch.rgb)
-                        onDominantColor = Color(swatch.bodyTextColor)
+            runCatching {
+                val request = ImageRequest.Builder(context)
+                    .data(currentArtworkPath.toAndroidAssetUri())
+                    .allowHardware(false)
+                    .size(200, 200)
+                    .build()
+                
+                val result = context.imageLoader.execute(request)
+                if (result is coil.request.SuccessResult) {
+                    val bitmap = (result.drawable as? android.graphics.drawable.BitmapDrawable)?.bitmap
+                    if (bitmap != null) {
+                        val palette = withContext(Dispatchers.Default) {
+                            Palette.from(bitmap).generate()
+                        }
+                        palette.dominantSwatch?.let { swatch ->
+                            dominantColor = Color(swatch.rgb)
+                            onDominantColor = Color(swatch.bodyTextColor)
+                        }
                     }
                 }
             }
@@ -152,6 +155,8 @@ fun PodcastPlayerScreen(
         pageCount = { if (playlist.isEmpty()) 1 else playlist.size }
     )
 
+    val isDragged by pagerState.interactionSource.collectIsDraggedAsState()
+
     LaunchedEffect(currentEpisodeId, playlist) {
         if (playlist.isNotEmpty()) {
             val targetPage = playlist.indexOfFirst { it.id == currentEpisodeId }
@@ -161,12 +166,14 @@ fun PodcastPlayerScreen(
         }
     }
 
-    LaunchedEffect(pagerState) {
-        snapshotFlow { pagerState.currentPage }.collect { page ->
-            if (pagerState.isScrollInProgress && playlist.isNotEmpty() && page < playlist.size) {
-                val episode = playlist[page]
-                if (episode.id != currentEpisodeId) {
-                    viewModel.playEpisode(episode)
+    LaunchedEffect(isDragged) {
+        if (isDragged) {
+            snapshotFlow { pagerState.currentPage }.collect { page ->
+                if (playlist.isNotEmpty() && page < playlist.size) {
+                    val episode = playlist[page]
+                    if (episode.id != currentEpisodeId) {
+                        viewModel.playEpisode(episode)
+                    }
                 }
             }
         }

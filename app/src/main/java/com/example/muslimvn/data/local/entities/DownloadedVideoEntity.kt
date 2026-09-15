@@ -5,7 +5,9 @@ import androidx.room.PrimaryKey
 
 @Entity(tableName = "downloaded_videos")
 data class DownloadedVideoEntity(
-    @PrimaryKey val id: String,
+    @PrimaryKey val id: String, // ID dạng: "${videoId}_VIDEO" hoặc "${videoId}_AUDIO" (hoặc videoId nếu cũ)
+    val videoId: String = "",
+    val mediaType: String = "VIDEO", // "VIDEO" hoặc "AUDIO"
     val title: String,
     val thumbnailUrl: String,
     val uploaderName: String,

@@ -9,7 +9,9 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Headset
 import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.VideoLibrary
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -33,11 +35,14 @@ fun DownloadedVideosScreen(
     viewModel: DownloadedVideosViewModel = hiltViewModel()
 ) {
     val downloadedVideos by viewModel.downloadedVideos.collectAsState()
+    val downloadedAudios by viewModel.downloadedAudios.collectAsState()
+
+    var selectedTabIndex by remember { mutableIntStateOf(0) }
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Video đã tải về") },
+                title = { Text("Nội dung đã tải về") },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Quay lại")
@@ -46,37 +51,83 @@ fun DownloadedVideosScreen(
             )
         }
     ) { innerPadding ->
-        Box(
+        Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
         ) {
-            if (downloadedVideos.isEmpty()) {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = "Chưa có video nào được tải về",
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-            } else {
-                LazyColumn(
-                    modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    items(downloadedVideos, key = { it.id }) { video ->
-                        DownloadedVideoItem(
-                            video = video,
-                            onClick = {
-                                val fileUri = android.net.Uri.fromFile(File(video.localFilePath)).toString()
-                                onVideoClick(fileUri, video.title, video.uploaderName)
-                            },
-                            onDelete = { viewModel.deleteVideo(video.id) }
-                        )
+            TabRow(selectedTabIndex = selectedTabIndex) {
+                Tab(
+                    selected = selectedTabIndex == 0,
+                    onClick = { selectedTabIndex = 0 },
+                    text = { Text("Video (${downloadedVideos.size})") },
+                    icon = { Icon(Icons.Default.VideoLibrary, contentDescription = null) }
+                )
+                Tab(
+                    selected = selectedTabIndex == 1,
+                    onClick = { selectedTabIndex = 1 },
+                    text = { Text("Âm thanh (${downloadedAudios.size})") },
+                    icon = { Icon(Icons.Default.Headset, contentDescription = null) }
+                )
+            }
+
+            Box(modifier = Modifier.fillMaxSize()) {
+                if (selectedTabIndex == 0) {
+                    if (downloadedVideos.isEmpty()) {
+                        Box(
+                            modifier = Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = "Chưa có video nào được tải về",
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    } else {
+                        LazyColumn(
+                            modifier = Modifier.fillMaxSize(),
+                            contentPadding = PaddingValues(16.dp),
+                            verticalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            items(downloadedVideos, key = { it.id }) { video ->
+                                DownloadedVideoItem(
+                                    video = video,
+                                    onClick = {
+                                        val fileUri = android.net.Uri.fromFile(File(video.localFilePath)).toString()
+                                        onVideoClick(fileUri, video.title, video.uploaderName)
+                                    },
+                                    onDelete = { viewModel.deleteVideo(video.id) }
+                                )
+                            }
+                        }
+                    }
+                } else {
+                    if (downloadedAudios.isEmpty()) {
+                        Box(
+                            modifier = Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = "Chưa có tệp âm thanh nào được tải về",
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    } else {
+                        LazyColumn(
+                            modifier = Modifier.fillMaxSize(),
+                            contentPadding = PaddingValues(16.dp),
+                            verticalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            items(downloadedAudios, key = { it.id }) { audio ->
+                                DownloadedAudioItem(
+                                    audio = audio,
+                                    onClick = { viewModel.playAudio(audio) },
+                                    onDelete = { viewModel.deleteVideo(audio.id) }
+                                )
+                            }
+                        }
                     }
                 }
             }
@@ -135,9 +186,7 @@ fun DownloadedVideoItem(
             Spacer(modifier = Modifier.width(12.dp))
 
             Column(
-                modifier = Modifier
-                    .weight(1f)
-                    .fillMaxHeight(),
+                modifier = Modifier.weight(1f),
                 verticalArrangement = Arrangement.Center
             ) {
                 Text(
@@ -179,6 +228,115 @@ fun DownloadedVideoItem(
             onDismissRequest = { showDeleteDialog = false },
             title = { Text("Xóa video") },
             text = { Text("Bạn có chắc chắn muốn xóa video này khỏi thiết bị không?") },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showDeleteDialog = false
+                        onDelete()
+                    },
+                    colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error)
+                ) {
+                    Text("Xóa")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteDialog = false }) {
+                    Text("Hủy")
+                }
+            }
+        )
+    }
+}
+
+@Composable
+fun DownloadedAudioItem(
+    audio: DownloadedVideoEntity,
+    onClick: () -> Unit,
+    onDelete: () -> Unit
+) {
+    var showDeleteDialog by remember { mutableStateOf(false) }
+
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick),
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(12.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(60.dp)
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(MaterialTheme.colorScheme.primaryContainer),
+                contentAlignment = Alignment.Center
+            ) {
+                if (audio.thumbnailUrl.isNotEmpty()) {
+                    AsyncImage(
+                        model = audio.thumbnailUrl,
+                        contentDescription = audio.title,
+                        modifier = Modifier.fillMaxSize(),
+                        contentScale = ContentScale.Crop
+                    )
+                }
+                Icon(
+                    imageVector = Icons.Default.Headset,
+                    contentDescription = "Nghe âm thanh",
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(28.dp)
+                )
+            }
+
+            Spacer(modifier = Modifier.width(12.dp))
+
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.Center
+            ) {
+                Text(
+                    text = audio.title,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = audio.uploaderName,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+                Spacer(modifier = Modifier.height(2.dp))
+                val sizeMb = String.format(java.util.Locale("vi", "VN"), "%.1f MB", audio.fileSize / (1024.0 * 1024.0))
+                Text(
+                    text = sizeMb,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.outline
+                )
+            }
+
+            IconButton(onClick = { showDeleteDialog = true }) {
+                Icon(
+                    imageVector = Icons.Default.Delete,
+                    contentDescription = "Xóa",
+                    tint = MaterialTheme.colorScheme.error
+                )
+            }
+        }
+    }
+
+    if (showDeleteDialog) {
+        AlertDialog(
+            onDismissRequest = { showDeleteDialog = false },
+            title = { Text("Xóa tệp âm thanh") },
+            text = { Text("Bạn có chắc chắn muốn xóa tệp âm thanh này khỏi thiết bị không?") },
             confirmButton = {
                 TextButton(
                     onClick = {

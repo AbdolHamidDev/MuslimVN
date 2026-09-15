@@ -165,12 +165,16 @@ class MachZenViewModel @Inject constructor(
     }
 
     fun playAudioDocument(doc: ScholarDocument) {
-        val mp3Docs = uiState.value.documents.filter { it.fileExtension?.uppercase() == "MP3" }
+        if (doc.downloadUrl.isNullOrBlank()) return
+
+        val mp3Docs = uiState.value.documents.filter {
+            it.fileExtension?.equals("MP3", ignoreCase = true) == true && !it.downloadUrl.isNullOrBlank()
+        }
         val startIndex = mp3Docs.indexOfFirst { it.id == doc.id }.coerceAtLeast(0)
-        
+
         val items = mp3Docs.map { d ->
             com.example.muslimvn.data.util.AudioPlayItem(
-                url = d.downloadUrl ?: "",
+                url = d.downloadUrl.orEmpty(),
                 mediaId = "islamhouse_${d.id}",
                 title = d.title,
                 artist = "Mách Zên",
@@ -178,10 +182,12 @@ class MachZenViewModel @Inject constructor(
             )
         }
 
-        audioPlayerManager.playList(
-            items = items,
-            startIndex = startIndex,
-            isPodcast = true
-        )
+        if (items.isNotEmpty()) {
+            audioPlayerManager.playList(
+                items = items,
+                startIndex = startIndex,
+                isPodcast = true
+            )
+        }
     }
 }

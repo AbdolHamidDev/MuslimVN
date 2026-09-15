@@ -63,7 +63,10 @@ class YouTubePlayerManager @Inject constructor(
                 _isPlaying.value = isPlaying
             }
         })
-        mediaSession = MediaSession.Builder(context, exoPlayer).build()
+        mediaSession?.release()
+        mediaSession = MediaSession.Builder(context, exoPlayer)
+            .setId("YouTubePlayerManagerSession")
+            .build()
     }
 
     fun playVideo(videoUrl: String, title: String, thumbnailUrl: String = "", channelName: String = "") {

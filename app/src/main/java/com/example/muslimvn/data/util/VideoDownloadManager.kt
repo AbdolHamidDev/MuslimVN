@@ -11,12 +11,16 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import okhttp3.OkHttpClient
 import java.io.File
 import java.io.RandomAccessFile
-import java.net.HttpURLConnection
-import java.net.URL
+import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 import javax.inject.Singleton
+
+enum class DownloadMediaType {
+    VIDEO, AUDIO
+}
 
 sealed interface DownloadStatus {
     data object Idle : DownloadStatus
@@ -30,7 +34,8 @@ sealed interface DownloadStatus {
 class VideoDownloadManager @Inject constructor(
     @ApplicationContext private val context: Context,
     private val downloadedVideoDao: DownloadedVideoDao,
-    private val youtubeRepository: YoutubeRepository
+    private val youtubeRepository: YoutubeRepository,
+    private val okHttpClient: OkHttpClient
 ) {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private val activeJobs = java.util.concurrent.ConcurrentHashMap<String, Job>()
@@ -38,12 +43,17 @@ class VideoDownloadManager @Inject constructor(
     private val _downloadStatuses = MutableStateFlow<Map<String, DownloadStatus>>(emptyMap())
     val downloadStatuses: StateFlow<Map<String, DownloadStatus>> = _downloadStatuses.asStateFlow()
 
-    fun getStatusFlow(videoId: String): Flow<DownloadStatus> {
+    fun getDownloadStatusKey(videoId: String, mediaType: DownloadMediaType): String {
+        return "${videoId}_${mediaType.name}"
+    }
+
+    fun getStatusFlow(videoId: String, mediaType: DownloadMediaType = DownloadMediaType.VIDEO): Flow<DownloadStatus> {
+        val key = getDownloadStatusKey(videoId, mediaType)
         return kotlinx.coroutines.flow.combine(
             downloadStatuses,
             downloadedVideoDao.getAllDownloadedVideos()
         ) { statuses, downloadedList ->
-            statuses[videoId] ?: if (downloadedList.any { it.id == videoId }) {
+            statuses[key] ?: if (downloadedList.any { it.id == key || (it.videoId == videoId && it.mediaType == mediaType.name) || (mediaType == DownloadMediaType.VIDEO && it.id == videoId) }) {
                 DownloadStatus.Completed
             } else {
                 DownloadStatus.Idle
@@ -51,7 +61,37 @@ class VideoDownloadManager @Inject constructor(
         }
     }
 
+    fun getVideoAndAudioStatuses(videoId: String): Flow<Pair<DownloadStatus, DownloadStatus>> {
+        val videoKey = getDownloadStatusKey(videoId, DownloadMediaType.VIDEO)
+        val audioKey = getDownloadStatusKey(videoId, DownloadMediaType.AUDIO)
+        
+        return kotlinx.coroutines.flow.combine(
+            downloadStatuses,
+            downloadedVideoDao.getDownloadedMediaByVideoId(videoId)
+        ) { statuses, downloadedList ->
+            val videoStatus = statuses[videoKey]
+                ?: if (downloadedList.any { it.id == videoKey || (it.videoId == videoId && it.mediaType == DownloadMediaType.VIDEO.name) || (it.id == videoId && (it.mediaType == "VIDEO" || it.mediaType.isEmpty())) }) {
+                    DownloadStatus.Completed
+                } else {
+                    DownloadStatus.Idle
+                }
+                
+            val audioStatus = statuses[audioKey]
+                ?: if (downloadedList.any { it.id == audioKey || (it.videoId == videoId && it.mediaType == DownloadMediaType.AUDIO.name) }) {
+                    DownloadStatus.Completed
+                } else {
+                    DownloadStatus.Idle
+                }
+                
+            Pair(videoStatus, audioStatus)
+        }
+    }
+
     val allDownloadedVideos: Flow<List<DownloadedVideoEntity>> = downloadedVideoDao.getAllDownloadedVideos()
+
+    fun getDownloadedMediaByType(mediaType: DownloadMediaType): Flow<List<DownloadedVideoEntity>> {
+        return downloadedVideoDao.getDownloadedMediaByType(mediaType.name)
+    }
 
     fun startDownload(
         videoId: String,
@@ -59,20 +99,28 @@ class VideoDownloadManager @Inject constructor(
         title: String,
         thumbnailUrl: String,
         uploaderName: String,
-        duration: String
+        duration: String,
+        mediaType: DownloadMediaType = DownloadMediaType.VIDEO
     ) {
-        if (activeJobs.containsKey(videoId) && activeJobs[videoId]?.isActive == true) return
+        val downloadKey = getDownloadStatusKey(videoId, mediaType)
+        if (activeJobs.containsKey(downloadKey) && activeJobs[downloadKey]?.isActive == true) return
 
         val job = scope.launch {
-            updateStatus(videoId, DownloadStatus.Downloading(0f, 0L, 1L))
+            updateStatus(downloadKey, DownloadStatus.Downloading(0f, 0L, 1L))
             try {
-                // 1. Lấy stream URL từ YouTube
+                // 1. Lấy stream URL từ YouTube theo mediaType
                 var streamUrl: String? = null
-                youtubeRepository.getVideoStreamUrl(videoUrl).collect { result ->
+                val streamFlow = if (mediaType == DownloadMediaType.AUDIO) {
+                    youtubeRepository.getAudioStreamUrl(videoUrl)
+                } else {
+                    youtubeRepository.getVideoStreamUrl(videoUrl)
+                }
+
+                streamFlow.collect { result ->
                     result.onSuccess { url ->
                         streamUrl = url
                     }.onFailure { e ->
-                        throw Exception(e.message ?: "Không thể lấy luồng video")
+                        throw Exception(e.message ?: "Không thể lấy luồng ${if (mediaType == DownloadMediaType.AUDIO) "âm thanh" else "video"}")
                     }
                 }
 
@@ -85,32 +133,60 @@ class VideoDownloadManager @Inject constructor(
                 }
                 // Làm sạch tên file hợp lệ
                 val sanitizedTitle = title.replace(Regex("[\\\\/:*?\"<>|]"), "_").take(50)
-                val targetFile = File(downloadsDir, "MuslimVN_$sanitizedTitle-$videoId.mp4")
+                val ext = if (mediaType == DownloadMediaType.AUDIO) "mp3" else "mp4"
+                val targetFile = File(downloadsDir, "MuslimVN_$sanitizedTitle-$downloadKey.$ext")
 
                 var downloadedBytes = if (targetFile.exists()) targetFile.length() else 0L
                 var totalBytes = -1L
 
-                val connection = URL(finalStreamUrl).openConnection() as HttpURLConnection
-                connection.connectTimeout = 15000
-                connection.readTimeout = 15000
+                val requestBuilder = okhttp3.Request.Builder()
+                    .header("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
+                    .header("Accept", "*/*")
+                    .header("Accept-Language", "vi-VN,vi;q=0.9,en-US;q=0.8,en;q=0.7")
 
-                // Kiểm tra hỗ trợ Range nếu file đã tải một phần
                 if (downloadedBytes > 0) {
-                    connection.setRequestProperty("Range", "bytes=$downloadedBytes-")
+                    requestBuilder.header("Range", "bytes=$downloadedBytes-")
                 }
 
-                val responseCode = connection.responseCode
-                if (responseCode == HttpURLConnection.HTTP_PARTIAL || responseCode == HttpURLConnection.HTTP_OK) {
-                    val contentLength = connection.contentLengthLong
-                    totalBytes = if (responseCode == HttpURLConnection.HTTP_PARTIAL) {
-                        contentLength + downloadedBytes
-                    } else {
-                        contentLength
-                    }
+                val downloadClient = okHttpClient.newBuilder()
+                    .connectTimeout(25, TimeUnit.SECONDS)
+                    .readTimeout(25, TimeUnit.SECONDS)
+                    .build()
 
-                    val inputStream = connection.inputStream
+                var currentUrl = finalStreamUrl
+                var response = downloadClient.newCall(requestBuilder.url(currentUrl).build()).execute()
+                var responseCode = response.code
+
+                if (responseCode != 200 && responseCode != 206 && mediaType == DownloadMediaType.AUDIO) {
+                    response.close()
+                    var fallbackUrl: String? = null
+                    youtubeRepository.getVideoStreamUrl(videoUrl).collect { res ->
+                        res.onSuccess { fallbackUrl = it }
+                    }
+                    if (!fallbackUrl.isNullOrEmpty() && fallbackUrl != currentUrl) {
+                        currentUrl = fallbackUrl!!
+                        val fallbackReq = okhttp3.Request.Builder()
+                            .url(currentUrl)
+                            .header("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
+                            .header("Accept", "*/*")
+                            .header("Accept-Language", "vi-VN,vi;q=0.9,en-US;q=0.8,en;q=0.7")
+                            .apply {
+                                if (downloadedBytes > 0) header("Range", "bytes=$downloadedBytes-")
+                            }
+                            .build()
+                        response = downloadClient.newCall(fallbackReq).execute()
+                        responseCode = response.code
+                    }
+                }
+
+                if (responseCode == 200 || responseCode == 206) {
+                    val body = response.body ?: throw Exception("Nội dung phản hồi rỗng")
+                    val contentLength = body.contentLength()
+                    totalBytes = if (responseCode == 206) contentLength + downloadedBytes else contentLength
+
+                    val inputStream = body.byteStream()
                     val randomAccessFile = RandomAccessFile(targetFile, "rw")
-                    if (responseCode == HttpURLConnection.HTTP_PARTIAL) {
+                    if (responseCode == 206) {
                         randomAccessFile.seek(downloadedBytes)
                     } else {
                         randomAccessFile.setLength(0)
@@ -130,22 +206,22 @@ class VideoDownloadManager @Inject constructor(
 
                             val progress = if (totalBytes > 0) {
                                 (downloadedBytes.toFloat() / totalBytes.toFloat()).coerceIn(0f, 1f)
-                            } else {
-                                0f
-                            }
+                            } else 0f
 
-                            updateStatus(videoId, DownloadStatus.Downloading(progress, downloadedBytes, if (totalBytes > 0) totalBytes else downloadedBytes))
+                            updateStatus(downloadKey, DownloadStatus.Downloading(progress, downloadedBytes, if (totalBytes > 0) totalBytes else downloadedBytes))
                         }
                     } finally {
                         inputStream.close()
                         randomAccessFile.close()
+                        response.close()
                     }
 
-                    // Nếu tải hoàn tất (không bị cancel giữa chừng)
                     if (isActive && (totalBytes <= 0 || downloadedBytes >= totalBytes)) {
-                        updateStatus(videoId, DownloadStatus.Completed)
+                        updateStatus(downloadKey, DownloadStatus.Completed)
                         val entity = DownloadedVideoEntity(
-                            id = videoId,
+                            id = downloadKey,
+                            videoId = videoId,
+                            mediaType = mediaType.name,
                             title = title,
                             thumbnailUrl = thumbnailUrl,
                             uploaderName = uploaderName,
@@ -155,28 +231,30 @@ class VideoDownloadManager @Inject constructor(
                             fileSize = targetFile.length()
                         )
                         downloadedVideoDao.insertDownloadedVideo(entity)
-                        activeJobs.remove(videoId)
+                        activeJobs.remove(downloadKey)
                     } else {
-                        updateStatus(videoId, DownloadStatus.Paused)
+                        updateStatus(downloadKey, DownloadStatus.Paused)
                     }
                 } else {
+                    response.close()
                     throw Exception("Lỗi HTTP: $responseCode")
                 }
             } catch (e: CancellationException) {
-                updateStatus(videoId, DownloadStatus.Paused)
+                updateStatus(downloadKey, DownloadStatus.Paused)
             } catch (e: Exception) {
-                updateStatus(videoId, DownloadStatus.Failed(e.message ?: "Lỗi tải xuống"))
-                activeJobs.remove(videoId)
+                updateStatus(downloadKey, DownloadStatus.Failed(e.message ?: "Lỗi tải xuống"))
+                activeJobs.remove(downloadKey)
             }
         }
 
-        activeJobs[videoId] = job
+        activeJobs[downloadKey] = job
     }
 
-    fun pauseDownload(videoId: String) {
-        activeJobs[videoId]?.cancel()
-        activeJobs.remove(videoId)
-        updateStatus(videoId, DownloadStatus.Paused)
+    fun pauseDownload(videoId: String, mediaType: DownloadMediaType = DownloadMediaType.VIDEO) {
+        val downloadKey = getDownloadStatusKey(videoId, mediaType)
+        activeJobs[downloadKey]?.cancel()
+        activeJobs.remove(downloadKey)
+        updateStatus(downloadKey, DownloadStatus.Paused)
     }
 
     fun resumeDownload(
@@ -185,26 +263,42 @@ class VideoDownloadManager @Inject constructor(
         title: String,
         thumbnailUrl: String,
         uploaderName: String,
-        duration: String
+        duration: String,
+        mediaType: DownloadMediaType = DownloadMediaType.VIDEO
     ) {
-        startDownload(videoId, videoUrl, title, thumbnailUrl, uploaderName, duration)
+        startDownload(videoId, videoUrl, title, thumbnailUrl, uploaderName, duration, mediaType)
     }
 
-    suspend fun deleteDownloadedVideo(videoId: String) {
-        val video = downloadedVideoDao.getDownloadedVideoById(videoId)
+    suspend fun deleteDownloadedVideo(idOrVideoId: String) {
+        val video = downloadedVideoDao.getDownloadedVideoById(idOrVideoId)
         if (video != null) {
             val file = File(video.localFilePath)
             if (file.exists()) {
                 file.delete()
             }
-            downloadedVideoDao.deleteDownloadedVideo(videoId)
+            downloadedVideoDao.deleteDownloadedVideo(video.id)
+            updateStatus(video.id, DownloadStatus.Idle)
+        } else {
+            // Delete video format
+            val videoEntity = downloadedVideoDao.getDownloadedVideoById("${idOrVideoId}_VIDEO")
+            if (videoEntity != null) {
+                File(videoEntity.localFilePath).takeIf { it.exists() }?.delete()
+                downloadedVideoDao.deleteDownloadedVideo(videoEntity.id)
+                updateStatus("${idOrVideoId}_VIDEO", DownloadStatus.Idle)
+            }
+            // Delete audio format
+            val audioEntity = downloadedVideoDao.getDownloadedVideoById("${idOrVideoId}_AUDIO")
+            if (audioEntity != null) {
+                File(audioEntity.localFilePath).takeIf { it.exists() }?.delete()
+                downloadedVideoDao.deleteDownloadedVideo(audioEntity.id)
+                updateStatus("${idOrVideoId}_AUDIO", DownloadStatus.Idle)
+            }
         }
-        updateStatus(videoId, DownloadStatus.Idle)
     }
 
-    private fun updateStatus(videoId: String, status: DownloadStatus) {
+    private fun updateStatus(key: String, status: DownloadStatus) {
         val currentMap = _downloadStatuses.value.toMutableMap()
-        currentMap[videoId] = status
+        currentMap[key] = status
         _downloadStatuses.value = currentMap
     }
 }

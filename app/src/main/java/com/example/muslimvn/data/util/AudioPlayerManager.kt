@@ -124,12 +124,16 @@ class AudioPlayerManager @Inject constructor(
         isPodcast: Boolean = false,
         playWhenReady: Boolean = true
     ) {
+        val validItems = items.filter { it.url.isNotBlank() }
+        if (validItems.isEmpty()) return
+        val safeIndex = startIndex.coerceIn(0, validItems.size - 1)
+
         initializePlayer()
         onPlaybackFinished = null
         if (isPodcastSession && _currentMediaId.value != null) persistProgressNow()
 
         isPodcastSession = isPodcast
-        val firstItem = items.getOrNull(startIndex)
+        val firstItem = validItems.getOrNull(safeIndex)
         _currentMediaId.value = firstItem?.mediaId
         _nowPlayingTitle.value = firstItem?.title
         _nowPlayingArtist.value = firstItem?.artist
@@ -138,7 +142,7 @@ class AudioPlayerManager @Inject constructor(
             else "file:///android_asset/${path.trimStart('/')}"
         }
 
-        val mediaItems = items.map { item ->
+        val mediaItems = validItems.map { item ->
             val artworkUri = item.artworkPath?.let { path ->
                 if (path.startsWith("http")) Uri.parse(path)
                 else Uri.parse("file:///android_asset/${path.trimStart('/')}")
@@ -159,7 +163,7 @@ class AudioPlayerManager @Inject constructor(
         exoPlayer?.apply {
             stop() // Dừng hẳn và xoá buffer cũ để nạp URL mới hoàn toàn
             clearMediaItems()
-            setMediaItems(mediaItems, startIndex, 0L)
+            setMediaItems(mediaItems, safeIndex, 0L)
             setPlaybackSpeed(_playbackSpeed.value)
             prepare()
             this.playWhenReady = playWhenReady
@@ -356,7 +360,10 @@ class AudioPlayerManager @Inject constructor(
                     }
                 })
             }
-            mediaSession = MediaSession.Builder(context, exoPlayer!!).build()
+            mediaSession?.release()
+            mediaSession = MediaSession.Builder(context, exoPlayer!!)
+                .setId("AudioPlayerManagerSession")
+                .build()
         }
     }
 
@@ -416,10 +423,13 @@ class AudioPlayerManager @Inject constructor(
     }
 
     private fun String.toAudioUri(): Uri {
-        return if (startsWith("http") || startsWith("file") || startsWith("content")) {
-            Uri.parse(this)
+        val trimmed = this.trim()
+        return if (trimmed.startsWith("http://") || trimmed.startsWith("https://") || trimmed.startsWith("file://") || trimmed.startsWith("content://")) {
+            Uri.parse(trimmed)
+        } else if (trimmed.isNotBlank()) {
+            Uri.fromFile(java.io.File(trimmed))
         } else {
-            Uri.fromFile(java.io.File(this))
+            Uri.EMPTY
         }
     }
 

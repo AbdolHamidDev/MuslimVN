@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.interaction.collectIsDraggedAsState
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -22,6 +23,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
@@ -97,6 +99,8 @@ fun MiniPlayerBar(
                 pageCount = { if (playlist.isEmpty()) 1 else playlist.size }
             )
 
+            val isDragged by pagerState.interactionSource.collectIsDraggedAsState()
+
             LaunchedEffect(currentMediaId, playlist) {
                 if (playlist.isNotEmpty()) {
                     val target = playlist.indexOfFirst { it.id == currentMediaId }
@@ -106,14 +110,16 @@ fun MiniPlayerBar(
                 }
             }
 
-            LaunchedEffect(pagerState) {
-                snapshotFlow { pagerState.currentPage }.collect { page ->
-                    // CHỈ đổi tập khi người dùng CHỦ ĐỘNG lướt tay (isScrollInProgress)
-                    // để tránh xung đột với việc audio tự động chuyển câu
-                    if (pagerState.isScrollInProgress && playlist.isNotEmpty() && page < playlist.size) {
-                        val episode = playlist[page]
-                        if (episode.id != currentMediaId) {
-                            onPlayEpisode(episode)
+            LaunchedEffect(isDragged) {
+                if (isDragged) {
+                    snapshotFlow { pagerState.currentPage }.collect { page ->
+                        // CHỈ đổi tập khi người dùng CHỦ ĐỘNG lướt tay (isDragged)
+                        // để tránh xung đột với việc tự động chuyển trang theo code
+                        if (playlist.isNotEmpty() && page < playlist.size) {
+                            val episode = playlist[page]
+                            if (episode.id != currentMediaId) {
+                                onPlayEpisode(episode)
+                            }
                         }
                     }
                 }

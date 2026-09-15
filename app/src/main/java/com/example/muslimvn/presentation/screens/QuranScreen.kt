@@ -67,9 +67,9 @@ fun QuranScreen(
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
         bottomBar = {
             PodcastPlayerBarState(playerViewModel) { active ->
-                androidx.compose.animation.AnimatedVisibility(visible = active != null) {
+                val isQuran = active?.id?.contains(":") == true
+                androidx.compose.animation.AnimatedVisibility(visible = isQuran) {
                     if (active != null) {
-                        val isQuran = active.id.contains(":")
                         
                         MiniPlayerBar(
                             title = active.title,

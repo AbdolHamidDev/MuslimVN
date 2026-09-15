@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.muslimvn.data.util.YouTubePlayerManager
 import com.example.muslimvn.data.util.VideoDownloadManager
+import com.example.muslimvn.data.util.DownloadMediaType
 import com.example.muslimvn.data.util.DownloadStatus
 import com.example.muslimvn.core.utils.TimeUtils
 import com.example.muslimvn.domain.models.YoutubeVideo
@@ -25,7 +26,13 @@ data class YoutubePlayerUiState(
     val channelName: String = "",
     val isLoadingDetail: Boolean = false,
     val detailError: String? = null,
-    val downloadStatus: DownloadStatus = DownloadStatus.Idle
+    val downloadStatus: DownloadStatus = DownloadStatus.Idle,
+    val videoDownloadStatus: DownloadStatus = DownloadStatus.Idle,
+    val audioDownloadStatus: DownloadStatus = DownloadStatus.Idle,
+    val showDownloadDialog: Boolean = false,
+    val videoSizeBytes: Long = 0L,
+    val audioSizeBytes: Long = 0L,
+    val isLoadingStreamInfo: Boolean = false
 )
 
 @HiltViewModel
@@ -58,7 +65,7 @@ class YoutubePlayerViewModel @Inject constructor(
                     initialVideoUrl.contains(it.id)
                 }
                 if (found != null) {
-                    currentVideoId = found.id
+                    currentVideoId = found.videoId.ifEmpty { found.id.substringBefore("_") }
                 }
                 observeDownloadStatus(currentVideoId)
             }
@@ -71,8 +78,20 @@ class YoutubePlayerViewModel @Inject constructor(
 
     private fun observeDownloadStatus(videoId: String) {
         viewModelScope.launch {
-            downloadManager.getStatusFlow(videoId).collectLatest { status ->
-                _uiState.update { it.copy(downloadStatus = status) }
+            downloadManager.getVideoAndAudioStatuses(videoId).collectLatest { (videoStat, audioStat) ->
+                val combinedStatus = when {
+                    videoStat is DownloadStatus.Downloading -> videoStat
+                    audioStat is DownloadStatus.Downloading -> audioStat
+                    videoStat is DownloadStatus.Completed || audioStat is DownloadStatus.Completed -> DownloadStatus.Completed
+                    else -> DownloadStatus.Idle
+                }
+                _uiState.update { 
+                    it.copy(
+                        downloadStatus = combinedStatus,
+                        videoDownloadStatus = videoStat,
+                        audioDownloadStatus = audioStat
+                    ) 
+                }
             }
         }
     }
@@ -80,13 +99,62 @@ class YoutubePlayerViewModel @Inject constructor(
     fun selectVideo(videoUrl: String, videoTitle: String) {
         playerManager.playVideo(videoUrl, videoTitle, channelName = _uiState.value.channelName)
         currentVideoId = videoUrl.substringAfter("v=", "").substringBefore("&").ifEmpty { "vid_${videoUrl.hashCode()}" }
+        _uiState.update { 
+            it.copy(
+                videoSizeBytes = 0L,
+                audioSizeBytes = 0L,
+                showDownloadDialog = false
+            ) 
+        }
         if (!videoUrl.startsWith("file://") && !videoUrl.startsWith("/")) {
             fetchVideoDetail(videoUrl)
         }
         observeDownloadStatus(currentVideoId)
     }
 
-    fun toggleDownload() {
+    fun onDownloadClick() {
+        _uiState.update { it.copy(showDownloadDialog = true) }
+        if (_uiState.value.videoSizeBytes == 0L && _uiState.value.audioSizeBytes == 0L) {
+            fetchStreamInfo()
+        }
+    }
+
+    fun dismissDownloadDialog() {
+        _uiState.update { it.copy(showDownloadDialog = false) }
+    }
+
+    private fun fetchStreamInfo() {
+        val detail = _uiState.value.videoDetail
+        val videoUrl = detail?.videoUrl ?: playerManager.currentVideoUrl.value ?: initialVideoUrl
+        if (videoUrl.startsWith("file://") || videoUrl.startsWith("/")) return
+
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoadingStreamInfo = true) }
+            youtubeRepository.getMediaStreamInfo(videoUrl).collect { result ->
+                result.onSuccess { info ->
+                    _uiState.update {
+                        it.copy(
+                            videoSizeBytes = info.videoInfo?.sizeBytes ?: 0L,
+                            audioSizeBytes = info.audioInfo?.sizeBytes ?: 0L,
+                            isLoadingStreamInfo = false
+                        )
+                    }
+                }.onFailure {
+                    _uiState.update { it.copy(isLoadingStreamInfo = false) }
+                }
+            }
+        }
+    }
+
+    fun startDownloadVideo() {
+        startDownloadInternal(DownloadMediaType.VIDEO)
+    }
+
+    fun startDownloadAudio() {
+        startDownloadInternal(DownloadMediaType.AUDIO)
+    }
+
+    private fun startDownloadInternal(mediaType: DownloadMediaType) {
         val detail = _uiState.value.videoDetail
         val videoUrl = detail?.videoUrl ?: playerManager.currentVideoUrl.value ?: initialVideoUrl
         val title = detail?.title ?: playerManager.videoTitle.value
@@ -94,20 +162,15 @@ class YoutubePlayerViewModel @Inject constructor(
         val uploaderName = detail?.uploaderName ?: _uiState.value.channelName
         val duration = ""
 
-        when (val status = _uiState.value.downloadStatus) {
-            is DownloadStatus.Idle, is DownloadStatus.Failed -> {
-                downloadManager.startDownload(currentVideoId, videoUrl, title, thumbnailUrl, uploaderName, duration)
-            }
-            is DownloadStatus.Downloading -> {
-                downloadManager.pauseDownload(currentVideoId)
-            }
-            is DownloadStatus.Paused -> {
-                downloadManager.resumeDownload(currentVideoId, videoUrl, title, thumbnailUrl, uploaderName, duration)
-            }
-            is DownloadStatus.Completed -> {
-                // Đã tải xong, có thể hỏi xóa hoặc không làm gì
-            }
-        }
+        downloadManager.startDownload(
+            videoId = currentVideoId,
+            videoUrl = videoUrl,
+            title = title,
+            thumbnailUrl = thumbnailUrl,
+            uploaderName = uploaderName,
+            duration = duration,
+            mediaType = mediaType
+        )
     }
 
     private fun fetchVideoDetail(videoUrl: String) {
@@ -122,7 +185,6 @@ class YoutubePlayerViewModel @Inject constructor(
                             isLoadingDetail = false
                         )
                     }
-                    // Cập nhật lại player với thông tin metadata đầy đủ hơn nếu cần
                     playerManager.playVideo(
                         videoUrl = detail.videoUrl,
                         title = detail.title,
@@ -136,7 +198,6 @@ class YoutubePlayerViewModel @Inject constructor(
                             detailError = e.message
                         )
                     }
-                    // Fallback to channel videos if detail fetch fails
                     fetchSuggestedVideos()
                 }
             }

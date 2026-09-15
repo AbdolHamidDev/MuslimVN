@@ -106,8 +106,8 @@ fun ScholarDetailScreen(
         },
         bottomBar = {
             PodcastPlayerBarState(playerViewModel) { active ->
-                val isQuran = active?.id?.contains(":") == true
-                AnimatedVisibility(visible = active != null && !isQuran) {
+                val isPodcast = active != null && !active.id.contains(":") && !active.id.startsWith("islamhouse_")
+                AnimatedVisibility(visible = isPodcast) {
                     if (active != null) {
                         val playlist by playerViewModel.playlist.collectAsState()
                         MiniPlayerBar(

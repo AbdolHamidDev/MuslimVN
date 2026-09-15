@@ -65,8 +65,8 @@ fun SettingsScreen(
                 item { PreferenceHeader(title = "Nội dung & Thông báo") }
                 item {
                     PreferenceItem(
-                        title = "Video đã tải về",
-                        subtitle = "Xem lại và quản lý video offline",
+                        title = "Nội dung đã tải về",
+                        subtitle = "Quản lý và nghe/xem lại video, podcast offline",
                         icon = Icons.Default.Download,
                         onClick = onNavigateToDownloadedVideos
                     )

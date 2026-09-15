@@ -22,6 +22,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.media3.common.util.UnstableApi
+import com.example.muslimvn.presentation.screens.youtube.components.DownloadOptionDialog
 import com.example.muslimvn.presentation.screens.youtube.components.FullscreenPlayer
 import com.example.muslimvn.presentation.screens.youtube.components.PortraitLayout
 import com.example.muslimvn.presentation.viewmodels.YoutubePlayerViewModel
@@ -165,9 +166,22 @@ fun YoutubePlayerDetailScreen(
                     onVideoClick = { video ->
                         viewModel.selectVideo(video.videoUrl, video.title)
                     },
-                    onDownloadClick = { viewModel.toggleDownload() },
+                    onDownloadClick = { viewModel.onDownloadClick() },
                     currentUrl = currentUrl ?: "",
                     snackbarHostState = snackbarHostState
+                )
+            }
+
+            if (uiState.showDownloadDialog) {
+                DownloadOptionDialog(
+                    videoStatus = uiState.videoDownloadStatus,
+                    audioStatus = uiState.audioDownloadStatus,
+                    videoSizeBytes = uiState.videoSizeBytes,
+                    audioSizeBytes = uiState.audioSizeBytes,
+                    isLoadingSizes = uiState.isLoadingStreamInfo,
+                    onDownloadVideoClick = { viewModel.startDownloadVideo() },
+                    onDownloadAudioClick = { viewModel.startDownloadAudio() },
+                    onDismiss = { viewModel.dismissDownloadDialog() }
                 )
             }
         }

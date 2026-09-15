@@ -276,7 +276,7 @@ fun SurahDetailScreen(
         bottomBar = {
             PodcastPlayerBarState(playerViewModel) { active ->
                 val isQuran = active?.id?.contains(":") == true
-                androidx.compose.animation.AnimatedVisibility(visible = active != null && !isQuran) {
+                androidx.compose.animation.AnimatedVisibility(visible = isQuran) {
                     if (active != null) {
                         val playlist by playerViewModel.playlist.collectAsState()
 

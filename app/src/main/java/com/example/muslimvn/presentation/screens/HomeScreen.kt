@@ -101,8 +101,8 @@ fun HomeScreen(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         bottomBar = {
             PodcastPlayerBarState(playerViewModel) { active ->
-                val isQuran = active?.id?.contains(":") == true
-                androidx.compose.animation.AnimatedVisibility(visible = active != null && !isQuran) {
+                val isPodcast = active != null && !active.id.contains(":") && !active.id.startsWith("islamhouse_")
+                androidx.compose.animation.AnimatedVisibility(visible = isPodcast) {
                     if (active != null) {
                         val podcastPlaylist by playerViewModel.playlist.collectAsState()
 
