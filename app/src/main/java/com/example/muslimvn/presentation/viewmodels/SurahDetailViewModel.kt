@@ -1,6 +1,5 @@
 package com.example.muslimvn.presentation.viewmodels
 
-import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.muslimvn.data.preferences.QuranDisplayMode
@@ -13,9 +12,11 @@ import com.example.muslimvn.domain.usecases.SurahDetail
 import com.example.muslimvn.domain.usecases.ToggleBookmarkUseCase
 import com.example.muslimvn.domain.usecases.UpdateTrackerQuranUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.assisted.Assisted
+import dagger.assisted.AssistedFactory
+import dagger.assisted.AssistedInject
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 
 data class QuranUiSettings(
     val reciterIdentifier: String = "Alafasy_128kbps",
@@ -24,8 +25,8 @@ data class QuranUiSettings(
     val viewMode: QuranViewMode = QuranViewMode.LIST
 )
 
-@HiltViewModel
-class SurahDetailViewModel @Inject constructor(
+@HiltViewModel(assistedFactory = SurahDetailViewModel.Factory::class)
+class SurahDetailViewModel @AssistedInject constructor(
     private val getSurahDetailUseCase: com.example.muslimvn.domain.usecases.GetSurahDetailUseCase,
     private val toggleBookmarkUseCase: com.example.muslimvn.domain.usecases.ToggleBookmarkUseCase,
     private val updateTrackerQuranUseCase: com.example.muslimvn.domain.usecases.UpdateTrackerQuranUseCase,
@@ -34,11 +35,11 @@ class SurahDetailViewModel @Inject constructor(
     private val quranPreferences: QuranPreferences,
     private val quranRepository: com.example.muslimvn.domain.repository.QuranRepository,
     private val translator: com.example.muslimvn.data.util.TafsirTranslator,
-    savedStateHandle: SavedStateHandle
+    @Assisted("surahNumber") private val initialSurahNumber: Int,
+    @Assisted("startAyah") private val startAyah: Int
 ) : ViewModel() {
-
-    private val initialSurahNumber: Int = checkNotNull(savedStateHandle["surahNumber"])
-    private val startAyah: Int = savedStateHandle["startAyah"] ?: 1
+    @AssistedFactory
+    interface Factory { fun create(@Assisted("surahNumber") surahNumber: Int, @Assisted("startAyah") startAyah: Int): SurahDetailViewModel }
 
     private val _surahNumberFlow = MutableStateFlow(initialSurahNumber)
     private val _refreshTrigger = MutableSharedFlow<Unit>(replay = 1).apply { tryEmit(Unit) }

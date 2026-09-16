@@ -1,6 +1,5 @@
 package com.example.muslimvn.presentation.viewmodels
 
-import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.muslimvn.data.util.YouTubePlayerManager
@@ -12,13 +11,15 @@ import com.example.muslimvn.domain.models.YoutubeVideo
 import com.example.muslimvn.domain.models.YoutubeVideoDetail
 import com.example.muslimvn.domain.repository.YoutubeRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.assisted.Assisted
+import dagger.assisted.AssistedFactory
+import dagger.assisted.AssistedInject
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 
 data class YoutubePlayerUiState(
     val videoDetail: YoutubeVideoDetail? = null,
@@ -35,19 +36,19 @@ data class YoutubePlayerUiState(
     val isLoadingStreamInfo: Boolean = false
 )
 
-@HiltViewModel
-class YoutubePlayerViewModel @Inject constructor(
+@HiltViewModel(assistedFactory = YoutubePlayerViewModel.Factory::class)
+class YoutubePlayerViewModel @AssistedInject constructor(
     val playerManager: YouTubePlayerManager,
     private val youtubeRepository: YoutubeRepository,
     private val downloadManager: VideoDownloadManager,
     private val downloadedVideoDao: com.example.muslimvn.data.local.dao.DownloadedVideoDao,
-    savedStateHandle: SavedStateHandle
+    @Assisted("videoUrl") private val initialVideoUrl: String,
+    @Assisted("videoTitle") private val initialVideoTitle: String,
+    @Assisted("channelName") private val initialChannelName: String,
+    @Assisted("channelUrl") private val channelUrl: String
 ) : ViewModel() {
-
-    private val initialVideoUrl: String = checkNotNull(savedStateHandle["videoUrl"])
-    private val initialVideoTitle: String = savedStateHandle["videoTitle"] ?: ""
-    private val initialChannelName: String = savedStateHandle["channelName"] ?: ""
-    private val channelUrl: String = savedStateHandle["channelUrl"] ?: ""
+    @AssistedFactory
+    interface Factory { fun create(@Assisted("videoUrl") videoUrl: String, @Assisted("videoTitle") videoTitle: String, @Assisted("channelName") channelName: String, @Assisted("channelUrl") channelUrl: String): YoutubePlayerViewModel }
 
     private val _uiState = MutableStateFlow(YoutubePlayerUiState(channelName = initialChannelName))
     val uiState = _uiState.asStateFlow()

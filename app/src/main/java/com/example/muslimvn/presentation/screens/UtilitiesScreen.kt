@@ -8,9 +8,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.example.muslimvn.R
-import com.example.muslimvn.core.navigation.LocalFloatingNavigationDockInset
 import com.example.muslimvn.domain.models.PrayerReminder
 import com.example.muslimvn.presentation.RoadmapData
 import com.example.muslimvn.presentation.components.PrayerList
@@ -84,7 +83,7 @@ fun UtilitiesScreen(
             verticalArrangement = Arrangement.spacedBy(24.dp),
             contentPadding = PaddingValues(
                 top = 16.dp,
-                bottom = 16.dp + LocalFloatingNavigationDockInset.current
+                bottom = 16.dp
             )
         ) {
             item { RoadmapSection(ibadahCategory) }

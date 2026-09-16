@@ -44,12 +44,11 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import coil.compose.AsyncImage
 import com.example.muslimvn.R
-import com.example.muslimvn.core.navigation.LocalFloatingNavigationDockInset
 import com.example.muslimvn.domain.models.PrayerName
 import com.example.muslimvn.domain.models.PrayerReminder
 import com.example.muslimvn.domain.models.PrayerTimes
@@ -137,7 +136,7 @@ fun HomeScreen(
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
             contentPadding = PaddingValues(
-                bottom = padding.calculateBottomPadding() + LocalFloatingNavigationDockInset.current
+                bottom = padding.calculateBottomPadding()
             ),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {

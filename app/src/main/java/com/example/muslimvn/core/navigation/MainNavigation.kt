@@ -1,285 +1,109 @@
 package com.example.muslimvn.core.navigation
 
-import androidx.compose.animation.core.tween
-import androidx.compose.animation.AnimatedContentTransitionScope
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideInVertically
-import androidx.compose.animation.slideOutVertically
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.navigation.NavHostController
-import androidx.navigation.NavType
-import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
-import androidx.navigation.navArgument
-import com.example.muslimvn.R
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
+import androidx.navigation3.runtime.NavBackStack
+import androidx.navigation3.runtime.NavKey
+import androidx.navigation3.runtime.entryProvider
+import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
+import androidx.navigation3.ui.NavDisplay
 import com.example.muslimvn.presentation.RoadmapData
-import com.example.muslimvn.presentation.components.ComingSoonScreen
 import com.example.muslimvn.presentation.screens.*
 import com.example.muslimvn.presentation.screens.zakat.ZakatScreen
-import androidx.compose.material3.ExperimentalMaterial3Api
+import com.example.muslimvn.presentation.viewmodels.*
 
-@OptIn(ExperimentalMaterial3Api::class)
 @androidx.media3.common.util.UnstableApi
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MainNavigation(navController: NavHostController, modifier: Modifier = Modifier) {
-    val topLevelRoutes = remember { bottomNavItems.map { it.route } }
-    fun topLevelIndex(route: String?) = topLevelRoutes.indexOf(route)
+fun MainNavigation(backStack: NavBackStack<NavKey>, modifier: Modifier = Modifier) {
+    val popBack: () -> Unit = { backStack.removeLastOrNull() }
     val openFullPlayer: (String?) -> Unit = { mediaId ->
-        if (mediaId?.contains(":") == true) {
-            val parts = mediaId.split(":")
-            val surahNum = parts[0].toIntOrNull() ?: 1
-            val ayahNum = if (parts.size > 1) parts[1].toIntOrNull() ?: 1 else 1
-            navController.navigate(Screen.SurahDetail.createRoute(surahNum, ayahNum))
-        } else {
-            navController.navigate(Screen.PodcastPlayer.route)
-        }
+        val parts = mediaId?.split(":")
+        val destination = parts?.firstOrNull()?.toIntOrNull()?.let {
+            Destination.SurahDetail(it, parts.getOrNull(1)?.toIntOrNull() ?: 1)
+        } ?: Destination.PodcastPlayer
+        backStack.add(destination)
     }
 
-    NavHost(
-        navController = navController,
-        startDestination = Screen.Home.route,
-        modifier = modifier,
-        // Các tab cấp cao dùng một swipe ngang nhẹ theo hướng tab; các màn con
-        // vẫn giữ motion dọc như trước.
-        enterTransition = {
-            val fromIndex = topLevelIndex(initialState.destination.route)
-            val toIndex = topLevelIndex(targetState.destination.route)
-            if (fromIndex >= 0 && toIndex >= 0) {
-                slideIntoContainer(
-                    towards = if (toIndex > fromIndex) {
-                        AnimatedContentTransitionScope.SlideDirection.Left
-                    } else {
-                        AnimatedContentTransitionScope.SlideDirection.Right
-                    },
-                    animationSpec = tween(220)
-                )
-            } else {
-                fadeIn(tween(260)) + slideInVertically(tween(260)) { it / 20 }
-            }
-        },
-        exitTransition = {
-            val fromIndex = topLevelIndex(initialState.destination.route)
-            val toIndex = topLevelIndex(targetState.destination.route)
-            if (fromIndex >= 0 && toIndex >= 0) {
-                slideOutOfContainer(
-                    towards = if (toIndex > fromIndex) {
-                        AnimatedContentTransitionScope.SlideDirection.Left
-                    } else {
-                        AnimatedContentTransitionScope.SlideDirection.Right
-                    },
-                    animationSpec = tween(220)
-                )
-            } else fadeOut(tween(180))
-        },
-        popEnterTransition = {
-            fadeIn(tween(260))
-        },
-        popExitTransition = {
-            fadeOut(tween(180)) + slideOutVertically(tween(260)) { it / 20 }
-        }
-    ) {
-        composable(Screen.Home.route) {
-            HomeScreen(
-                onPodcastClick = { navController.navigate(Screen.PodcastHome.route) },
-                onScholarClick = { scholarId ->
-                    navController.navigate(Screen.ScholarDetail.createRoute(scholarId))
-                },
-                onVietnamScholarClick = { scholarId ->
-                    navController.navigate(Screen.VietnamScholarDetail.createRoute(scholarId))
-                },
-                onDailyReminderClick = { hadithId ->
-                    navController.navigate(Screen.DailyReminder.createRoute(hadithId))
-                },
-                onOpenFullPlayer = { openFullPlayer(null) }
-            )
-        }
-        composable(
-            route = Screen.DailyReminder.route,
-            arguments = listOf(navArgument("hadithId") { type = NavType.StringType })
-        ) { backStackEntry ->
-            DailyReminderViewerScreen(
-                initialHadithId = backStackEntry.arguments?.getString("hadithId").orEmpty(),
-                onBackClick = { navController.popBackStack() }
-            )
-        }
-        composable(Screen.Knowledge.route) {
-            val category = remember {
-                RoadmapData.getKnowledgeCategory(
-                    onPodcastClick = { navController.navigate(Screen.PodcastHome.route) }
+    NavDisplay(
+        backStack = backStack, modifier = modifier, onBack = popBack,
+        entryDecorators = listOf(
+            rememberSaveableStateHolderNavEntryDecorator(),
+            rememberViewModelStoreNavEntryDecorator()
+        ),
+        entryProvider = entryProvider {
+            entry<Destination.Home> {
+                HomeScreen(
+                    onPodcastClick = { backStack.add(Destination.PodcastHome) },
+                    onScholarClick = { backStack.add(Destination.ScholarDetail(it)) },
+                    onVietnamScholarClick = { backStack.add(Destination.VietnamScholarDetail(it)) },
+                    onDailyReminderClick = { backStack.add(Destination.DailyReminder(it)) },
+                    onOpenFullPlayer = { openFullPlayer(null) }
                 )
             }
-            RoadmapCategoryScreen(title = "Kiến thức", category = category)
-        }
-        composable(Screen.Utilities.route) {
-            UtilitiesScreen(
-                onPrayerTimesClick = { /* Không điều hướng, UtilitiesScreen tự hiện BottomSheet */ },
-                onQiblaClick = { navController.navigate(Screen.Qibla.route) },
-                onHijriCalendarClick = { navController.navigate(Screen.HijriCalendar.route) },
-                onNamesOfAllahClick = { navController.navigate(Screen.NamesOfAllah.route) },
-                onZakatClick = { navController.navigate(Screen.Zakat.route) },
-                onPodcastClick = { navController.navigate(Screen.PodcastHome.route) },
-                onFeatureClick = { feature ->
-                    if (feature == "Azkar") {
-                        navController.navigate(Screen.Azkar.route)
-                    }
-                }
-            )
-        }
-        composable(Screen.Local.route) {
-            val category = remember {
-                RoadmapData.getLocalCategory()
+            entry<Destination.DailyReminder> { key -> DailyReminderViewerScreen(key.hadithId, popBack) }
+            entry<Destination.Knowledge> { RoadmapCategoryScreen("Kiến thức", RoadmapData.getKnowledgeCategory { backStack.add(Destination.PodcastHome) }) }
+            entry<Destination.Local> { RoadmapCategoryScreen("Local Việt Nam", RoadmapData.getLocalCategory()) }
+            entry<Destination.Utilities> {
+                UtilitiesScreen(
+                    onPrayerTimesClick = {}, onQiblaClick = { backStack.add(Destination.Qibla) },
+                    onHijriCalendarClick = { backStack.add(Destination.HijriCalendar) },
+                    onNamesOfAllahClick = { backStack.add(Destination.NamesOfAllah) },
+                    onZakatClick = { backStack.add(Destination.Zakat) },
+                    onPodcastClick = { backStack.add(Destination.PodcastHome) },
+                    onFeatureClick = { if (it == "Azkar") backStack.add(Destination.Azkar) }
+                )
             }
-            RoadmapCategoryScreen(title = "Local Việt Nam", category = category)
+            entry<Destination.Tracker> { TrackerScreen(onQuranClick = { surah, ayah -> backStack.add(Destination.SurahDetail(surah, ayah)) }) }
+            entry<Destination.Azkar> { AzkarScreen(onBackClick = popBack) }
+            entry<Destination.Quran> {
+                QuranScreen({ surah, ayah -> backStack.add(Destination.SurahDetail(surah, ayah)) }, { backStack.add(Destination.QuranSettings()) }, openFullPlayer)
+            }
+            entry<Destination.QuranSettings> { key ->
+                val viewModel = hiltViewModel<QuranSettingsViewModel, QuranSettingsViewModel.Factory> { it.create(key.surahNumber) }
+                QuranSettingsScreen(popBack, viewModel)
+            }
+            entry<Destination.PrayerNotifications> { PrayerNotificationsScreen(popBack) }
+            entry<Destination.Qibla> { QiblaScreen(popBack) }
+            entry<Destination.HijriCalendar> { HijriCalendarScreen(popBack) }
+            entry<Destination.NamesOfAllah> { NamesOfAllahScreen(popBack) }
+            entry<Destination.Zakat> { ZakatScreen(popBack) }
+            entry<Destination.Settings> {
+                SettingsScreen({ backStack.add(Destination.QuranSettings()) }, { backStack.add(Destination.PrayerNotifications) }, { backStack.add(Destination.DownloadedVideos) })
+            }
+            entry<Destination.DownloadedVideos> {
+                DownloadedVideosScreen(
+                    onBackClick = popBack,
+                    onVideoClick = { file, title, uploader -> backStack.add(Destination.YoutubePlayer(file, title, uploader)) },
+                    onAudioPlayerClick = { backStack.add(Destination.PodcastPlayer) }
+                )
+            }
+            entry<Destination.SurahDetail> { key ->
+                val viewModel = hiltViewModel<SurahDetailViewModel, SurahDetailViewModel.Factory> { it.create(key.surahNumber, key.startAyah) }
+                SurahDetailScreen(popBack, { backStack.add(Destination.QuranSettings(key.surahNumber)) }, { openFullPlayer(null) }, viewModel)
+            }
+            entry<Destination.PodcastHome> { PodcastHomeScreen(popBack, { backStack.add(Destination.ScholarDetail(it)) }, { openFullPlayer(null) }) }
+            entry<Destination.ScholarDetail> { key ->
+                val viewModel = hiltViewModel<ScholarDetailViewModel, ScholarDetailViewModel.Factory> { it.create(key.scholarId) }
+                ScholarDetailScreen(popBack, { openFullPlayer(null) }, viewModel)
+            }
+            entry<Destination.PodcastPlayer> { PodcastPlayerScreen(popBack) }
+            entry<Destination.VietnamScholarDetail> { key ->
+                VietnamScholarDetailScreen(
+                    scholarId = key.scholarId, onBackClick = popBack,
+                    onVideoClick = { url, title, channel, channelUrl -> backStack.add(Destination.YoutubePlayer(url, title, channel, channelUrl)) },
+                    onDocumentClick = { url, title -> backStack.add(Destination.DocumentReader(url, title)) },
+                    onOpenFullPlayer = { backStack.add(Destination.PodcastPlayer) }
+                )
+            }
+            entry<Destination.YoutubePlayer> { key ->
+                val viewModel = hiltViewModel<YoutubePlayerViewModel, YoutubePlayerViewModel.Factory> { it.create(key.videoUrl, key.videoTitle, key.channelName, key.channelUrl) }
+                YoutubePlayerDetailScreen(popBack, viewModel)
+            }
+            entry<Destination.DocumentReader> { key -> DocumentReaderScreen(key.url, key.title, popBack) }
         }
-        composable(Screen.Tracker.route) {
-            TrackerScreen(
-                onQuranClick = { surahNumber, ayahNumber ->
-                    navController.navigate(Screen.SurahDetail.createRoute(surahNumber, ayahNumber))
-                }
-            )
-        }
-        composable("coming_soon/{title}") { backStackEntry ->
-            val title = backStackEntry.arguments?.getString("title") ?: ""
-            ComingSoonScreen(title = title, onBackClick = { navController.popBackStack() })
-        }
-        composable(Screen.Azkar.route) {
-            AzkarScreen(onBackClick = { navController.popBackStack() })
-        }
-        composable(Screen.Quran.route) {
-            QuranScreen(
-                onSurahClick = { surahNumber, ayahNumber ->
-                    navController.navigate(Screen.SurahDetail.createRoute(surahNumber, ayahNumber))
-                },
-                onSettingsClick = { navController.navigate(Screen.QuranSettings.createRoute()) },
-                onOpenFullPlayer = openFullPlayer
-            )
-        }
-        composable(
-            route = Screen.QuranSettings.route,
-            arguments = listOf(navArgument("surahNumber") { type = NavType.IntType; defaultValue = -1 })
-        ) {
-            QuranSettingsScreen(onBackClick = { navController.popBackStack() })
-        }
-        composable(Screen.PrayerNotifications.route) {
-            PrayerNotificationsScreen(onBackClick = { navController.popBackStack() })
-        }
-        composable(Screen.Qibla.route) {
-            QiblaScreen(onBackClick = { navController.popBackStack() })
-        }
-        composable(Screen.HijriCalendar.route) {
-            HijriCalendarScreen(onBackClick = { navController.popBackStack() })
-        }
-        composable(Screen.NamesOfAllah.route) {
-            NamesOfAllahScreen(onBackClick = { navController.popBackStack() })
-        }
-        composable(Screen.Zakat.route) {
-            ZakatScreen(onBackClick = { navController.popBackStack() })
-        }
-        composable(Screen.Settings.route) {
-            SettingsScreen(
-                onNavigateToQuranSettings = { navController.navigate(Screen.QuranSettings.route) },
-                onNavigateToPrayerNotifications = { navController.navigate(Screen.PrayerNotifications.route) },
-                onNavigateToDownloadedVideos = { navController.navigate(Screen.DownloadedVideos.route) }
-            )
-        }
-        composable(Screen.DownloadedVideos.route) {
-            DownloadedVideosScreen(
-                onBackClick = { navController.popBackStack() },
-                onVideoClick = { fileUri, title, uploader ->
-                    navController.navigate(Screen.YoutubePlayer.createRoute(fileUri, title, uploader))
-                },
-                onAudioPlayerClick = {
-                    navController.navigate(Screen.PodcastPlayer.route)
-                }
-            )
-        }
-        composable(
-            route = Screen.SurahDetail.route,
-            arguments = listOf(
-                navArgument("surahNumber") { type = NavType.IntType },
-                navArgument("startAyah") { type = NavType.IntType; defaultValue = 1 }
-            )
-        ) { backStackEntry ->
-            val surahNumber = backStackEntry.arguments?.getInt("surahNumber") ?: 1
-            SurahDetailScreen(
-                onBackClick = { navController.popBackStack() },
-                onSettingsClick = { navController.navigate(Screen.QuranSettings.createRoute(surahNumber)) },
-                onOpenFullPlayer = { openFullPlayer(null) }
-            )
-        }
-
-        // ── Podcast học giả ─────────────────────────────────────────────────────
-        composable(Screen.PodcastHome.route) {
-            PodcastHomeScreen(
-                onBackClick = { navController.popBackStack() },
-                onScholarClick = { scholarId ->
-                    navController.navigate(Screen.ScholarDetail.createRoute(scholarId))
-                },
-                onOpenFullPlayer = { openFullPlayer(null) }
-            )
-        }
-        composable(
-            route = Screen.ScholarDetail.route,
-            arguments = listOf(navArgument(Screen.ScholarDetail.ARG_SCHOLAR_ID) { type = NavType.StringType })
-        ) {
-            ScholarDetailScreen(
-                onBackClick = { navController.popBackStack() },
-                onOpenFullPlayer = { openFullPlayer(null) }
-            )
-        }
-        composable(Screen.PodcastPlayer.route) {
-            PodcastPlayerScreen(onCloseClick = { navController.popBackStack() })
-        }
-
-        composable(
-            route = Screen.VietnamScholarDetail.route,
-            arguments = listOf(navArgument("scholarId") { type = NavType.StringType })
-        ) { backStackEntry ->
-            val scholarId = backStackEntry.arguments?.getString("scholarId") ?: ""
-            VietnamScholarDetailScreen(
-                scholarId = scholarId,
-                onBackClick = { navController.popBackStack() },
-                onVideoClick = { videoUrl, videoTitle, channelName, channelUrl ->
-                    navController.navigate(Screen.YoutubePlayer.createRoute(videoUrl, videoTitle, channelName, channelUrl))
-                },
-                onDocumentClick = { url, title ->
-                    navController.navigate(Screen.DocumentReader.createRoute(url, title))
-                },
-                onOpenFullPlayer = { navController.navigate(Screen.PodcastPlayer.route) }
-            )
-        }
-
-        composable(
-            route = Screen.YoutubePlayer.route,
-            arguments = listOf(
-                navArgument("videoUrl") { type = NavType.StringType },
-                navArgument("videoTitle") { type = NavType.StringType; defaultValue = "" },
-                navArgument("channelName") { type = NavType.StringType; defaultValue = "" },
-                navArgument("channelUrl") { type = NavType.StringType; defaultValue = "" }
-            )
-        ) {
-            YoutubePlayerDetailScreen(
-                onBackClick = { navController.popBackStack() }
-            )
-        }
-
-        composable(
-            route = Screen.DocumentReader.route,
-            arguments = listOf(
-                navArgument("url") { type = NavType.StringType },
-                navArgument("title") { type = NavType.StringType; defaultValue = "" }
-            )
-        ) { backStackEntry ->
-            val url = backStackEntry.arguments?.getString("url") ?: ""
-            val title = backStackEntry.arguments?.getString("title") ?: ""
-            DocumentReaderScreen(
-                url = url,
-                title = title,
-                onBackClick = { navController.popBackStack() }
-            )
-        }
-    }
+    )
 }

@@ -1,14 +1,15 @@
 package com.example.muslimvn.presentation.viewmodels
 
-import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.muslimvn.core.navigation.Screen
 import com.example.muslimvn.data.util.AudioPlayerManager
 import com.example.muslimvn.domain.models.PodcastEpisode
 import com.example.muslimvn.domain.models.Scholar
 import com.example.muslimvn.domain.repository.PodcastRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.assisted.Assisted
+import dagger.assisted.AssistedFactory
+import dagger.assisted.AssistedInject
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
@@ -16,21 +17,20 @@ import androidx.paging.PagingData
 import androidx.paging.cachedIn
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 
 /**
  * ViewModel màn chi tiết học giả: header (bio, tổng số tập) + danh sách tập từ cache Room,
  * kèm refresh nền RSS. Điều khiển phát qua [AudioPlayerManager] dùng chung — phát tiếp
  * từ lastPositionMs, tua ±10s, đổi tốc độ.
  */
-@HiltViewModel
-class ScholarDetailViewModel @Inject constructor(
+@HiltViewModel(assistedFactory = ScholarDetailViewModel.Factory::class)
+class ScholarDetailViewModel @AssistedInject constructor(
     private val podcastRepository: PodcastRepository,
     private val audioPlayerManager: AudioPlayerManager,
-    savedStateHandle: SavedStateHandle
+    @Assisted val scholarId: String
 ) : ViewModel() {
-
-    val scholarId: String = savedStateHandle.get<String>(Screen.ScholarDetail.ARG_SCHOLAR_ID).orEmpty()
+    @AssistedFactory
+    interface Factory { fun create(scholarId: String): ScholarDetailViewModel }
 
     data class UiState(
         val scholar: Scholar? = null,

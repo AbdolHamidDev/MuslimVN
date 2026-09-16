@@ -1,6 +1,5 @@
 package com.example.muslimvn.presentation.viewmodels
 
-import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.muslimvn.data.preferences.QuranDisplayMode
@@ -10,20 +9,22 @@ import com.example.muslimvn.domain.models.DownloadStatus
 import com.example.muslimvn.domain.models.Reciter
 import com.example.muslimvn.domain.repository.QuranRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.assisted.Assisted
+import dagger.assisted.AssistedFactory
+import dagger.assisted.AssistedInject
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
-import javax.inject.Inject
 
-@HiltViewModel
-class QuranSettingsViewModel @Inject constructor(
+@HiltViewModel(assistedFactory = QuranSettingsViewModel.Factory::class)
+class QuranSettingsViewModel @AssistedInject constructor(
     private val preferences: QuranPreferences,
     private val quranRepository: QuranRepository,
-    savedStateHandle: SavedStateHandle
+    @Assisted private val surahNumber: Int
 ) : ViewModel() {
-
-    private val surahNumber: Int = savedStateHandle["surahNumber"] ?: -1
+    @AssistedFactory
+    interface Factory { fun create(surahNumber: Int): QuranSettingsViewModel }
 
     private val _showDownloadConfirmDialog = MutableStateFlow<Reciter?>(null)
     val showDownloadConfirmDialog: StateFlow<Reciter?> = _showDownloadConfirmDialog.asStateFlow()

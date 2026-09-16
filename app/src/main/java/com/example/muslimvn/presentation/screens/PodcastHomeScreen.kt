@@ -46,7 +46,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import coil.compose.AsyncImage
 import com.example.muslimvn.R
 import com.example.muslimvn.domain.models.PodcastCategory
@@ -321,4 +321,3 @@ private fun ScholarListRow(scholar: Scholar, onClick: () -> Unit) {
         }
     }
 }
-

@@ -16,9 +16,8 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.example.muslimvn.R
-import com.example.muslimvn.core.navigation.LocalFloatingNavigationDockInset
 import com.example.muslimvn.domain.models.AppTheme
 import com.example.muslimvn.presentation.viewmodels.SettingsViewModel
 
@@ -50,7 +49,7 @@ fun SettingsScreen(
         Box(modifier = Modifier.fillMaxSize().padding(innerPadding)) {
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(bottom = LocalFloatingNavigationDockInset.current)
+                contentPadding = PaddingValues(bottom = 0.dp)
             ) {
                 item { PreferenceHeader(title = "Giao diện") }
                 item {

@@ -1,17 +1,18 @@
 package com.example.muslimvn.presentation.viewmodels
 
-import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.muslimvn.domain.models.YoutubeVideo
 import com.example.muslimvn.domain.repository.YoutubeRepository
 import com.example.muslimvn.presentation.components.vietnamScholarsList
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.assisted.Assisted
+import dagger.assisted.AssistedFactory
+import dagger.assisted.AssistedInject
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 
 data class VietnamScholarUiState(
     val isLoading: Boolean = false,
@@ -20,13 +21,13 @@ data class VietnamScholarUiState(
     val isGridMode: Boolean = false
 )
 
-@HiltViewModel
-class VietnamScholarViewModel @Inject constructor(
+@HiltViewModel(assistedFactory = VietnamScholarViewModel.Factory::class)
+class VietnamScholarViewModel @AssistedInject constructor(
     private val youtubeRepository: YoutubeRepository,
-    savedStateHandle: SavedStateHandle
+    @Assisted scholarId: String
 ) : ViewModel() {
-
-    private val scholarId: String = checkNotNull(savedStateHandle["scholarId"])
+    @AssistedFactory
+    interface Factory { fun create(scholarId: String): VietnamScholarViewModel }
     private val scholar = vietnamScholarsList.find { it.id == scholarId }
 
     private val _uiState = MutableStateFlow(VietnamScholarUiState())

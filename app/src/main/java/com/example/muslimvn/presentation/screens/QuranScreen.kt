@@ -24,9 +24,8 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import coil.compose.AsyncImage
-import com.example.muslimvn.core.navigation.LocalFloatingNavigationDockInset
 import com.example.muslimvn.R
 import com.example.muslimvn.domain.models.Surah
 import com.example.muslimvn.domain.models.availableReciters
@@ -153,7 +152,7 @@ fun QuranScreen(
                     ?: availableReciters[0]
 
                 LazyColumn(
-                    contentPadding = PaddingValues(bottom = 16.dp + LocalFloatingNavigationDockInset.current),
+                    contentPadding = PaddingValues(bottom = 16.dp),
                     modifier = Modifier.fillMaxSize()
                 ) {
                     items(surahs, key = { it.number }) { surah ->

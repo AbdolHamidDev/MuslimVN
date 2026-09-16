@@ -30,7 +30,7 @@ import androidx.compose.ui.text.input.OffsetMapping
 import androidx.compose.ui.text.input.TransformedText
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.example.muslimvn.R
 import com.example.muslimvn.core.utils.VietnameseNumberReader
 import com.example.muslimvn.core.utils.toDotString

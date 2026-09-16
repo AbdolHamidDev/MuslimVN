@@ -25,8 +25,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.hilt.navigation.compose.hiltViewModel
-import com.example.muslimvn.core.navigation.LocalFloatingNavigationDockInset
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.example.muslimvn.R
 import com.example.muslimvn.presentation.viewmodels.*
 import com.example.muslimvn.presentation.components.ShimmerPlaceholder
@@ -87,7 +86,7 @@ fun TrackerContent(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding),
-            contentPadding = PaddingValues(bottom = 24.dp + LocalFloatingNavigationDockInset.current)
+            contentPadding = PaddingValues(bottom = 24.dp)
         ) {
             // Weekly Calendar Strip
             item {
