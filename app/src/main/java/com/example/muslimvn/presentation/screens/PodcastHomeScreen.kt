@@ -35,7 +35,6 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -47,6 +46,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
 import com.example.muslimvn.R
 import com.example.muslimvn.domain.models.PodcastCategory
@@ -77,7 +77,7 @@ fun PodcastHomeScreen(
     viewModel: PodcastHomeViewModel = hiltViewModel(),
     playerViewModel: PodcastPlayerViewModel = hiltViewModel()
 ) {
-    val state by viewModel.uiState.collectAsState()
+    val state by viewModel.uiState.collectAsStateWithLifecycle()
 
     Scaffold(
         topBar = {
@@ -98,7 +98,7 @@ fun PodcastHomeScreen(
                 val isPodcast = active != null && !active.id.contains(":") && !active.id.startsWith("islamhouse_")
                 AnimatedVisibility(visible = isPodcast) {
                     if (active != null) {
-                        val playlist by playerViewModel.playlist.collectAsState()
+                        val playlist by playerViewModel.playlist.collectAsStateWithLifecycle()
                         MiniPlayerBar(
                             title = active.title,
                             subtitle = active.subtitle,

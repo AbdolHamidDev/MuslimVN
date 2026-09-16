@@ -11,6 +11,8 @@ import com.example.muslimvn.core.utils.AdhanScheduler
 import com.example.muslimvn.domain.models.PrayerReminder
 import com.example.muslimvn.domain.models.PrayerTimes
 import com.example.muslimvn.domain.models.Scholar
+import com.example.muslimvn.domain.models.masjid.Masjid
+import com.example.muslimvn.domain.repository.MasjidRepository
 import com.example.muslimvn.domain.repository.PodcastRepository
 import com.example.muslimvn.domain.repository.SettingsRepository
 import com.example.muslimvn.domain.usecases.GetHijriDateOffsetUseCase
@@ -31,6 +33,9 @@ data class HomeUiState(
     val prayerTimes: PrayerTimes? = null,
     val reminders: Map<String, PrayerReminder> = emptyMap(),
     val featuredScholars: List<Scholar> = emptyList(),
+    val masjids: List<Masjid> = emptyList(),
+    val isLocatingMasjid: Boolean = false,
+    val userLocationAddress: String? = null,
     val isLoading: Boolean = true,
     val error: String? = null,
     val isLocationPermissionGranted: Boolean = false,
@@ -44,6 +49,7 @@ class HomeViewModel @Inject constructor(
     private val getHijriDateOffsetUseCase: GetHijriDateOffsetUseCase,
     private val settingsRepository: SettingsRepository,
     private val podcastRepository: PodcastRepository,
+    private val masjidRepository: MasjidRepository,
     private val adhanScheduler: AdhanScheduler
 ) : ViewModel() {
 
@@ -63,6 +69,31 @@ class HomeViewModel @Inject constructor(
         startCountdownTimer()
         observeReminders()
         loadFeaturedScholars()
+        loadMasjids()
+    }
+
+    fun loadMasjids(provinceId: String = "ho-chi-minh") {
+        viewModelScope.launch {
+            try {
+                val list = masjidRepository.getMasjids(provinceId)
+                _uiState.update { it.copy(masjids = list) }
+            } catch (e: Exception) {
+                android.util.Log.e("HomeViewModel", "Failed to load masjids", e)
+            }
+        }
+    }
+
+    fun findNearestMasjid() {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLocatingMasjid = true) }
+            delay(1000) // Giả lập quét GPS định vị vị trí gần nhất
+            _uiState.update { 
+                it.copy(
+                    isLocatingMasjid = false,
+                    userLocationAddress = "Thành phố Hồ Chí Minh"
+                ) 
+            }
+        }
     }
 
     private fun loadFeaturedScholars() {
@@ -93,21 +124,9 @@ class HomeViewModel @Inject constructor(
         }
     }
 
-    /**
-     * Đọc trạng thái quyền THỰC TẾ từ hệ thống và đồng bộ vào UI state.
-     *
-     * Trước đây [HomeUiState.isLocationPermissionGranted] chỉ được đặt trong callback
-     * của hộp thoại xin quyền nên mỗi lần mở lại app nó luôn reset về `false` dù quyền
-     * đã được cấp — khiến card "Cấp quyền" hiện vĩnh viễn. Hàm này là nguồn sự thật.
-     *
-     * @return true nếu quyền vị trí VỪA chuyển từ chưa-cấp → đã-cấp (ví dụ người dùng
-     *         bật thủ công trong Cài đặt rồi quay lại app) — lúc đó nên tính lại
-     *         giờ cầu nguyện theo vị trí thật bằng [refreshPrayerTimes].
-     */
     fun syncPermissionState(): Boolean {
         val locationGranted = hasPermission(Manifest.permission.ACCESS_FINE_LOCATION) ||
             hasPermission(Manifest.permission.ACCESS_COARSE_LOCATION)
-        // POST_NOTIFICATIONS chỉ tồn tại từ Android 13 (API 33) trở lên
         val notificationsGranted =
             Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU ||
                 hasPermission(Manifest.permission.POST_NOTIFICATIONS)
@@ -133,11 +152,9 @@ class HomeViewModel @Inject constructor(
                 val times = getPrayerTimesUseCase()
                 _uiState.update { it.copy(prayerTimes = times, isLoading = false) }
                 
-                // Đặt báo thức trong một khối try-catch riêng để không làm hỏng luồng UI
                 try {
                     adhanScheduler.scheduleNextWithSettings(times, _uiState.value.reminders)
                 } catch (e: Exception) {
-                    // Chỉ ghi log hoặc thông báo nhẹ, không làm hiện màn hình lỗi chính
                     android.util.Log.e("HomeViewModel", "Alarm scheduling failed", e)
                 }
             } catch (e: Exception) {
@@ -150,9 +167,6 @@ class HomeViewModel @Inject constructor(
         viewModelScope.launch {
             while (true) {
                 delay(60_000)
-                // Tính lại mốc cầu nguyện tiếp theo mỗi phút (ví dụ khi đã qua Isha,
-                // mốc tiếp theo là Fajr ngày mai). Phần giây đếm ngược do UI tự tick
-                // từng giây — không gọi lại use case mỗi giây.
                 if (_uiState.value.prayerTimes != null) {
                     refreshPrayerTimes()
                 }

@@ -79,12 +79,14 @@ dependencies {
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.core.splashscreen)
     implementation(libs.androidx.lifecycle.runtime.ktx)
+    implementation(libs.androidx.lifecycle.runtime.compose)
     
     // Navigation 3
     implementation(libs.androidx.navigation3.runtime)
     implementation(libs.androidx.navigation3.ui)
     implementation(libs.androidx.lifecycle.viewmodel.navigation3)
     implementation(libs.kotlinx.serialization.core)
+    implementation(libs.kotlinx.serialization.json)
     implementation(libs.androidx.compose.material.icons.extended)
     
     // Hilt
@@ -127,6 +129,9 @@ dependencies {
 
     // Coil
     implementation(libs.coil.compose)
+
+    // Lottie
+    implementation(libs.lottie.compose)
 
     // DataStore
     implementation(libs.androidx.datastore.preferences)

@@ -1,27 +1,59 @@
 package com.example.muslimvn.presentation.components
 
-import androidx.compose.animation.*
-import androidx.compose.animation.core.*
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
-import androidx.compose.material.icons.outlined.Notifications
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
+import com.airbnb.lottie.compose.LottieAnimation
+import com.airbnb.lottie.compose.LottieCompositionSpec
+import com.airbnb.lottie.compose.LottieConstants
+import com.airbnb.lottie.compose.animateLottieCompositionAsState
+import com.airbnb.lottie.compose.rememberLottieComposition
 import com.example.muslimvn.R
 import com.example.muslimvn.domain.models.PrayerTimes
 import com.example.muslimvn.domain.util.HijriCalendarUtils
@@ -29,7 +61,9 @@ import com.example.muslimvn.domain.util.HijriMonthNames
 import kotlinx.coroutines.delay
 import java.text.SimpleDateFormat
 import java.time.LocalDate
-import java.util.*
+import java.time.temporal.ChronoField
+import java.util.Date
+import java.util.Locale
 
 @Composable
 fun NextPrayerHero(
@@ -37,16 +71,12 @@ fun NextPrayerHero(
     hijriOffset: Int,
     onCountdownFinished: () -> Unit,
     modifier: Modifier = Modifier,
+    onMasjidClick: () -> Unit = {},
+    onDateClick: () -> Unit = {},
 ) {
-    var remainingMs by remember(prayerTimes.nextPrayerTime) {
-        mutableLongStateOf(prayerTimes.nextPrayerTime.time - System.currentTimeMillis())
+    var refreshRequested by remember(prayerTimes.nextPrayerTime) {
+        mutableStateOf(false)
     }
-    var refreshRequested by remember(prayerTimes.nextPrayerTime) { 
-        mutableStateOf(value = false) 
-    }
-
-    // Progress calculation
-    var progress by remember { mutableFloatStateOf(0f) }
 
     // Pulse animation for LIVE indicator
     val infiniteTransition = rememberInfiniteTransition(label = "pulse")
@@ -55,21 +85,18 @@ fun NextPrayerHero(
         targetValue = 1f,
         animationSpec = infiniteRepeatable(
             animation = tween(1000, easing = FastOutSlowInEasing),
-            repeatMode = RepeatMode.Reverse
+            repeatMode = RepeatMode.Reverse,
         ),
-        label = "pulseAlpha"
+        label = "pulseAlpha",
     )
-    
-    LaunchedEffect(prayerTimes.nextPrayerTime, prayerTimes.previousPrayerTime) {
+
+    // Auto-refresh when next prayer time is reached
+    LaunchedEffect(prayerTimes.nextPrayerTime) {
         while (true) {
             val now = System.currentTimeMillis()
-            remainingMs = prayerTimes.nextPrayerTime.time - now
-            
-            val totalDuration = prayerTimes.nextPrayerTime.time - prayerTimes.previousPrayerTime.time
-            val elapsed = now - prayerTimes.previousPrayerTime.time
-            progress = if (totalDuration > 0) (elapsed.toFloat() / totalDuration).coerceIn(0f, 1f) else 0f
+            val remainingMs = prayerTimes.nextPrayerTime.time - now
 
-            if ((!refreshRequested) && (remainingMs <= 0L)) {
+            if (!refreshRequested && remainingMs <= 0L) {
                 refreshRequested = true
                 onCountdownFinished()
             }
@@ -79,17 +106,26 @@ fun NextPrayerHero(
 
     val timeFormat = remember { SimpleDateFormat("HH:mm", Locale.getDefault()) }
     val prayerTimeStr = remember(prayerTimes.nextPrayerTime) { timeFormat.format(prayerTimes.nextPrayerTime) }
-    
+
     val prayerNameRes = remember(prayerTimes.nextPrayerName) {
         getPrayerNameRes(prayerTimes.nextPrayerName)
     }
 
-    val prayerIcon = remember(prayerTimes.nextPrayerName) {
-        getPrayerIcon(prayerTimes.nextPrayerName)
+    // Active prayer name for dynamic background image (prioritizes active current prayer over next prayer)
+    val activePrayerNameForImage = remember(
+        prayerTimes.currentPrayerName,
+        prayerTimes.nextPrayerName,
+        prayerTimes.isCurrentPrayerActive
+    ) {
+        if (prayerTimes.isCurrentPrayerActive && !prayerTimes.currentPrayerName.isNullOrEmpty()) {
+            prayerTimes.currentPrayerName
+        } else {
+            prayerTimes.nextPrayerName
+        }
     }
 
-    val backgroundImage = remember(prayerTimes.nextPrayerName) {
-        getHeroPrayerImage(prayerTimes.nextPrayerName)
+    val backgroundImage = remember(activePrayerNameForImage) {
+        getHeroPrayerImage(activePrayerNameForImage)
     }
 
     val gregorianDate = remember {
@@ -98,172 +134,305 @@ fun NextPrayerHero(
 
     val hijriLabel = remember(hijriOffset) {
         HijriCalendarUtils.hijriDateFor(LocalDate.now(), hijriOffset)?.let { hijri ->
-            val day = hijri.get(java.time.temporal.ChronoField.DAY_OF_MONTH)
-            val month = HijriMonthNames.monthName(hijri.get(java.time.temporal.ChronoField.MONTH_OF_YEAR))
-            val year = hijri.get(java.time.temporal.ChronoField.YEAR)
+            val day = hijri.get(ChronoField.DAY_OF_MONTH)
+            val month = HijriMonthNames.monthName(hijri.get(ChronoField.MONTH_OF_YEAR))
+            val year = hijri.get(ChronoField.YEAR)
             "$day $month $year AH"
         }.orEmpty()
+    }
+
+    // Lottie Composition for Masjid Icon
+    val lottieComposition by rememberLottieComposition(
+        LottieCompositionSpec.Asset("lottiefiles/masjid_home.json")
+    )
+    val lottieProgress by animateLottieCompositionAsState(
+        composition = lottieComposition,
+        iterations = LottieConstants.IterateForever
+    )
+
+    // Typewriter effect logic for Thought Bubble text
+    val fullThoughtText = "Bạn đang tìm masjid?"
+    var typedThoughtText by remember { mutableStateOf("") }
+    LaunchedEffect(Unit) {
+        typedThoughtText = ""
+        delay(400L)
+        for (i in 1..fullThoughtText.length) {
+            typedThoughtText = fullThoughtText.substring(0, i)
+            delay(75L)
+        }
     }
 
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .height(320.dp)
+            .height(260.dp)
     ) {
+        // Background Image
         AsyncImage(
             model = backgroundImage,
             contentDescription = null,
             modifier = Modifier.fillMaxSize(),
             contentScale = ContentScale.Crop
         )
-        
+
+        // Scrim overlay for contrast & calm aesthetic
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .background(
                     brush = Brush.verticalGradient(
                         colors = listOf(
-                            Color.Black.copy(alpha = 0.5f),
-                            Color.Transparent,
-                            Color.Black.copy(alpha = 0.8f)
+                            Color.Black.copy(alpha = 0.65f),
+                            Color.Black.copy(alpha = 0.40f),
+                            Color.Black.copy(alpha = 0.85f)
                         )
                     )
                 )
         )
 
-        // Content
+        // Content layout
         Column(
             modifier = Modifier
                 .statusBarsPadding()
-                .padding(20.dp)
+                .padding(horizontal = 16.dp, vertical = 10.dp)
                 .fillMaxSize(),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.SpaceBetween
         ) {
-            // Top: Date Information
+            // 1. TOP BAR: Date Information & Lottie Masjid Button with Thought Bubble
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.Top
             ) {
-                Column {
+                // Clickable Date Column -> Navigates to Hijri Calendar
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .clickable(
+                            interactionSource = remember { MutableInteractionSource() },
+                            indication = null,
+                            onClick = onDateClick
+                        )
+                ) {
                     Text(
                         text = gregorianDate,
-                        style = MaterialTheme.typography.titleSmall,
-                        color = Color.White.copy(alpha = 0.9f),
-                        fontWeight = FontWeight.Medium
+                        style = MaterialTheme.typography.titleSmall.copy(
+                            fontWeight = FontWeight.SemiBold,
+                            fontSize = 13.sp,
+                            letterSpacing = 0.2.sp
+                        ),
+                        color = Color.White.copy(alpha = 0.95f)
                     )
+                    Spacer(modifier = Modifier.height(1.dp))
                     Text(
                         text = hijriLabel,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = Color.White.copy(alpha = 0.7f)
+                        style = MaterialTheme.typography.bodySmall.copy(
+                            fontWeight = FontWeight.Medium,
+                            fontSize = 11.sp,
+                            letterSpacing = 0.3.sp
+                        ),
+                        color = Color.White.copy(alpha = 0.75f)
                     )
                 }
-                
-                // Action Icons
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(
-                        imageVector = Icons.Outlined.Notifications,
-                        contentDescription = null,
-                        modifier = Modifier.size(22.dp).alpha(0.8f),
-                        tint = Color.White
-                    )
-                    Spacer(modifier = Modifier.width(16.dp))
-                    Icon(
-                        imageVector = prayerIcon,
-                        contentDescription = null,
-                        modifier = Modifier.size(24.dp).alpha(0.6f),
-                        tint = Color.White
-                    )
-                }
-            }
 
-            // Middle: Prayer Focus
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                AnimatedContent(
-                    targetState = prayerNameRes,
-                    transitionSpec = {
-                        fadeIn(tween(600)) togetherWith fadeOut(tween(600))
-                    },
-                    label = "nextPrayerName"
-                ) { resId ->
-                    Text(
-                        text = stringResource(resId).uppercase(),
-                        style = MaterialTheme.typography.labelLarge.copy(letterSpacing = 3.sp),
-                        color = Color.White.copy(alpha = 0.7f),
-                        fontWeight = FontWeight.Light
-                    )
-                }
-                
-                Text(
-                    text = prayerTimeStr,
-                    style = MaterialTheme.typography.displayLarge.copy(
-                        fontSize = 72.sp,
-                        fontWeight = FontWeight.Thin
-                    ),
-                    color = Color.White
-                )
+                Spacer(modifier = Modifier.width(8.dp))
 
-                // Countdown sub-text
-                Surface(
-                    color = Color.Black.copy(alpha = 0.3f),
-                    shape = CircleShape
+                // Thought Bubble ABOVE Lottie Icon
+                Column(
+                    horizontalAlignment = Alignment.End,
+                    modifier = Modifier.clickable(
+                        interactionSource = remember { MutableInteractionSource() },
+                        indication = null,
+                        onClick = onMasjidClick
+                    )
                 ) {
-                    Text(
-                        text = "Tiếp theo trong ${formatRemaining(remainingMs)}",
-                        style = MaterialTheme.typography.labelMedium,
-                        color = Color.White.copy(alpha = 0.9f),
-                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp)
-                    )
-                }
-            }
-
-            // Bottom: Current Prayer Status (Live)
-            if (prayerTimes.isCurrentPrayerActive && prayerTimes.currentPrayerName != null) {
-                val currentPrayerRes = remember(prayerTimes.currentPrayerName) {
-                    getPrayerNameRes(prayerTimes.currentPrayerName)
-                }
-                Surface(
-                    color = Color.White.copy(alpha = 0.2f),
-                    shape = CircleShape,
-                    border = androidx.compose.foundation.BorderStroke(0.5.dp, Color.White.copy(alpha = 0.3f)),
-                    modifier = Modifier.padding(bottom = 12.dp)
-                ) {
-                    Row(
-                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-                        verticalAlignment = Alignment.CenterVertically
+                    Surface(
+                        shape = RoundedCornerShape(10.dp),
+                        color = Color.White.copy(alpha = 0.95f),
+                        shadowElevation = 2.dp
                     ) {
-                        // Pulse Dot
+                        Text(
+                            text = typedThoughtText.ifEmpty { " " },
+                            style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
+                            fontWeight = FontWeight.Bold,
+                            color = Color(0xFF1B5E20),
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(1.dp))
+                    Box(
+                        modifier = Modifier
+                            .padding(end = 16.dp)
+                            .size(3.dp)
+                            .background(Color.White.copy(alpha = 0.9f), CircleShape)
+                    )
+                    Spacer(modifier = Modifier.height(1.dp))
+                    Box(
+                        modifier = Modifier
+                            .padding(end = 18.dp)
+                            .size(2.dp)
+                            .background(Color.White.copy(alpha = 0.7f), CircleShape)
+                    )
+
+                    Box(
+                        modifier = Modifier.size(72.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        LottieAnimation(
+                            composition = lottieComposition,
+                            progress = { lottieProgress },
+                            modifier = Modifier.fillMaxSize()
+                        )
+                    }
+                }
+            }
+
+            // 2. CENTER CONTENT: REFINED HIERARCHY (CURRENT PRAYER PRIMARY, NEXT PRAYER SECONDARY)
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center,
+                modifier = Modifier.padding(bottom = 8.dp)
+            ) {
+                if (prayerTimes.isCurrentPrayerActive && prayerTimes.currentPrayerName != null) {
+                    val currentPrayerRes = remember(prayerTimes.currentPrayerName) {
+                        getPrayerNameRes(prayerTimes.currentPrayerName)
+                    }
+
+                    // 1. Current Prayer Indicator (Subtle Live Badge)
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.Center
+                    ) {
                         Box(
                             modifier = Modifier
                                 .size(8.dp)
                                 .alpha(pulseAlpha)
-                                .background(Color(0xFF4CAF50), CircleShape) // Standard Success Green
+                                .background(Color(0xFF4CAF50), CircleShape)
                         )
-                        Spacer(modifier = Modifier.width(10.dp))
+                        Spacer(modifier = Modifier.width(6.dp))
                         Text(
-                            text = "ĐANG TRONG GIỜ LỄ ${stringResource(currentPrayerRes).uppercase()}",
-                            style = MaterialTheme.typography.labelMedium.copy(letterSpacing = 1.2.sp),
-                            color = Color.White,
-                            fontWeight = FontWeight.Bold
+                            text = "ĐANG TRONG GIỜ",
+                            style = MaterialTheme.typography.labelMedium.copy(
+                                fontWeight = FontWeight.Bold,
+                                letterSpacing = 2.sp,
+                                fontSize = 11.sp
+                            ),
+                            color = Color.White.copy(alpha = 0.85f)
                         )
                     }
+
+                    Spacer(modifier = Modifier.height(2.dp))
+
+                    // 2. Current Prayer Name (PRIMARY FOCAL POINT)
+                    AnimatedContent(
+                        targetState = currentPrayerRes,
+                        transitionSpec = {
+                            fadeIn(tween(400)) togetherWith fadeOut(tween(400))
+                        },
+                        label = "currentPrayerName"
+                    ) { resId ->
+                        Text(
+                            text = stringResource(resId).uppercase(),
+                            style = MaterialTheme.typography.displayMedium.copy(
+                                fontSize = 38.sp,
+                                fontWeight = FontWeight.Bold,
+                                letterSpacing = 1.5.sp
+                            ),
+                            color = Color.White
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(14.dp))
+
+                    // 3. Next Prayer (SECONDARY INFORMATION PILL)
+                    Surface(
+                        color = Color.Black.copy(alpha = 0.35f),
+                        shape = CircleShape,
+                        border = BorderStroke(0.5.dp, Color.White.copy(alpha = 0.20f))
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp)
+                        ) {
+                            Text(
+                                text = "GIỜ LỄ TIẾP THEO: ",
+                                style = MaterialTheme.typography.labelSmall.copy(
+                                    fontWeight = FontWeight.SemiBold,
+                                    letterSpacing = 1.2.sp,
+                                    fontSize = 11.sp
+                                ),
+                                color = Color.White.copy(alpha = 0.75f)
+                            )
+                            Text(
+                                text = "${stringResource(prayerNameRes).uppercase()} · $prayerTimeStr",
+                                style = MaterialTheme.typography.labelMedium.copy(
+                                    fontWeight = FontWeight.Bold,
+                                    letterSpacing = 0.5.sp,
+                                    fontSize = 12.sp
+                                ),
+                                color = Color.White
+                            )
+                        }
+                    }
+                } else {
+                    // Fallback when no current prayer is active
+                    Surface(
+                        color = Color.White.copy(alpha = 0.15f),
+                        shape = RoundedCornerShape(100.dp),
+                        border = BorderStroke(0.5.dp, Color.White.copy(alpha = 0.25f))
+                    ) {
+                        Text(
+                            text = "GIỜ LỄ TIẾP THEO",
+                            style = MaterialTheme.typography.labelSmall.copy(
+                                letterSpacing = 2.sp,
+                                fontSize = 10.sp,
+                                fontWeight = FontWeight.Bold
+                            ),
+                            color = Color.White.copy(alpha = 0.9f),
+                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 3.dp)
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(6.dp))
+
+                    Text(
+                        text = "${stringResource(prayerNameRes).uppercase()} · $prayerTimeStr",
+                        style = MaterialTheme.typography.headlineMedium.copy(
+                            fontSize = 32.sp,
+                            fontWeight = FontWeight.Bold,
+                            letterSpacing = 1.2.sp
+                        ),
+                        color = Color.White
+                    )
                 }
-            } else {
-                Spacer(modifier = Modifier.height(48.dp))
             }
         }
+    }
+}
 
-        // Progress Bar at the very bottom (Material 3 standard)
-        LinearProgressIndicator(
-            progress = { progress },
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .fillMaxWidth()
-                .height(4.dp),
-            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.9f),
-            trackColor = Color.White.copy(alpha = 0.15f),
-            strokeCap = androidx.compose.ui.graphics.StrokeCap.Round
+@Preview(showBackground = true)
+@Composable
+fun NextPrayerHeroPreview() {
+    val sampleTimes = PrayerTimes(
+        fajr = Date(),
+        sunrise = Date(),
+        dhuhr = Date(),
+        asr = Date(),
+        maghrib = Date(),
+        isha = Date(),
+        nextPrayerName = "Fajr",
+        nextPrayerTime = Date(System.currentTimeMillis() + 1000 * 60 * 45),
+        nextPrayerCountdown = "00:45:00",
+        previousPrayerTime = Date(System.currentTimeMillis() - 1000 * 60 * 120),
+        currentPrayerName = "Isha",
+        isCurrentPrayerActive = true
+    )
+    MaterialTheme {
+        NextPrayerHero(
+            prayerTimes = sampleTimes,
+            hijriOffset = 0,
+            onCountdownFinished = {}
         )
     }
 }
@@ -290,24 +459,4 @@ private fun getPrayerNameRes(prayerName: String): Int {
         prayerName.contains("Isha", ignoreCase = true) -> R.string.prayer_isha
         else -> R.string.utility_prayer
     }
-}
-
-private fun getPrayerIcon(prayerName: String): ImageVector {
-    return when {
-        prayerName.contains("Fajr", ignoreCase = true) -> Icons.Default.NightsStay
-        prayerName.contains("Sunrise", ignoreCase = true) -> Icons.Default.WbTwilight
-        prayerName.contains("Dhuhr", ignoreCase = true) -> Icons.Default.WbSunny
-        prayerName.contains("Asr", ignoreCase = true) -> Icons.Default.WbCloudy
-        prayerName.contains("Maghrib", ignoreCase = true) -> Icons.Default.WbTwilight
-        prayerName.contains("Isha", ignoreCase = true) -> Icons.Default.Bedtime
-        else -> Icons.Default.Schedule
-    }
-}
-
-private fun formatRemaining(remainingMs: Long): String {
-    val totalSeconds = (remainingMs / 1000).coerceAtLeast(0)
-    val hours = totalSeconds / 3600
-    val minutes = (totalSeconds % 3600) / 60
-    val seconds = totalSeconds % 60
-    return String.format(Locale.getDefault(), "%02d:%02d:%02d", hours, minutes, seconds)
 }

@@ -40,6 +40,7 @@ import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.muslimvn.R
 import com.example.muslimvn.data.preferences.QuranDisplayMode
 import com.example.muslimvn.data.preferences.QuranViewMode
@@ -73,27 +74,29 @@ fun SurahDetailScreen(
     viewModel: SurahDetailViewModel = hiltViewModel(),
     playerViewModel: PodcastPlayerViewModel = hiltViewModel()
 ) {
-    val state by viewModel.state.collectAsState()
-    val quranSettings by viewModel.quranSettings.collectAsState()
-    val isPlaying by viewModel.isPlaying.collectAsState()
-    val isBuffering by viewModel.isBuffering.collectAsState()
-    val currentMediaId by viewModel.currentMediaId.collectAsState()
-    val isSyncing by viewModel.isSyncing.collectAsState()
-    val syncProgress by viewModel.syncProgress.collectAsState()
-    val downloadProgress by viewModel.downloadProgress.collectAsState()
-    val downloadedCount by viewModel.downloadedCount.collectAsState()
-    val tafsirState by viewModel.tafsirState.collectAsState()
-    val translationState by viewModel.translationState.collectAsState()
-    val currentTafsirAyah by viewModel.currentTafsirAyah.collectAsState()
-    val currentMushafPage by viewModel.currentMushafPage.collectAsState()
+    val state by viewModel.state.collectAsStateWithLifecycle()
+    val quranSettings by viewModel.quranSettings.collectAsStateWithLifecycle()
+    val isPlaying by viewModel.isPlaying.collectAsStateWithLifecycle()
+    val isBuffering by viewModel.isBuffering.collectAsStateWithLifecycle()
+    val currentMediaId by viewModel.currentMediaId.collectAsStateWithLifecycle()
+    val isSyncing by viewModel.isSyncing.collectAsStateWithLifecycle()
+    val syncProgress by viewModel.syncProgress.collectAsStateWithLifecycle()
+    val downloadProgress by viewModel.downloadProgress.collectAsStateWithLifecycle()
+    val downloadedCount by viewModel.downloadedCount.collectAsStateWithLifecycle()
+    val tafsirState by viewModel.tafsirState.collectAsStateWithLifecycle()
+    val translationState by viewModel.translationState.collectAsStateWithLifecycle()
+    val currentTafsirAyah by viewModel.currentTafsirAyah.collectAsStateWithLifecycle()
+    val currentMushafPage by viewModel.currentMushafPage.collectAsStateWithLifecycle()
     val context = LocalContext.current
 
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
     val lazyListState = rememberLazyListState()
+    var initialScrollHandled by remember { mutableStateOf(false) }
     
     // Cuộn tới Ayah bắt đầu khi lần đầu mở (Google Style: Seamless transition)
     LaunchedEffect(state) {
-        if (state is SurahDetailState.Success) {
+        if (!initialScrollHandled && state is SurahDetailState.Success) {
+            initialScrollHandled = true
             val startAyah = viewModel.getStartAyah()
             if (startAyah > 1) {
                 // Header là index 0, Bismillah là index 1 (nếu có), nên startAyah index thường là startAyah hoặc startAyah + 1
@@ -277,7 +280,7 @@ fun SurahDetailScreen(
                 val isQuran = active?.id?.contains(":") == true
                 androidx.compose.animation.AnimatedVisibility(visible = isQuran) {
                     if (active != null) {
-                        val playlist by playerViewModel.playlist.collectAsState()
+                        val playlist by playerViewModel.playlist.collectAsStateWithLifecycle()
 
                         MiniPlayerBar(
                             title = active.title,
@@ -357,7 +360,11 @@ fun SurahDetailScreen(
                                 }
                             }
                             
-                            items(surahDetail.ayahs, key = { it.id }) { ayah ->
+                            items(
+                                items = surahDetail.ayahs,
+                                key = { it.id },
+                                contentType = { "ayah" }
+                            ) { ayah ->
                                 val isAyahPlaying = currentMediaId == "${surahDetail.surah.number}:${ayah.ayahNumber}"
                                 
                                 AyahItem(
@@ -732,7 +739,7 @@ fun AyahItem(
     isAnyAyahPlaying: Boolean = false,
     onClick: () -> Unit
 ) {
-    val playingWordIndex by if (isAyahPlaying) playingWordIndexFlow.collectAsState() else remember { mutableStateOf<Int?>(null) }
+    val playingWordIndex by if (isAyahPlaying) playingWordIndexFlow.collectAsStateWithLifecycle() else remember { mutableStateOf<Int?>(null) }
     // Focus Effect: Chỉ mờ khi CÓ audio đang phát toàn cục. Nếu không phát gì, tất cả đều rõ nét (Alpha 1.0)
     val itemAlpha by animateFloatAsState(
         targetValue = if (isAnyAyahPlaying && !isPlaying) 0.4f else 1.0f,

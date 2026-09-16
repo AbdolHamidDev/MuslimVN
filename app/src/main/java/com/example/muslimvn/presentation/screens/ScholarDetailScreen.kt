@@ -39,7 +39,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -51,6 +50,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.paging.LoadState
 import androidx.paging.compose.collectAsLazyPagingItems
 import coil.compose.AsyncImage
@@ -81,7 +81,10 @@ fun ScholarDetailScreen(
     viewModel: ScholarDetailViewModel = hiltViewModel(),
     playerViewModel: PodcastPlayerViewModel = hiltViewModel()
 ) {
-    val state by viewModel.uiState.collectAsState()
+    val state by viewModel.uiState.collectAsStateWithLifecycle()
+    val currentEpisodeId by viewModel.currentEpisodeId.collectAsStateWithLifecycle()
+    val isPlaying by viewModel.isPlaying.collectAsStateWithLifecycle()
+    val isBuffering by viewModel.isBuffering.collectAsStateWithLifecycle()
     val episodes = viewModel.episodesPagingData.collectAsLazyPagingItems()
 
     Scaffold(
@@ -109,7 +112,7 @@ fun ScholarDetailScreen(
                 val isPodcast = active != null && !active.id.contains(":") && !active.id.startsWith("islamhouse_")
                 AnimatedVisibility(visible = isPodcast) {
                     if (active != null) {
-                        val playlist by playerViewModel.playlist.collectAsState()
+                        val playlist by playerViewModel.playlist.collectAsStateWithLifecycle()
                         MiniPlayerBar(
                             title = active.title,
                             subtitle = active.subtitle,
@@ -187,16 +190,17 @@ fun ScholarDetailScreen(
                 
                 items(
                     count = episodes.itemCount,
-                    key = { index -> episodes[index]?.id ?: "placeholder_$index" }
+                    key = { index -> episodes[index]?.id ?: "placeholder_$index" },
+                    contentType = { "episode" }
                 ) { index ->
                     val episode = episodes[index]
                     if (episode != null) {
                         EpisodeRow(
                             episode = episode,
                             scholarName = state.scholar?.name,
-                            isCurrent = viewModel.currentEpisodeId.collectAsState().value == episode.id,
-                            isPlaying = viewModel.isPlaying.collectAsState().value,
-                            isBuffering = viewModel.isBuffering.collectAsState().value,
+                            isCurrent = currentEpisodeId == episode.id,
+                            isPlaying = isPlaying,
+                            isBuffering = isBuffering,
                             onPlayPause = { viewModel.onPlayPauseClicked(episode, state.scholar?.name) }
                         )
                     }

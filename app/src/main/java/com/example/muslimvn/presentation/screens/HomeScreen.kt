@@ -1,3 +1,5 @@
+@file:OptIn(androidx.media3.common.util.UnstableApi::class, ExperimentalMaterial3Api::class)
+
 package com.example.muslimvn.presentation.screens
 
 import android.Manifest
@@ -36,7 +38,6 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -47,6 +48,8 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
 import com.example.muslimvn.R
 import com.example.muslimvn.domain.models.PrayerName
@@ -65,7 +68,6 @@ import java.util.*
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
     viewModel: HomeViewModel = hiltViewModel(),
@@ -75,17 +77,19 @@ fun HomeScreen(
     onVietnamScholarClick: (String) -> Unit = {},
     onDailyReminderClick: (String) -> Unit = {},
     onOpenFullPlayer: () -> Unit = {},
+    onMasjidClick: () -> Unit = {},
+    onHijriCalendarClick: () -> Unit = {},
 ) {
-    val uiState by viewModel.uiState.collectAsState()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val dailyReminderViewModel: DailyReminderViewModel = hiltViewModel()
-    val dailyReminderState by dailyReminderViewModel.uiState.collectAsState()
+    val dailyReminderState by dailyReminderViewModel.uiState.collectAsStateWithLifecycle()
     var showPrayerSheet by remember { mutableStateOf(false) }
     var selectedPrayerForReminder by remember { mutableStateOf<String?>(null) }
     
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
 
-    val hijriOffset by viewModel.hijriDateOffset.collectAsState()
+    val hijriOffset by viewModel.hijriDateOffset.collectAsStateWithLifecycle()
 
     val lifecycleOwner = LocalLifecycleOwner.current
     DisposableEffect(lifecycleOwner) {
@@ -108,7 +112,7 @@ fun HomeScreen(
                 val isPodcast = active != null && !active.id.contains(":") && !active.id.startsWith("islamhouse_")
                 androidx.compose.animation.AnimatedVisibility(visible = isPodcast) {
                     if (active != null) {
-                        val podcastPlaylist by playerViewModel.playlist.collectAsState()
+                        val podcastPlaylist by playerViewModel.playlist.collectAsStateWithLifecycle()
 
                         MiniPlayerBar(
                             title = active.title,
@@ -131,8 +135,9 @@ fun HomeScreen(
                 }
             }
         }
-    )
-{ padding ->
+    ) { padding ->
+        val prayerTimes = uiState.prayerTimes
+
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
             contentPadding = PaddingValues(
@@ -140,13 +145,14 @@ fun HomeScreen(
             ),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            val prayerTimes = uiState.prayerTimes
             if (prayerTimes != null) {
                 item {
                     NextPrayerHero(
                         prayerTimes = prayerTimes,
                         hijriOffset = hijriOffset,
                         onCountdownFinished = viewModel::refreshPrayerTimes,
+                        onMasjidClick = onMasjidClick,
+                        onDateClick = onHijriCalendarClick,
                         modifier = Modifier.bouncyClick {
                             selectedPrayerForReminder = prayerTimes.nextPrayerName
                         }
@@ -177,47 +183,20 @@ fun HomeScreen(
                         )
                     }
                 }
-
-                if (showPrayerSheet) {
-                    item {
-                        ModalBottomSheet(
-                            onDismissRequest = { showPrayerSheet = false },
-                            sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-                        ) {
-                            Column(modifier = Modifier.fillMaxWidth().padding(bottom = 32.dp)) {
-                                Text(text = stringResource(R.string.utility_prayer), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, modifier = Modifier.padding(16.dp))
-                                PrayerList(prayerTimes = prayerTimes, reminders = uiState.reminders, onReminderClick = { selectedPrayerForReminder = it })
-                            }
-                        }
-                    }
-                }
-
-                selectedPrayerForReminder?.let { prayerName ->
-                    item {
-                        val reminder = uiState.reminders[prayerName] ?: PrayerReminder(prayerName)
-                        PrayerReminderBottomSheet(
-                            prayerName = prayerName,
-                            currentReminder = reminder,
-                            onDismiss = { selectedPrayerForReminder = null },
-                            onSave = { 
-                                viewModel.updateReminder(it)
-                                selectedPrayerForReminder = null
-                            }
-                        )
-                    }
-                }
             } else {
                 item {
                     Box(modifier = Modifier.padding(horizontal = 16.dp)) {
                         if (uiState.isLoading) {
                             HomeLoadingSkeleton()
                         } else {
-                            ErrorState(message = uiState.error ?: stringResource(R.string.prayer_times_error), onRetry = viewModel::refreshPrayerTimes, modifier = Modifier.fillParentMaxSize())
+                            ErrorState(
+                                message = uiState.error ?: stringResource(R.string.prayer_times_error),
+                                onRetry = viewModel::refreshPrayerTimes,
+                                modifier = Modifier.fillParentMaxSize()
+                            )
                         }
                     }
                 }
-                // This stream loads independently: a location/API issue in Prayer Time must not
-                // prevent a cached or newly fetched reminder from being read.
                 item {
                     DailyReminderSection(
                         state = dailyReminderState,
@@ -225,6 +204,41 @@ fun HomeScreen(
                     )
                 }
             }
+        }
+
+        // Bottom Sheets placed outside LazyColumn for instant UI response
+        if (prayerTimes != null && showPrayerSheet) {
+            ModalBottomSheet(
+                onDismissRequest = { showPrayerSheet = false },
+                sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+            ) {
+                Column(modifier = Modifier.fillMaxWidth().padding(bottom = 32.dp)) {
+                    Text(
+                        text = stringResource(R.string.utility_prayer),
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(16.dp)
+                    )
+                    PrayerList(
+                        prayerTimes = prayerTimes,
+                        reminders = uiState.reminders,
+                        onReminderClick = { selectedPrayerForReminder = it }
+                    )
+                }
+            }
+        }
+
+        selectedPrayerForReminder?.let { prayerName ->
+            val reminder = uiState.reminders[prayerName] ?: PrayerReminder(prayerName)
+            PrayerReminderBottomSheet(
+                prayerName = prayerName,
+                currentReminder = reminder,
+                onDismiss = { selectedPrayerForReminder = null },
+                onSave = { 
+                    viewModel.updateReminder(it)
+                    selectedPrayerForReminder = null
+                }
+            )
         }
     }
 }

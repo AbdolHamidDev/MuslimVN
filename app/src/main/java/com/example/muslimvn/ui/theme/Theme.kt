@@ -1,11 +1,9 @@
 package com.example.muslimvn.ui.theme
 
-import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import com.example.muslimvn.domain.models.AppTheme
 
 private val LightColorScheme = lightColorScheme(
@@ -119,12 +117,10 @@ val MaterialTheme.extendedColors: ExtendedColors
  * Theme chính của MuslimVN.
  *
  * @param themeMode Chế độ theme được chọn (Hệ thống, Sáng, Tối).
- * @param dynamicColor Mặc định BẬT cho Android 12+.
  */
 @Composable
 fun MuslimVNTheme(
     themeMode: AppTheme = AppTheme.FOLLOW_SYSTEM,
-    dynamicColor: Boolean = false,
     content: @Composable () -> Unit
 ) {
     val darkTheme = when (themeMode) {
@@ -133,14 +129,7 @@ fun MuslimVNTheme(
         AppTheme.DARK -> true
     }
 
-    val context = LocalContext.current
-    val colorScheme = when {
-        dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
-            if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
-        }
-        darkTheme -> DarkColorScheme
-        else -> LightColorScheme
-    }
+    val colorScheme = if (darkTheme) DarkColorScheme else LightColorScheme
     val extendedColors = if (darkTheme) darkExtendedColors() else lightExtendedColors()
 
     CompositionLocalProvider(LocalExtendedColors provides extendedColors) {

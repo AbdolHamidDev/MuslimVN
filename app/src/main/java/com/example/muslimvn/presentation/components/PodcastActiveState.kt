@@ -2,7 +2,7 @@ package com.example.muslimvn.presentation.components
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.collectAsState
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.muslimvn.presentation.viewmodels.PodcastPlayerViewModel
 
 /** Snapshot trạng thái phát hiện tại dùng cho mini-player; null khi không có tập nào. */
@@ -27,15 +27,15 @@ fun PodcastPlayerBarState(
     playerViewModel: PodcastPlayerViewModel,
     content: @Composable (ActivePlayback?) -> Unit
 ) {
-    val currentEpisodeId by playerViewModel.currentEpisodeId.collectAsState()
-    val title by playerViewModel.title.collectAsState()
-    val artist by playerViewModel.artist.collectAsState()
-    val artworkPath by playerViewModel.artworkPath.collectAsState()
-    val isPlaying by playerViewModel.isPlaying.collectAsState()
-    val isBuffering by playerViewModel.isBuffering.collectAsState()
-    val positionMs by playerViewModel.positionMs.collectAsState()
-    val durationMs by playerViewModel.durationMs.collectAsState()
-    val speed by playerViewModel.playbackSpeed.collectAsState()
+    val currentEpisodeId by playerViewModel.currentEpisodeId.collectAsStateWithLifecycle()
+    val title by playerViewModel.title.collectAsStateWithLifecycle()
+    val artist by playerViewModel.artist.collectAsStateWithLifecycle()
+    val artworkPath by playerViewModel.artworkPath.collectAsStateWithLifecycle()
+    val isPlaying by playerViewModel.isPlaying.collectAsStateWithLifecycle()
+    val isBuffering by playerViewModel.isBuffering.collectAsStateWithLifecycle()
+    val positionMs by playerViewModel.positionMs.collectAsStateWithLifecycle()
+    val durationMs by playerViewModel.durationMs.collectAsStateWithLifecycle()
+    val speed by playerViewModel.playbackSpeed.collectAsStateWithLifecycle()
 
     val active = if (currentEpisodeId == null || title == null) {
         null

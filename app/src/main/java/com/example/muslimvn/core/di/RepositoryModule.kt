@@ -85,6 +85,12 @@ abstract class RepositoryModule {
 
     @Binds
     @Singleton
+    abstract fun bindMasjidRepository(
+        localMasjidRepository: LocalMasjidRepository
+    ): MasjidRepository
+
+    @Binds
+    @Singleton
     abstract fun bindHadithRepository(
         hadithRepositoryImpl: HadithRepositoryImpl
     ): HadithRepository
