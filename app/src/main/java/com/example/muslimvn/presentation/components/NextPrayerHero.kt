@@ -150,18 +150,6 @@ fun NextPrayerHero(
         iterations = LottieConstants.IterateForever
     )
 
-    // Typewriter effect logic for Thought Bubble text
-    val fullThoughtText = "Bạn đang tìm masjid?"
-    var typedThoughtText by remember { mutableStateOf("") }
-    LaunchedEffect(Unit) {
-        typedThoughtText = ""
-        delay(400L)
-        for (i in 1..fullThoughtText.length) {
-            typedThoughtText = fullThoughtText.substring(0, i)
-            delay(75L)
-        }
-    }
-
     Box(
         modifier = modifier
             .fillMaxWidth()
@@ -253,10 +241,10 @@ fun NextPrayerHero(
                         shadowElevation = 2.dp
                     ) {
                         Text(
-                            text = typedThoughtText.ifEmpty { " " },
+                            text = "Bạn đang tìm masjid?",
                             style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
                             fontWeight = FontWeight.Bold,
-                            color = Color(0xFF1B5E20),
+                            color = Color.Black,
                             modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
                         )
                     }

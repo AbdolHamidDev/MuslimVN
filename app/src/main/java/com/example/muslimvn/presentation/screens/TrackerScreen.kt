@@ -236,7 +236,7 @@ fun DailyProgressHeader(prayers: List<PrayerTrackerState>) {
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 8.dp),
-        color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.4f),
+        color = MaterialTheme.colorScheme.surfaceContainerHigh,
         shape = RoundedCornerShape(24.dp)
     ) {
         Row(
@@ -368,7 +368,7 @@ fun EnhancedPrayerItem(
                                 onClick = onToggleSunnahBefore,
                                 label = { Text("Sunnah Trước", fontSize = 12.sp) },
                                 colors = FilterChipDefaults.filterChipColors(
-                                    selectedContainerColor = MaterialTheme.colorScheme.secondaryContainer
+                                    selectedContainerColor = MaterialTheme.colorScheme.surfaceContainerHighest
                                 )
                             )
                         }
@@ -380,7 +380,7 @@ fun EnhancedPrayerItem(
                                 onClick = onToggleSunnahAfter,
                                 label = { Text("Sunnah Sau", fontSize = 12.sp) },
                                 colors = FilterChipDefaults.filterChipColors(
-                                    selectedContainerColor = MaterialTheme.colorScheme.secondaryContainer
+                                    selectedContainerColor = MaterialTheme.colorScheme.surfaceContainerHighest
                                 )
                             )
                         }
@@ -396,7 +396,7 @@ fun TrackerSectionHeader(title: String, modifier: Modifier = Modifier) {
     Text(
         text = title,
         style = MaterialTheme.typography.titleMedium,
-        color = MaterialTheme.colorScheme.primary,
+        color = MaterialTheme.colorScheme.onSurface,
         fontWeight = FontWeight.Bold,
         modifier = modifier
     )

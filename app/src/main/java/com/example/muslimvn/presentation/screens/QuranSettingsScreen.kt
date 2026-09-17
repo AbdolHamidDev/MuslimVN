@@ -209,7 +209,7 @@ fun MushafDownloadConfirmationDialog(
                 Text(
                     text = "Dung lượng ước tính: ~120 MB",
                     fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.primary
+                    color = MaterialTheme.colorScheme.onSurface
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
@@ -278,7 +278,7 @@ fun DownloadConfirmationDialog(
                 Text(
                     text = "Dung lượng ước tính: ~${reciter.estimatedSizeMb} MB",
                     fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.primary
+                    color = MaterialTheme.colorScheme.onSurface
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
@@ -307,13 +307,13 @@ private fun SettingsSectionTitle(title: String, icon: androidx.compose.ui.graphi
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier.padding(bottom = 12.dp)
     ) {
-        Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(20.dp))
+        Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.onSurface, modifier = Modifier.size(20.dp))
         Spacer(modifier = Modifier.width(12.dp))
         Text(
             text = title,
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.primary
+            color = MaterialTheme.colorScheme.onSurface
         )
     }
 }
@@ -345,7 +345,8 @@ private fun MushafDownloadItem(
                         else -> "Chưa tải bản gốc (1024px)"
                     },
                     style = MaterialTheme.typography.bodyMedium,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface
                 )
                 Text(
                     text = if (isOffline) "Bạn có thể đọc Quran dạng Mushaf không cần mạng." 
@@ -365,7 +366,7 @@ private fun MushafDownloadItem(
                     Text(
                         text = if (status == DownloadStatus.DOWNLOADING) "Tiến độ: $progressText" else "Đã tải: $progressText",
                         style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.primary
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }
@@ -397,12 +398,12 @@ private fun MushafDownloadItem(
                         }
                         DownloadStatus.DOWNLOADING -> {
                             IconButton(onClick = onPauseClick) {
-                                Icon(Icons.Default.Pause, contentDescription = "Tạm dừng", tint = MaterialTheme.colorScheme.primary)
+                                Icon(Icons.Default.Pause, contentDescription = "Tạm dừng", tint = MaterialTheme.colorScheme.onSurface)
                             }
                         }
                         DownloadStatus.PAUSED -> {
                             IconButton(onClick = onDownloadClick) {
-                                Icon(Icons.Default.PlayArrow, contentDescription = "Tiếp tục", tint = MaterialTheme.colorScheme.primary)
+                                Icon(Icons.Default.PlayArrow, contentDescription = "Tiếp tục", tint = MaterialTheme.colorScheme.onSurface)
                             }
                         }
                         DownloadStatus.COMPLETED -> {
@@ -527,7 +528,8 @@ private fun ReciterItem(
     Surface(
         onClick = onClick,
         shape = RoundedCornerShape(12.dp),
-        color = if (isSelected) MaterialTheme.colorScheme.primaryContainer else Color.Transparent,
+        color = if (isSelected) MaterialTheme.colorScheme.surfaceContainerHigh else Color.Transparent,
+        border = if (isSelected) androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant) else null,
         modifier = Modifier.fillMaxWidth()
     ) {
         Row(
@@ -547,24 +549,24 @@ private fun ReciterItem(
                         .clip(CircleShape)
                         .border(
                             width = 2.dp,
-                            color = if (isSelected) MaterialTheme.colorScheme.primary else Color.Transparent,
+                            color = if (isSelected) MaterialTheme.colorScheme.onSurfaceVariant else Color.Transparent,
                             shape = CircleShape
                         )
                 )
                 if (isSelected) {
                     Box(
                         modifier = Modifier
-                            .size(18.dp)
+                            .size(20.dp)
                             .clip(CircleShape)
-                            .background(MaterialTheme.colorScheme.primary)
-                            .border(2.dp, MaterialTheme.colorScheme.primaryContainer, CircleShape),
+                            .background(MaterialTheme.colorScheme.surfaceContainerHighest)
+                            .border(1.dp, MaterialTheme.colorScheme.outlineVariant, CircleShape),
                         contentAlignment = Alignment.Center
                     ) {
-                        RadioButton(
-                            selected = true,
-                            onClick = null,
-                            colors = RadioButtonDefaults.colors(selectedColor = Color.White),
-                            modifier = Modifier.scale(0.5f)
+                        Icon(
+                            Icons.Default.Check,
+                            contentDescription = "Selected",
+                            tint = MaterialTheme.colorScheme.onSurface,
+                            modifier = Modifier.size(14.dp)
                         )
                     }
                 }
@@ -577,20 +579,19 @@ private fun ReciterItem(
                     text = reciter.name,
                     style = MaterialTheme.typography.bodyLarge,
                     fontWeight = FontWeight.Bold,
-                    color = if (isSelected) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface
+                    color = MaterialTheme.colorScheme.onSurface
                 )
                 Text(
                     text = reciter.description,
                     style = MaterialTheme.typography.bodySmall,
-                    color = if (isSelected) MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f) 
-                            else MaterialTheme.colorScheme.onSurfaceVariant
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 if (downloadStatus != DownloadStatus.IDLE && downloadStatus != DownloadStatus.COMPLETED) {
                     val progressText = if (downloadProgress != null) "${(downloadProgress * 100).toInt()}%" else "..."
                     Text(
                         text = if (downloadStatus == DownloadStatus.DOWNLOADING) "Đang tải: $progressText" else "Đã tạm dừng: $progressText",
                         style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.primary
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }
@@ -615,12 +616,12 @@ private fun ReciterItem(
                         }
                         DownloadStatus.DOWNLOADING -> {
                             IconButton(onClick = onPauseClick) {
-                                Icon(Icons.Default.Pause, contentDescription = "Tạm dừng", tint = MaterialTheme.colorScheme.primary)
+                                Icon(Icons.Default.Pause, contentDescription = "Tạm dừng", tint = MaterialTheme.colorScheme.onSurface)
                             }
                         }
                         DownloadStatus.PAUSED -> {
                             IconButton(onClick = onDownloadClick) {
-                                Icon(Icons.Default.PlayArrow, contentDescription = "Tiếp tục", tint = MaterialTheme.colorScheme.primary)
+                                Icon(Icons.Default.PlayArrow, contentDescription = "Tiếp tục", tint = MaterialTheme.colorScheme.onSurface)
                             }
                         }
                         DownloadStatus.COMPLETED -> {

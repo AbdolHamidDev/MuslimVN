@@ -257,7 +257,7 @@ private fun ScholarHeader(scholar: Scholar?, episodeCount: Int) {
             Text(
                 text = scholar.title,
                 style = MaterialTheme.typography.titleSmall,
-                color = MaterialTheme.colorScheme.primary
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
             Spacer(modifier = Modifier.height(8.dp))
             Surface(shape = CircleShape, color = MaterialTheme.colorScheme.secondaryContainer) {

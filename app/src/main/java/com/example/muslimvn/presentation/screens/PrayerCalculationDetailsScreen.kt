@@ -67,7 +67,7 @@ fun PrayerCalculationDetailsScreen(
                             text = "CHI TIẾT CÁCH TÍNH",
                             style = MaterialTheme.typography.labelLarge,
                             fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.primary
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                         Spacer(modifier = Modifier.height(6.dp))
                         Text(
@@ -203,7 +203,7 @@ fun PrayerCalculationDetailsScreen(
                         text = "Khoảng đệm an toàn của ứng dụng:",
                         style = MaterialTheme.typography.titleSmall,
                         fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.primary
+                        color = MaterialTheme.colorScheme.onSurface
                     )
                     Spacer(modifier = Modifier.height(2.dp))
                     Text(
@@ -345,7 +345,7 @@ private fun SectionCard(title: String, content: @Composable ColumnScope.() -> Un
                 text = title,
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.primary
+                color = MaterialTheme.colorScheme.onSurface
             )
             Spacer(modifier = Modifier.height(8.dp))
             content()
@@ -386,7 +386,7 @@ private fun WindowBoundaryRow(
         Text(name, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
         Text("• Bắt đầu: $start", style = MaterialTheme.typography.bodySmall)
         if (preferredEnd != null) {
-            Text("• Giới hạn ưu tiên: $preferredEnd", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.primary)
+            Text("• Giới hạn ưu tiên: $preferredEnd", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
         if (finalEnd != null) {
             Text("• Giới hạn cuối: $finalEnd", style = MaterialTheme.typography.bodySmall)

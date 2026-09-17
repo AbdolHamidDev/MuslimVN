@@ -106,7 +106,7 @@ fun StopAdhanContent(
 ) {
     Surface(
         modifier = Modifier.fillMaxSize(),
-        color = MaterialTheme.colorScheme.primaryContainer
+        color = MaterialTheme.colorScheme.surface
     ) {
         Column(
             modifier = Modifier
@@ -118,7 +118,7 @@ fun StopAdhanContent(
             Text(
                 text = "GIỜ CẦU NGUYỆN",
                 style = MaterialTheme.typography.labelLarge,
-                color = MaterialTheme.colorScheme.onPrimaryContainer,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 letterSpacing = 4.sp
             )
             
@@ -128,7 +128,7 @@ fun StopAdhanContent(
                 text = prayerName,
                 style = MaterialTheme.typography.displayMedium,
                 fontWeight = FontWeight.Black,
-                color = MaterialTheme.colorScheme.onPrimaryContainer
+                color = MaterialTheme.colorScheme.onSurface
             )
             
             Spacer(modifier = Modifier.height(64.dp))

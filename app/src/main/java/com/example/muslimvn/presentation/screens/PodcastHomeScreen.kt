@@ -305,7 +305,7 @@ private fun ScholarListRow(scholar: Scholar, onClick: () -> Unit) {
                     Text(
                         text = scholar.tags.joinToString(" • ") { it.replaceFirstChar { c -> c.uppercase() } },
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.primary,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                         modifier = Modifier.padding(top = 2.dp)

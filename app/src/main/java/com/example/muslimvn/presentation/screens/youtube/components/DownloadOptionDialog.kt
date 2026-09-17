@@ -15,7 +15,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -43,7 +42,8 @@ fun DownloadOptionDialog(
             Text(
                 text = "Chọn định dạng tải xuống",
                 style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSurface
             )
         },
         text = {
@@ -88,7 +88,8 @@ fun DownloadOptionDialog(
                 Text(
                     text = "Đóng",
                     style = MaterialTheme.typography.labelLarge,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface
                 )
             }
         }
@@ -116,16 +117,12 @@ private fun DownloadOptionItem(
     }
 
     val backgroundColor = if (isAlreadyDownloaded) {
-        MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)
+        MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
     } else {
         MaterialTheme.colorScheme.surfaceContainerHigh
     }
 
-    val borderColor = if (isAlreadyDownloaded) {
-        Color(0xFF2E7D32)
-    } else {
-        MaterialTheme.colorScheme.outlineVariant
-    }
+    val borderColor = MaterialTheme.colorScheme.outlineVariant
 
     Surface(
         modifier = Modifier
@@ -145,16 +142,13 @@ private fun DownloadOptionItem(
                 modifier = Modifier
                     .size(48.dp)
                     .clip(RoundedCornerShape(12.dp))
-                    .background(
-                        if (isAlreadyDownloaded) Color(0xFF2E7D32).copy(alpha = 0.15f)
-                        else MaterialTheme.colorScheme.primaryContainer
-                    ),
+                    .background(MaterialTheme.colorScheme.surfaceVariant),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
                     imageVector = if (isAlreadyDownloaded) Icons.Default.CheckCircle else icon,
                     contentDescription = null,
-                    tint = if (isAlreadyDownloaded) Color(0xFF2E7D32) else MaterialTheme.colorScheme.primary,
+                    tint = if (isAlreadyDownloaded) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.size(24.dp)
                 )
             }
@@ -165,7 +159,8 @@ private fun DownloadOptionItem(
                 Text(
                     text = title,
                     style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface
                 )
                 Spacer(modifier = Modifier.height(2.dp))
                 Text(
@@ -178,8 +173,8 @@ private fun DownloadOptionItem(
                     Text(
                         text = "Dung lượng: $formattedSize",
                         style = MaterialTheme.typography.labelMedium,
-                        fontWeight = FontWeight.SemiBold,
-                        color = MaterialTheme.colorScheme.primary
+                        fontWeight = FontWeight.Medium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
                 if (isDownloading) {
@@ -191,6 +186,7 @@ private fun DownloadOptionItem(
                             .fillMaxWidth()
                             .height(6.dp)
                             .clip(RoundedCornerShape(3.dp)),
+                        color = MaterialTheme.colorScheme.primary
                     )
                 }
             }
@@ -203,7 +199,7 @@ private fun DownloadOptionItem(
                         text = "Đã tải",
                         style = MaterialTheme.typography.labelMedium,
                         fontWeight = FontWeight.Bold,
-                        color = Color(0xFF2E7D32)
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
                 isDownloading -> {
@@ -219,7 +215,7 @@ private fun DownloadOptionItem(
                     Icon(
                         imageVector = Icons.Default.Download,
                         contentDescription = "Tải về",
-                        tint = MaterialTheme.colorScheme.primary,
+                        tint = MaterialTheme.colorScheme.onSurface,
                         modifier = Modifier.size(24.dp)
                     )
                 }

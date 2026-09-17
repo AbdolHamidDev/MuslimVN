@@ -339,13 +339,13 @@ private fun MasjidScreenCardItem(
                     item.distanceKm?.let { dist ->
                         Surface(
                             shape = RoundedCornerShape(6.dp),
-                            color = MaterialTheme.colorScheme.tertiaryContainer
+                            color = MaterialTheme.colorScheme.surfaceVariant
                         ) {
                             Text(
                                 text = String.format(java.util.Locale.getDefault(), "Cách %.1f km", dist),
                                 style = MaterialTheme.typography.labelSmall,
                                 fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onTertiaryContainer,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
                             )
                         }
@@ -355,7 +355,7 @@ private fun MasjidScreenCardItem(
                 masjid.prayer?.jummah?.firstOrNull()?.let { jummahTime ->
                     Surface(
                         shape = RoundedCornerShape(6.dp),
-                        color = MaterialTheme.colorScheme.primaryContainer
+                        color = MaterialTheme.colorScheme.surfaceVariant
                     ) {
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
@@ -429,12 +429,12 @@ private fun MasjidScreenCardItem(
                     facilityTags.forEach { tag ->
                         Surface(
                             shape = CircleShape,
-                            color = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.7f)
+                            color = MaterialTheme.colorScheme.surfaceVariant
                         ) {
                             Text(
                                 text = tag,
                                 style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.onSecondaryContainer,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 modifier = Modifier.padding(horizontal = 10.dp, vertical = 2.dp)
                             )
                         }

@@ -272,8 +272,15 @@ fun FeaturedPodcastSection(
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
-            TextButton(onClick = onSeeAllClick) {
-                Text(text = stringResource(R.string.view_all))
+            TextButton(
+                onClick = onSeeAllClick,
+                colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.onSurfaceVariant)
+            ) {
+                Text(
+                    text = stringResource(R.string.view_all),
+                    style = MaterialTheme.typography.labelLarge,
+                    fontWeight = FontWeight.SemiBold
+                )
             }
         }
         

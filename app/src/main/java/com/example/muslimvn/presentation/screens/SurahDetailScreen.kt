@@ -204,14 +204,14 @@ fun SurahDetailScreen(
                                         progress = { downloadProgress },
                                         modifier = Modifier.size(32.dp),
                                         strokeWidth = 2.dp,
-                                        color = MaterialTheme.colorScheme.primary
+                                        color = MaterialTheme.colorScheme.onSurface
                                     )
                                 }
                                 IconButton(onClick = { viewModel.downloadSurah() }) {
                                     Icon(
                                         imageVector = Icons.Default.Download,
                                         contentDescription = "Tải xuống",
-                                        tint = if (downloadProgress > 0) MaterialTheme.colorScheme.primary else LocalContentColor.current
+                                        tint = if (downloadProgress > 0) MaterialTheme.colorScheme.onSurface else LocalContentColor.current
                                     )
                                 }
                             }
@@ -220,7 +220,7 @@ fun SurahDetailScreen(
                                 imageVector = Icons.Default.DownloadDone,
                                 contentDescription = "Đã tải xuống",
                                 modifier = Modifier.padding(12.dp),
-                                tint = MaterialTheme.colorScheme.primary
+                                tint = MaterialTheme.colorScheme.onSurface
                             )
                         }
 
@@ -354,7 +354,7 @@ fun SurahDetailScreen(
                                             text = "بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ",
                                             style = MaterialTheme.extendedTypography.arabicHeading,
                                             fontSize = (quranSettings.fontSize * 1.2).sp,
-                                            color = MaterialTheme.colorScheme.primary
+                                            color = MaterialTheme.colorScheme.onSurface
                                         )
                                     }
                                 }
@@ -546,7 +546,7 @@ private fun TafsirBottomSheet(
                                     text = "VERSE ${ayah.surahId}:${ayah.ayahNumber}",
                                     style = MaterialTheme.typography.labelLarge,
                                     fontWeight = FontWeight.Black,
-                                    color = MaterialTheme.colorScheme.primary,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                                     letterSpacing = 1.sp
                                 )
                                 Spacer(modifier = Modifier.height(12.dp))
@@ -749,7 +749,7 @@ fun AyahItem(
 
     val containerColor by animateColorAsState(
         targetValue = if (isPlaying) {
-            MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.15f)
+            MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
         } else {
             Color.Transparent
         },
@@ -774,7 +774,7 @@ fun AyahItem(
                 text = ayah.ayahNumber.toArabicOrnate(),
                 style = MaterialTheme.extendedTypography.arabicInline,
                 fontSize = (fontSize * 0.8).sp,
-                color = MaterialTheme.colorScheme.primary,
+                color = MaterialTheme.colorScheme.onSurface,
                 modifier = Modifier.padding(4.dp)
             )
             
@@ -789,7 +789,7 @@ fun AyahItem(
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.VolumeUp,
                     contentDescription = null,
-                    tint = MaterialTheme.colorScheme.primary,
+                    tint = MaterialTheme.colorScheme.onSurface,
                     modifier = Modifier.size(18.dp)
                 )
             }
@@ -799,7 +799,7 @@ fun AyahItem(
                 Icon(
                     imageVector = Icons.Default.Bookmark,
                     contentDescription = null,
-                    tint = MaterialTheme.colorScheme.primary,
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.size(14.dp)
                 )
             }
@@ -867,15 +867,15 @@ private fun WordItem(
     isWaqfMark: Boolean,
     isAnyAyahPlaying: Boolean
 ) {
-    // Hoạt ảnh cực kỳ nhẹ nhàng, trang trọng (Dùng tween thay vì spring để không nhún nhảy)
+    // Hoạt ảnh nhẹ nhàng, trang trọng
     val scale by animateFloatAsState(
-        targetValue = if (isHighlighted) 1.05f else 1.0f,
+        targetValue = if (isHighlighted) 1.08f else 1.0f,
         animationSpec = tween(400, easing = LinearOutSlowInEasing),
         label = "wordScale"
     )
     
-    // Chỉ làm mờ các chữ khác khi CÓ audio đang phát toàn cục.
-    // Tăng độ mờ lên 0.5 để người dùng vẫn có thể đọc được các chữ xung quanh dễ dàng.
+    // Đen trắng: Từ được phát sẽ có độ đậm (bold), kích thước lớn hơn nhẹ và độ sáng 100%,
+    // còn các từ xung quanh sẽ mờ nhẹ (0.45f) mà không cần tô màu xanh.
     val alpha by animateFloatAsState(
         targetValue = if (isHighlighted) 1.0f 
                      else if (isAnyAyahPlaying) (if (isWaqfMark) 0.5f else 0.45f) 
@@ -883,22 +883,15 @@ private fun WordItem(
         animationSpec = tween(500),
         label = "wordAlpha"
     )
-    
-    val color by animateColorAsState(
-        targetValue = if (isHighlighted) MaterialTheme.colorScheme.primary 
-                     else MaterialTheme.colorScheme.onSurface,
-        animationSpec = tween(500),
-        label = "wordColor"
-    )
 
     Text(
         text = word,
         fontSize = fontSize,
         fontFamily = com.example.muslimvn.ui.theme.ArabicFontFamily,
         fontWeight = if (isHighlighted) FontWeight.Bold else FontWeight.Normal,
-        color = color,
+        color = MaterialTheme.colorScheme.onSurface,
         modifier = Modifier
-            .padding(horizontal = 3.dp) // Tăng nhẹ khoảng cách ngang giữa các từ
+            .padding(horizontal = 3.dp)
             .graphicsLayer {
                 this.alpha = alpha
                 scaleX = scale

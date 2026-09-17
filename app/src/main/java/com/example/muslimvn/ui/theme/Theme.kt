@@ -82,10 +82,12 @@ private val DarkColorScheme = darkColorScheme(
 
 /**
  * Màu ngữ nghĩa mở rộng ngoài bộ Material 3 color scheme chuẩn.
- * Truy cập: `MaterialTheme.extendedColors.success`
+ * Truy cập: `MaterialTheme.extendedColors.brand` hoặc `MaterialTheme.extendedColors.success`
  */
 @Immutable
 data class ExtendedColors(
+    val brand: Color,
+    val onBrand: Color,
     val success: Color,
     val onSuccess: Color,
     val successContainer: Color,
@@ -93,6 +95,8 @@ data class ExtendedColors(
 )
 
 private fun lightExtendedColors() = ExtendedColors(
+    brand = BrandGreen,
+    onBrand = Color.White,
     success = md_light_success,
     onSuccess = md_light_on_success,
     successContainer = md_light_success_container,
@@ -100,6 +104,8 @@ private fun lightExtendedColors() = ExtendedColors(
 )
 
 private fun darkExtendedColors() = ExtendedColors(
+    brand = BrandGreen,
+    onBrand = Color.White,
     success = md_dark_success,
     onSuccess = md_dark_on_success,
     successContainer = md_dark_success_container,

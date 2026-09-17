@@ -178,7 +178,7 @@ private fun HijriCalendarContent(
                 text = stringResource(R.string.hijri_events_title).uppercase(),
                 style = MaterialTheme.typography.labelMedium,
                 fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.primary,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 letterSpacing = 1.sp,
                 modifier = Modifier.padding(top = 24.dp, bottom = 12.dp, start = 4.dp)
             )
@@ -237,7 +237,7 @@ private fun HijriMonthHeader(
                     uiState.gregorianYear
                 ),
                 style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.primary,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 fontWeight = FontWeight.Medium
             )
         }

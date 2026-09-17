@@ -17,7 +17,7 @@ fun PreferenceHeader(title: String) {
     Text(
         text = title,
         style = MaterialTheme.typography.labelLarge,
-        color = MaterialTheme.colorScheme.primary,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
         fontWeight = FontWeight.Bold,
         modifier = Modifier.padding(start = 16.dp, top = 24.dp, bottom = 8.dp)
     )

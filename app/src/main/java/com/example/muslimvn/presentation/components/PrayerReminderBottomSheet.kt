@@ -240,7 +240,7 @@ fun AdhanList(
                         Text(
                             text = "Bản Adhan đặc biệt cho giờ Fajr",
                             style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.primary,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                             fontWeight = FontWeight.Medium
                         )
                     }

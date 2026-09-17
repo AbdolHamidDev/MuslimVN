@@ -180,7 +180,7 @@ fun NamesOfAllahScreen(
                         // Indicator vị trí: 1 / 99
                         Surface(
                             shape = CircleShape,
-                            color = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.7f),
+                            color = MaterialTheme.colorScheme.surfaceVariant,
                             modifier = Modifier.padding(bottom = 24.dp, top = 8.dp)
                         ) {
                             Text(
@@ -188,7 +188,7 @@ fun NamesOfAllahScreen(
                                        else "${pagerState.currentPage + 1} / ${names.size}",
                                 style = MaterialTheme.typography.labelLarge,
                                 fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onSecondaryContainer,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp)
                             )
                         }
@@ -335,7 +335,7 @@ private fun AllahNamePagerItem(
                 text = stringResource(R.string.action_view_detail).uppercase(),
                 style = MaterialTheme.typography.labelMedium,
                 fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.7f),
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 letterSpacing = 1.sp
             )
         }

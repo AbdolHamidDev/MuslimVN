@@ -338,7 +338,7 @@ fun AssetInputStep(
         Text(
             text = title,
             style = MaterialTheme.typography.titleLarge,
-            color = MaterialTheme.colorScheme.primary,
+            color = MaterialTheme.colorScheme.onSurface,
             fontWeight = FontWeight.Bold
         )
         Spacer(modifier = Modifier.height(24.dp))
@@ -369,7 +369,7 @@ fun AssetInputStep(
                         Text(
                             text = VietnameseNumberReader.readNumber(decimalValue),
                             style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.secondary
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 },
@@ -858,7 +858,7 @@ fun ReviewItem(
                         Text(
                             text = VietnameseNumberReader.readNumber(decimalValue),
                             style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.secondary
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 }
@@ -873,9 +873,7 @@ fun TrendCard(uiState: ZakatUiState) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
-            containerColor = if (uiState.result.isEligible) 
-                MaterialTheme.colorScheme.primaryContainer 
-            else MaterialTheme.colorScheme.secondaryContainer
+            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
         )
     ) {
         Column(
@@ -884,14 +882,15 @@ fun TrendCard(uiState: ZakatUiState) {
         ) {
             Text(
                 text = stringResource(R.string.zakat_due_amount),
-                style = MaterialTheme.typography.titleMedium
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
             Spacer(modifier = Modifier.height(8.dp))
             Text(
                 text = uiState.result.zakatDue.toVndString(),
                 style = MaterialTheme.typography.headlineLarge,
                 fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.primary
+                color = MaterialTheme.colorScheme.onSurface
             )
             
             uiState.zakatTrendPercent?.let { percent ->

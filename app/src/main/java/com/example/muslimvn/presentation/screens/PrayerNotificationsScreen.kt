@@ -489,7 +489,7 @@ fun PrayerReminderItem(
                 Text(
                     text = "Thay đổi âm thanh Adhan",
                     style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.secondary
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
         }
@@ -535,7 +535,7 @@ private fun AdhanAudioSelectionDialog(
                                 Text(
                                     text = "Bản Adhan đặc biệt có câu 'Cầu nguyện tốt hơn giấc ngủ'",
                                     style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.primary
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             }
                         }
