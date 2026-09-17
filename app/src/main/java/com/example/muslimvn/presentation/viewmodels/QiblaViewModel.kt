@@ -17,7 +17,8 @@ import kotlin.math.abs
 @HiltViewModel
 class QiblaViewModel @Inject constructor(
     private val sensorManager: CompassSensorManager,
-    private val locationRepository: LocationRepository
+    private val locationRepository: LocationRepository,
+    private val settingsRepository: com.example.muslimvn.domain.repository.SettingsRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(QiblaUiState())
@@ -35,17 +36,33 @@ class QiblaViewModel @Inject constructor(
     fun loadLocationAndCalculateQibla() {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true) }
-            val location = locationRepository.getCurrentLocation() ?: createDefaultLocation()
-            val isUsingDefault = location.latitude == DEFAULT_LATITUDE && location.longitude == DEFAULT_LONGITUDE
+            
+            // Try Live GPS first
+            var location = locationRepository.getCurrentLocation()
+            
+            // Fallback to Cache
+            if (location == null) {
+                val cached = settingsRepository.getLastLocation().first()
+                if (cached != null) {
+                    location = Location("cache").apply {
+                        latitude = cached.first
+                        longitude = cached.second
+                    }
+                }
+            }
+            
+            // Final fallback to Hardcoded
+            val finalLocation = location ?: createDefaultLocation()
+            val isUsingDefault = finalLocation.latitude == DEFAULT_LATITUDE && finalLocation.longitude == DEFAULT_LONGITUDE
 
-            val bearing = QiblaUtils.calculateQiblaBearing(location.latitude, location.longitude).toFloat()
-            val distance = QiblaUtils.calculateDistanceToMecca(location.latitude, location.longitude)
+            val bearing = QiblaUtils.calculateQiblaBearing(finalLocation.latitude, finalLocation.longitude).toFloat()
+            val distance = QiblaUtils.calculateDistanceToMecca(finalLocation.latitude, finalLocation.longitude)
             
             // Calculate Magnetic Declination
             val geoField = GeomagneticField(
-                location.latitude.toFloat(),
-                location.longitude.toFloat(),
-                location.altitude.toFloat(),
+                finalLocation.latitude.toFloat(),
+                finalLocation.longitude.toFloat(),
+                finalLocation.altitude.toFloat(),
                 System.currentTimeMillis()
             )
             val declination = geoField.declination
@@ -57,8 +74,8 @@ class QiblaViewModel @Inject constructor(
                 it.copy(
                     qiblaBearing = adjustedBearing,
                     distanceToMecca = distance,
-                    userLatitude = location.latitude,
-                    userLongitude = location.longitude,
+                    userLatitude = finalLocation.latitude,
+                    userLongitude = finalLocation.longitude,
                     isUsingDefaultLocation = isUsingDefault,
                     isLoading = false
                 )

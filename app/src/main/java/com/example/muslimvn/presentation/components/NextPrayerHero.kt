@@ -28,6 +28,9 @@ import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -71,6 +74,7 @@ fun NextPrayerHero(
     hijriOffset: Int,
     onCountdownFinished: () -> Unit,
     modifier: Modifier = Modifier,
+    userLocation: String? = null,
     onMasjidClick: () -> Unit = {},
     onDateClick: () -> Unit = {},
 ) {
@@ -213,15 +217,43 @@ fun NextPrayerHero(
                         color = Color.White.copy(alpha = 0.95f)
                     )
                     Spacer(modifier = Modifier.height(1.dp))
-                    Text(
-                        text = hijriLabel,
-                        style = MaterialTheme.typography.bodySmall.copy(
-                            fontWeight = FontWeight.Medium,
-                            fontSize = 11.sp,
-                            letterSpacing = 0.3.sp
-                        ),
-                        color = Color.White.copy(alpha = 0.75f)
-                    )
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            text = hijriLabel,
+                            style = MaterialTheme.typography.bodySmall.copy(
+                                fontWeight = FontWeight.Medium,
+                                fontSize = 11.sp,
+                                letterSpacing = 0.3.sp
+                            ),
+                            color = Color.White.copy(alpha = 0.75f)
+                        )
+
+                        if (!userLocation.isNullOrEmpty()) {
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Box(
+                                modifier = Modifier
+                                    .size(2.dp)
+                                    .background(Color.White.copy(alpha = 0.4f), CircleShape)
+                            )
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Icon(
+                                imageVector = Icons.Default.LocationOn,
+                                contentDescription = null,
+                                modifier = Modifier.size(10.dp),
+                                tint = Color.White.copy(alpha = 0.7f)
+                            )
+                            Spacer(modifier = Modifier.width(2.dp))
+                            Text(
+                                text = userLocation,
+                                style = MaterialTheme.typography.bodySmall.copy(
+                                    fontWeight = FontWeight.Normal,
+                                    fontSize = 10.sp,
+                                ),
+                                color = Color.White.copy(alpha = 0.7f),
+                                maxLines = 1
+                            )
+                        }
+                    }
                 }
 
                 Spacer(modifier = Modifier.width(8.dp))

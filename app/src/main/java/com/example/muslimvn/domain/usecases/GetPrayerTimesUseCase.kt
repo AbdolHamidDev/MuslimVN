@@ -10,11 +10,23 @@ class GetPrayerTimesUseCase @Inject constructor(
     private val locationRepository: LocationRepository,
     private val prayerRepository: PrayerRepository
 ) {
-    suspend operator fun invoke(date: Date = Date()): PrayerTimes {
-        val location = locationRepository.getCurrentLocation()
-        val lat = location?.latitude ?: 10.7005 // Chau Doc fallback
-        val lng = location?.longitude ?: 105.1147
+    suspend operator fun invoke(
+        date: Date = Date(),
+        lat: Double? = null,
+        lng: Double? = null
+    ): PrayerTimes {
+        val actualLat: Double
+        val actualLng: Double
+
+        if (lat != null && lng != null) {
+            actualLat = lat
+            actualLng = lng
+        } else {
+            val location = locationRepository.getCurrentLocation()
+            actualLat = location?.latitude ?: 10.7005 // Chau Doc fallback
+            actualLng = location?.longitude ?: 105.1147
+        }
         
-        return prayerRepository.getPrayerTimes(lat, lng, date)
+        return prayerRepository.getPrayerTimes(actualLat, actualLng, date)
     }
 }

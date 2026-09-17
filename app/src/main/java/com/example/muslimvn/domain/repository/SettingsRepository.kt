@@ -24,4 +24,7 @@ interface SettingsRepository {
 
     fun isOnboardingCompleted(): Flow<Boolean>
     suspend fun setOnboardingCompleted(completed: Boolean)
+
+    fun getLastLocation(): Flow<Triple<Double, Double, String?>?>
+    suspend fun saveLastLocation(lat: Double, lng: Double, address: String?)
 }

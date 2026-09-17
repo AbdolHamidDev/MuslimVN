@@ -153,6 +153,7 @@ fun HomeScreen(
                         onCountdownFinished = viewModel::refreshPrayerTimes,
                         onMasjidClick = onMasjidClick,
                         onDateClick = onHijriCalendarClick,
+                        userLocation = uiState.userLocationAddress,
                         modifier = Modifier.bouncyClick {
                             selectedPrayerForReminder = prayerTimes.nextPrayerName
                         }

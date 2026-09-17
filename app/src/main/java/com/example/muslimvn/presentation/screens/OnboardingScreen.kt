@@ -1,10 +1,13 @@
 package com.example.muslimvn.presentation.screens
 
 import android.Manifest
+import android.app.Activity
 import android.content.Context
+import android.content.IntentSender
 import android.content.pm.PackageManager
 import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.IntentSenderRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
@@ -61,6 +64,13 @@ import com.airbnb.lottie.compose.LottieConstants
 import com.airbnb.lottie.compose.animateLottieCompositionAsState
 import com.airbnb.lottie.compose.rememberLottieComposition
 import com.example.muslimvn.R
+import com.google.android.gms.common.api.ResolvableApiException
+import com.google.android.gms.location.LocationRequest
+import com.google.android.gms.location.LocationSettingsRequest
+import com.google.android.gms.location.LocationSettingsResponse
+import com.google.android.gms.location.Priority
+import com.google.android.gms.location.SettingsClient
+import com.google.android.gms.tasks.Task
 import kotlinx.coroutines.launch
 
 private val OnboardingBgColor = Color(0xFF055136)
@@ -110,14 +120,36 @@ fun OnboardingScreen(
     var hasLocationPerm by remember { mutableStateOf(checkLocationPermission(context)) }
     var hasNotificationPerm by remember { mutableStateOf(checkNotificationPermission(context)) }
 
+    val settingResultLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.StartIntentSenderForResult()
+    ) { result ->
+        if (result.resultCode == Activity.RESULT_OK) {
+            coroutineScope.launch { pagerState.animateScrollToPage(2) }
+        } else {
+            // User cancelled or failed to turn on GPS, but they gave permission,
+            // so we still proceed to next page to not get stuck.
+            coroutineScope.launch { pagerState.animateScrollToPage(2) }
+        }
+    }
+
     val locationLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission()
     ) { isGranted ->
         hasLocationPerm = isGranted || checkLocationPermission(context)
         if (isGranted) {
-            coroutineScope.launch {
-                pagerState.animateScrollToPage(2)
-            }
+            checkAndRequestLocationSettings(
+                context = context,
+                onSettingsEnabled = {
+                    coroutineScope.launch { pagerState.animateScrollToPage(2) }
+                },
+                onResolutionRequired = { intentSender ->
+                    val request = IntentSenderRequest.Builder(intentSender).build()
+                    settingResultLauncher.launch(request)
+                },
+                onError = {
+                    coroutineScope.launch { pagerState.animateScrollToPage(2) }
+                }
+            )
         }
     }
 
@@ -306,7 +338,19 @@ fun OnboardingScreen(
                             Button(
                                 onClick = {
                                     if (hasLocationPerm) {
-                                        coroutineScope.launch { pagerState.animateScrollToPage(2) }
+                                        checkAndRequestLocationSettings(
+                                            context = context,
+                                            onSettingsEnabled = {
+                                                coroutineScope.launch { pagerState.animateScrollToPage(2) }
+                                            },
+                                            onResolutionRequired = { intentSender ->
+                                                val request = IntentSenderRequest.Builder(intentSender).build()
+                                                settingResultLauncher.launch(request)
+                                            },
+                                            onError = {
+                                                coroutineScope.launch { pagerState.animateScrollToPage(2) }
+                                            }
+                                        )
                                     } else {
                                         locationLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
                                     }
@@ -424,5 +468,33 @@ private fun checkNotificationPermission(context: Context): Boolean {
         ) == PackageManager.PERMISSION_GRANTED
     } else {
         true
+    }
+}
+
+private fun checkAndRequestLocationSettings(
+    context: Context,
+    onSettingsEnabled: () -> Unit,
+    onResolutionRequired: (IntentSender) -> Unit,
+    onError: (Exception) -> Unit
+) {
+    val locationRequest = LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, 10000).build()
+    val builder = LocationSettingsRequest.Builder().addLocationRequest(locationRequest)
+    val client: com.google.android.gms.location.SettingsClient = com.google.android.gms.location.LocationServices.getSettingsClient(context)
+    val task: Task<LocationSettingsResponse> = client.checkLocationSettings(builder.build())
+
+    task.addOnSuccessListener {
+        onSettingsEnabled()
+    }
+
+    task.addOnFailureListener { exception ->
+        if (exception is ResolvableApiException) {
+            try {
+                onResolutionRequired(exception.resolution.intentSender)
+            } catch (sendEx: IntentSender.SendIntentException) {
+                onError(sendEx)
+            }
+        } else {
+            onError(exception)
+        }
     }
 }

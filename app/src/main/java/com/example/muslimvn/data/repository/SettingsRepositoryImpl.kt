@@ -3,6 +3,7 @@ package com.example.muslimvn.data.repository
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
+import androidx.datastore.preferences.core.doublePreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
@@ -134,8 +135,34 @@ class SettingsRepositoryImpl @Inject constructor(
         }
     }
 
+    override fun getLastLocation(): Flow<Triple<Double, Double, String?>?> {
+        return dataStore.data.map { preferences ->
+            val lat = preferences[KEY_LAST_LAT]
+            val lng = preferences[KEY_LAST_LNG]
+            val address = preferences[KEY_LAST_ADDRESS]
+            if (lat != null && lng != null) {
+                Triple(lat, lng, address)
+            } else {
+                null
+            }
+        }
+    }
+
+    override suspend fun saveLastLocation(lat: Double, lng: Double, address: String?) {
+        dataStore.edit { preferences ->
+            preferences[KEY_LAST_LAT] = lat
+            preferences[KEY_LAST_LNG] = lng
+            if (address != null) {
+                preferences[KEY_LAST_ADDRESS] = address
+            }
+        }
+    }
+
     companion object {
         private val KEY_ONBOARDING_COMPLETED = booleanPreferencesKey("is_onboarding_completed")
+        private val KEY_LAST_LAT = doublePreferencesKey("last_lat")
+        private val KEY_LAST_LNG = doublePreferencesKey("last_lng")
+        private val KEY_LAST_ADDRESS = stringPreferencesKey("last_address")
         private val KEY_APP_THEME = stringPreferencesKey("app_theme")
         private val KEY_CALCULATION_METHOD = stringPreferencesKey("calculation_method")
         private val KEY_ASR_METHOD = stringPreferencesKey("asr_method")

@@ -12,6 +12,7 @@ import com.example.muslimvn.domain.models.PrayerReminder
 import com.example.muslimvn.domain.models.PrayerTimes
 import com.example.muslimvn.domain.models.Scholar
 import com.example.muslimvn.domain.models.masjid.Masjid
+import com.example.muslimvn.domain.repository.LocationRepository
 import com.example.muslimvn.domain.repository.MasjidRepository
 import com.example.muslimvn.domain.repository.PodcastRepository
 import com.example.muslimvn.domain.repository.SettingsRepository
@@ -50,6 +51,7 @@ class HomeViewModel @Inject constructor(
     private val settingsRepository: SettingsRepository,
     private val podcastRepository: PodcastRepository,
     private val masjidRepository: MasjidRepository,
+    private val locationRepository: LocationRepository,
     private val adhanScheduler: AdhanScheduler
 ) : ViewModel() {
 
@@ -64,6 +66,7 @@ class HomeViewModel @Inject constructor(
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), 0)
 
     init {
+        loadCachedLocation()
         syncPermissionState()
         refreshPrayerTimes()
         startCountdownTimer()
@@ -118,6 +121,19 @@ class HomeViewModel @Inject constructor(
         }
     }
 
+    private fun loadCachedLocation() {
+        viewModelScope.launch {
+            settingsRepository.getLastLocation().collect { cached ->
+                if (cached != null) {
+                    val (lat, lng, address) = cached
+                    _uiState.update { it.copy(userLocationAddress = address) }
+                    // Trigger initial prayer times update with cached location
+                    refreshPrayerTimes(lat, lng)
+                }
+            }
+        }
+    }
+
     fun updateReminder(reminder: PrayerReminder) {
         viewModelScope.launch {
             settingsRepository.updateReminder(reminder)
@@ -145,12 +161,30 @@ class HomeViewModel @Inject constructor(
         ContextCompat.checkSelfPermission(appContext, permission) ==
             PackageManager.PERMISSION_GRANTED
 
-    fun refreshPrayerTimes() {
+    fun refreshPrayerTimes(manualLat: Double? = null, manualLng: Double? = null) {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, error = null) }
             try {
-                val times = getPrayerTimesUseCase()
+                // Lấy giờ cầu nguyện
+                val times = if (manualLat != null && manualLng != null) {
+                    // Ưu tiên tọa độ truyền vào (từ cache)
+                    getPrayerTimesUseCase(lat = manualLat, lng = manualLng)
+                } else {
+                    getPrayerTimesUseCase()
+                }
+                
                 _uiState.update { it.copy(prayerTimes = times, isLoading = false) }
+
+                // Lấy vị trí thực tế (Live GPS) nếu có quyền
+                if (_uiState.value.isLocationPermissionGranted) {
+                    val location = locationRepository.getCurrentLocation()
+                    if (location != null) {
+                        val address = locationRepository.getAddress(location.latitude, location.longitude)
+                        _uiState.update { it.copy(userLocationAddress = address) }
+                        // Save to cache for next time
+                        settingsRepository.saveLastLocation(location.latitude, location.longitude, address)
+                    }
+                }
                 
                 try {
                     adhanScheduler.scheduleNextWithSettings(times, _uiState.value.reminders)
