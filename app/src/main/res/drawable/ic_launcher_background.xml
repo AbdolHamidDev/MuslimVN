@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Nền màu kem khớp với logo mới logo_muslimvn.png -->
+<!-- Nền màu kem khớp với logo chuẩn muslimvn_logo.png -->
 <shape xmlns:android="http://schemas.android.com/apk/res/android"
     android:shape="rectangle">
-    <solid android:color="#FDF9F0" />
+    <solid android:color="#FCFBF1" />
 </shape>
