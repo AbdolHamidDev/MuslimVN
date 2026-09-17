@@ -145,8 +145,9 @@ fun HomeScreen(
             ),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            if (prayerTimes != null) {
-                item {
+            // 1. Next Prayer Hero Section (Always visible, show skeleton if null)
+            item {
+                if (prayerTimes != null) {
                     NextPrayerHero(
                         prayerTimes = prayerTimes,
                         hijriOffset = hijriOffset,
@@ -158,51 +159,46 @@ fun HomeScreen(
                             selectedPrayerForReminder = prayerTimes.nextPrayerName
                         }
                     )
-                }
-
-                item {
-                    DailyReminderSection(
-                        state = dailyReminderState,
-                        onStoryClick = { onDailyReminderClick(it.id) }
+                } else if (uiState.isLoading) {
+                    ShimmerPlaceholder(modifier = Modifier.fillMaxWidth().height(260.dp))
+                } else if (uiState.error != null) {
+                    ErrorState(
+                        message = uiState.error ?: stringResource(R.string.prayer_times_error),
+                        onRetry = viewModel::refreshPrayerTimes,
+                        modifier = Modifier.fillMaxWidth().height(260.dp)
                     )
                 }
+            }
 
-                item {
-                    VietnamScholarsSection(
-                        onScholarClick = { scholar ->
-                            onVietnamScholarClick(scholar.id)
-                        }
-                    )
-                }
+            // 2. Daily Reminder Section (Always show if state is available)
+            item {
+                DailyReminderSection(
+                    state = dailyReminderState,
+                    onStoryClick = { onDailyReminderClick(it.id) }
+                )
+            }
 
-                if (uiState.featuredScholars.isNotEmpty()) {
-                    item {
-                        FeaturedPodcastSection(
-                            scholars = uiState.featuredScholars,
-                            onScholarClick = onScholarClick,
-                            onSeeAllClick = onPodcastClick
-                        )
+            // 3. Vietnam Scholars Section
+            item {
+                VietnamScholarsSection(
+                    onScholarClick = { scholar ->
+                        onVietnamScholarClick(scholar.id)
                     }
-                }
-            } else {
+                )
+            }
+
+            // 4. Featured Podcast Section
+            if (uiState.featuredScholars.isNotEmpty()) {
                 item {
-                    Box(modifier = Modifier.padding(horizontal = 16.dp)) {
-                        if (uiState.isLoading) {
-                            HomeLoadingSkeleton()
-                        } else {
-                            ErrorState(
-                                message = uiState.error ?: stringResource(R.string.prayer_times_error),
-                                onRetry = viewModel::refreshPrayerTimes,
-                                modifier = Modifier.fillParentMaxSize()
-                            )
-                        }
-                    }
-                }
-                item {
-                    DailyReminderSection(
-                        state = dailyReminderState,
-                        onStoryClick = { onDailyReminderClick(it.id) }
+                    FeaturedPodcastSection(
+                        scholars = uiState.featuredScholars,
+                        onScholarClick = onScholarClick,
+                        onSeeAllClick = onPodcastClick
                     )
+                }
+            } else if (uiState.isLoading) {
+                item {
+                    ShimmerPlaceholder(modifier = Modifier.fillMaxWidth().height(120.dp).padding(horizontal = 16.dp))
                 }
             }
         }
@@ -244,14 +240,7 @@ fun HomeScreen(
     }
 }
 
-@Composable
-private fun HomeLoadingSkeleton() {
-    Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-        ShimmerPlaceholder(modifier = Modifier.fillMaxWidth().height(190.dp))
-        ShimmerPlaceholder(modifier = Modifier.fillMaxWidth().height(112.dp))
-        ShimmerPlaceholder(modifier = Modifier.fillMaxWidth().height(112.dp))
-    }
-}
+
 
 @Composable
 fun FeaturedPodcastSection(

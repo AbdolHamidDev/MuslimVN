@@ -25,6 +25,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -66,13 +67,29 @@ class HomeViewModel @Inject constructor(
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), 0)
 
     init {
-        loadCachedLocation()
         syncPermissionState()
-        refreshPrayerTimes()
+        loadInitialData()
         startCountdownTimer()
         observeReminders()
         loadFeaturedScholars()
         loadMasjids()
+    }
+
+    private fun loadInitialData() {
+        viewModelScope.launch {
+            // Step 1: Load from cache first for instant UI
+            val cached = settingsRepository.getLastLocation().first()
+            if (cached != null) {
+                val (lat, lng, address) = cached
+                _uiState.update { it.copy(userLocationAddress = address, isLoading = false) }
+                // Load prayer times from cache immediately
+                val cachedTimes = getPrayerTimesUseCase(lat = lat, lng = lng)
+                _uiState.update { it.copy(prayerTimes = cachedTimes) }
+            }
+
+            // Step 2: Trigger a background refresh for live data
+            refreshPrayerTimes()
+        }
     }
 
     fun loadMasjids(provinceId: String = "ho-chi-minh") {
@@ -121,19 +138,6 @@ class HomeViewModel @Inject constructor(
         }
     }
 
-    private fun loadCachedLocation() {
-        viewModelScope.launch {
-            settingsRepository.getLastLocation().collect { cached ->
-                if (cached != null) {
-                    val (lat, lng, address) = cached
-                    _uiState.update { it.copy(userLocationAddress = address) }
-                    // Trigger initial prayer times update with cached location
-                    refreshPrayerTimes(lat, lng)
-                }
-            }
-        }
-    }
-
     fun updateReminder(reminder: PrayerReminder) {
         viewModelScope.launch {
             settingsRepository.updateReminder(reminder)
@@ -163,11 +167,14 @@ class HomeViewModel @Inject constructor(
 
     fun refreshPrayerTimes(manualLat: Double? = null, manualLng: Double? = null) {
         viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true, error = null) }
+            val shouldShowLoading = _uiState.value.prayerTimes == null
+            if (shouldShowLoading) {
+                _uiState.update { it.copy(isLoading = true, error = null) }
+            }
+            
             try {
-                // Lấy giờ cầu nguyện
+                // 1. Get Prayer Times (Highest Priority: Manual/Cache or first attempt at Live GPS)
                 val times = if (manualLat != null && manualLng != null) {
-                    // Ưu tiên tọa độ truyền vào (từ cache)
                     getPrayerTimesUseCase(lat = manualLat, lng = manualLng)
                 } else {
                     getPrayerTimesUseCase()
@@ -175,24 +182,34 @@ class HomeViewModel @Inject constructor(
                 
                 _uiState.update { it.copy(prayerTimes = times, isLoading = false) }
 
-                // Lấy vị trí thực tế (Live GPS) nếu có quyền
+                // 2. Refresh Location & Address in background to ensure maximum accuracy
                 if (_uiState.value.isLocationPermissionGranted) {
-                    val location = locationRepository.getCurrentLocation()
-                    if (location != null) {
-                        val address = locationRepository.getAddress(location.latitude, location.longitude)
-                        _uiState.update { it.copy(userLocationAddress = address) }
-                        // Save to cache for next time
-                        settingsRepository.saveLastLocation(location.latitude, location.longitude, address)
+                    launch {
+                        val location = locationRepository.getCurrentLocation()
+                        if (location != null) {
+                            // Update address & cache
+                            val address = locationRepository.getAddress(location.latitude, location.longitude)
+                            _uiState.update { it.copy(userLocationAddress = address) }
+                            settingsRepository.saveLastLocation(location.latitude, location.longitude, address)
+                            
+                            // CRITICAL: Re-calculate prayer times with this confirmed live location
+                            // This ensures that even if the first attempt failed/timed out, 
+                            // we eventually show the exact times for the user's location.
+                            val accurateTimes = getPrayerTimesUseCase(lat = location.latitude, lng = location.longitude)
+                            _uiState.update { it.copy(prayerTimes = accurateTimes) }
+                            adhanScheduler.scheduleNextWithSettings(accurateTimes, _uiState.value.reminders)
+                        }
                     }
                 }
                 
-                try {
-                    adhanScheduler.scheduleNextWithSettings(times, _uiState.value.reminders)
-                } catch (e: Exception) {
-                    android.util.Log.e("HomeViewModel", "Alarm scheduling failed", e)
-                }
+                // 3. Schedule Notifications for the initial 'times' (updated again in step 2 if location found)
+                adhanScheduler.scheduleNextWithSettings(times, _uiState.value.reminders)
+
             } catch (e: Exception) {
-                _uiState.update { it.copy(error = e.localizedMessage ?: "Unknown error", isLoading = false) }
+                if (shouldShowLoading) {
+                    _uiState.update { it.copy(error = e.localizedMessage ?: "Unknown error", isLoading = false) }
+                }
+                android.util.Log.e("HomeViewModel", "Refresh failed", e)
             }
         }
     }
