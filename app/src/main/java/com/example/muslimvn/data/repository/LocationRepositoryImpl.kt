@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.location.Location
 import com.example.muslimvn.domain.repository.LocationRepository
 import com.google.android.gms.location.FusedLocationProviderClient
+import com.google.android.gms.location.Priority
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -16,7 +17,11 @@ class LocationRepositoryImpl @Inject constructor(
     @SuppressLint("MissingPermission")
     override suspend fun getCurrentLocation(): Location? {
         return try {
-            fusedLocationProviderClient.lastLocation.await()
+            val lastLoc = fusedLocationProviderClient.lastLocation.await()
+            lastLoc ?: fusedLocationProviderClient.getCurrentLocation(
+                Priority.PRIORITY_BALANCED_POWER_ACCURACY,
+                null
+            ).await()
         } catch (e: Exception) {
             null
         }

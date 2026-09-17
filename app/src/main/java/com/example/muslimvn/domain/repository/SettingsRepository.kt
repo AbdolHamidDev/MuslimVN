@@ -21,4 +21,7 @@ interface SettingsRepository {
 
     fun getPrayerAdjustments(): Flow<PrayerAdjustments>
     suspend fun updatePrayerAdjustments(adjustments: PrayerAdjustments)
+
+    fun isOnboardingCompleted(): Flow<Boolean>
+    suspend fun setOnboardingCompleted(completed: Boolean)
 }

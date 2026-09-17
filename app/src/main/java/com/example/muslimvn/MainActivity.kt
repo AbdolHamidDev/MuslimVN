@@ -30,6 +30,7 @@ import androidx.navigation3.runtime.rememberNavBackStack
 import com.example.muslimvn.core.navigation.Destination
 import com.example.muslimvn.core.navigation.MainNavigation
 import com.example.muslimvn.core.navigation.topLevelDestinations
+import com.example.muslimvn.presentation.viewmodels.OnboardingViewModel
 import com.example.muslimvn.presentation.viewmodels.SettingsViewModel
 import com.example.muslimvn.ui.theme.MuslimVNTheme
 import dagger.hilt.android.AndroidEntryPoint
@@ -40,11 +41,6 @@ class MainActivity : ComponentActivity() {
         installSplashScreen()
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
-            ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED
-        ) {
-            registerForActivityResult(ActivityResultContracts.RequestPermission()) {}.launch(Manifest.permission.POST_NOTIFICATIONS)
-        }
         setContent {
             val settingsViewModel: SettingsViewModel = hiltViewModel()
             val themeMode by settingsViewModel.appTheme.collectAsState()
@@ -55,7 +51,15 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun MainScreen() {
-    val backStack = rememberNavBackStack(Destination.Home)
+    val onboardingViewModel: OnboardingViewModel = hiltViewModel()
+    val isOnboardingCompleted by onboardingViewModel.isOnboardingCompleted.collectAsState()
+
+    if (isOnboardingCompleted == null) {
+        return
+    }
+
+    val startDestination = if (isOnboardingCompleted == true) Destination.Home else Destination.Onboarding
+    val backStack = rememberNavBackStack(startDestination)
     val currentDestination = backStack.lastOrNull()
     val showNavigationBar = currentDestination in topLevelDestinations.map { it.destination }
 

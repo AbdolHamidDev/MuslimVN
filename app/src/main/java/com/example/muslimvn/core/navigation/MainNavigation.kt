@@ -1,9 +1,11 @@
 package com.example.muslimvn.core.navigation
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
 import androidx.navigation3.runtime.NavBackStack
 import androidx.navigation3.runtime.NavKey
@@ -35,6 +37,16 @@ fun MainNavigation(backStack: NavBackStack<NavKey>, modifier: Modifier = Modifie
             rememberViewModelStoreNavEntryDecorator()
         ),
         entryProvider = entryProvider {
+            entry<Destination.Onboarding> {
+                val viewModel = hiltViewModel<OnboardingViewModel>()
+                OnboardingScreen(
+                    onFinishOnboarding = {
+                        viewModel.completeOnboarding()
+                        backStack.clear()
+                        backStack.add(Destination.Home)
+                    }
+                )
+            }
             entry<Destination.Home> {
                 HomeScreen(
                     onPodcastClick = { backStack.add(Destination.PodcastHome) },

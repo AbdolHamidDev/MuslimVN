@@ -2,6 +2,7 @@ package com.example.muslimvn.data.repository
 
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
@@ -121,7 +122,20 @@ class SettingsRepositoryImpl @Inject constructor(
         }
     }
 
+    override fun isOnboardingCompleted(): Flow<Boolean> {
+        return dataStore.data.map { preferences ->
+            preferences[KEY_ONBOARDING_COMPLETED] ?: false
+        }
+    }
+
+    override suspend fun setOnboardingCompleted(completed: Boolean) {
+        dataStore.edit { preferences ->
+            preferences[KEY_ONBOARDING_COMPLETED] = completed
+        }
+    }
+
     companion object {
+        private val KEY_ONBOARDING_COMPLETED = booleanPreferencesKey("is_onboarding_completed")
         private val KEY_APP_THEME = stringPreferencesKey("app_theme")
         private val KEY_CALCULATION_METHOD = stringPreferencesKey("calculation_method")
         private val KEY_ASR_METHOD = stringPreferencesKey("asr_method")
