@@ -54,10 +54,16 @@ fun SuggestedVideoItem(
                         .background(Color.Black.copy(alpha = 0.8f), RoundedCornerShape(4.dp))
                         .padding(horizontal = 4.dp, vertical = 2.dp)
                 ) {
-                    val minutes = video.duration / 60
+                    val hours = video.duration / 3600
+                    val minutes = (video.duration % 3600) / 60
                     val seconds = video.duration % 60
+                    val durationText = if (hours > 0) {
+                        String.format(Locale.US, "%d:%02d:%02d", hours, minutes, seconds)
+                    } else {
+                        String.format(Locale.US, "%d:%02d", minutes, seconds)
+                    }
                     Text(
-                        text = String.format(Locale.US, "%d:%02d", minutes, seconds),
+                        text = durationText,
                         color = Color.White,
                         style = MaterialTheme.typography.labelSmall
                     )

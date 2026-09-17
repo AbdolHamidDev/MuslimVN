@@ -35,6 +35,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import coil.compose.AsyncImage
 import com.example.muslimvn.domain.models.YoutubeVideo
+import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -315,15 +316,43 @@ fun GosalyAhmadVideoListItem(
                 .padding(8.dp)
                 .height(80.dp)
         ) {
-            AsyncImage(
-                model = video.thumbnailUrl,
-                contentDescription = video.title,
+            Box(
                 modifier = Modifier
                     .width(120.dp)
                     .fillMaxHeight()
-                    .clip(RoundedCornerShape(8.dp)),
-                contentScale = ContentScale.Crop
-            )
+                    .clip(RoundedCornerShape(8.dp))
+            ) {
+                AsyncImage(
+                    model = video.thumbnailUrl,
+                    contentDescription = video.title,
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = ContentScale.Crop
+                )
+
+                if (video.duration > 0) {
+                    Box(
+                        modifier = Modifier
+                            .align(Alignment.BottomEnd)
+                            .padding(4.dp)
+                            .background(Color.Black.copy(alpha = 0.8f), RoundedCornerShape(4.dp))
+                            .padding(horizontal = 4.dp, vertical = 2.dp)
+                    ) {
+                        val hours = video.duration / 3600
+                        val minutes = (video.duration % 3600) / 60
+                        val seconds = video.duration % 60
+                        val durationText = if (hours > 0) {
+                            String.format(Locale.US, "%d:%02d:%02d", hours, minutes, seconds)
+                        } else {
+                            String.format(Locale.US, "%d:%02d", minutes, seconds)
+                        }
+                        Text(
+                            text = durationText,
+                            color = Color.White,
+                            style = MaterialTheme.typography.labelSmall
+                        )
+                    }
+                }
+            }
             
             Spacer(modifier = Modifier.width(12.dp))
             
@@ -368,15 +397,43 @@ fun GosalyAhmadVideoCardItem(
         Column(
             modifier = Modifier.fillMaxWidth()
         ) {
-            AsyncImage(
-                model = video.thumbnailUrl,
-                contentDescription = video.title,
+            Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .aspectRatio(16/9f)
-                    .clip(RoundedCornerShape(topStart = 12.dp, topEnd = 12.dp)),
-                contentScale = ContentScale.Crop
-            )
+                    .clip(RoundedCornerShape(topStart = 12.dp, topEnd = 12.dp))
+            ) {
+                AsyncImage(
+                    model = video.thumbnailUrl,
+                    contentDescription = video.title,
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = ContentScale.Crop
+                )
+
+                if (video.duration > 0) {
+                    Box(
+                        modifier = Modifier
+                            .align(Alignment.BottomEnd)
+                            .padding(6.dp)
+                            .background(Color.Black.copy(alpha = 0.8f), RoundedCornerShape(4.dp))
+                            .padding(horizontal = 4.dp, vertical = 2.dp)
+                    ) {
+                        val hours = video.duration / 3600
+                        val minutes = (video.duration % 3600) / 60
+                        val seconds = video.duration % 60
+                        val durationText = if (hours > 0) {
+                            String.format(Locale.US, "%d:%02d:%02d", hours, minutes, seconds)
+                        } else {
+                            String.format(Locale.US, "%d:%02d", minutes, seconds)
+                        }
+                        Text(
+                            text = durationText,
+                            color = Color.White,
+                            style = MaterialTheme.typography.labelSmall
+                        )
+                    }
+                }
+            }
             
             Column(
                 modifier = Modifier.padding(12.dp)
