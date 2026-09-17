@@ -68,7 +68,13 @@ fun MainNavigation(backStack: NavBackStack<NavKey>, modifier: Modifier = Modifie
                 val viewModel = hiltViewModel<QuranSettingsViewModel, QuranSettingsViewModel.Factory> { it.create(key.surahNumber) }
                 QuranSettingsScreen(popBack, viewModel)
             }
-            entry<Destination.PrayerNotifications> { PrayerNotificationsScreen(popBack) }
+            entry<Destination.PrayerNotifications> {
+                PrayerNotificationsScreen(
+                    onBackClick = popBack,
+                    onNavigateToCalculationDetails = { backStack.add(Destination.PrayerCalculationDetails) }
+                )
+            }
+            entry<Destination.PrayerCalculationDetails> { PrayerCalculationDetailsScreen(onBackClick = popBack) }
             entry<Destination.Qibla> { QiblaScreen(popBack) }
             entry<Destination.HijriCalendar> { HijriCalendarScreen(popBack) }
             entry<Destination.NamesOfAllah> { NamesOfAllahScreen(popBack) }

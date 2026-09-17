@@ -7,6 +7,8 @@ import android.os.Build
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.muslimvn.domain.models.AsrMethod
+import com.example.muslimvn.domain.models.PrayerAdjustments
 import com.example.muslimvn.domain.models.PrayerReminder
 import com.example.muslimvn.domain.models.ReminderMode
 import com.example.muslimvn.domain.repository.SettingsRepository
@@ -41,8 +43,6 @@ class PrayerNotificationsViewModel @Inject constructor(
                 Manifest.permission.POST_NOTIFICATIONS
             ) == PackageManager.PERMISSION_GRANTED
         } else {
-            // Đối với Android < 13, kiểm tra qua NotificationManagerCompat hoặc đơn giản là true
-            // vì quyền này được cấp mặc định khi cài đặt.
             true 
         }
         _isSystemNotificationEnabled.update { granted }
@@ -59,7 +59,21 @@ class PrayerNotificationsViewModel @Inject constructor(
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
-            initialValue = "MUSLIM_WORLD_LEAGUE"
+            initialValue = "MUSLIMVN_DEFAULT"
+        )
+
+    val asrMethod: StateFlow<AsrMethod> = repository.getAsrMethod()
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = AsrMethod.STANDARD
+        )
+
+    val prayerAdjustments: StateFlow<PrayerAdjustments> = repository.getPrayerAdjustments()
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = PrayerAdjustments()
         )
 
     fun onReminderModeChanged(prayerType: String, mode: ReminderMode) {
@@ -79,6 +93,18 @@ class PrayerNotificationsViewModel @Inject constructor(
     fun onCalculationMethodChanged(method: String) {
         viewModelScope.launch {
             repository.updateCalculationMethod(method)
+        }
+    }
+
+    fun onAsrMethodChanged(method: AsrMethod) {
+        viewModelScope.launch {
+            repository.updateAsrMethod(method)
+        }
+    }
+
+    fun onPrayerAdjustmentsChanged(adjustments: PrayerAdjustments) {
+        viewModelScope.launch {
+            repository.updatePrayerAdjustments(adjustments)
         }
     }
 }

@@ -28,12 +28,14 @@ fun PreferenceItem(
     title: String,
     subtitle: String? = null,
     icon: ImageVector? = null,
+    trailingContent: (@Composable () -> Unit)? = null,
     onClick: () -> Unit
 ) {
     ListItem(
         headlineContent = { Text(title) },
         supportingContent = subtitle?.let { { Text(it) } },
         leadingContent = icon?.let { { Icon(it, contentDescription = null) } },
+        trailingContent = trailingContent,
         modifier = Modifier.clickable(onClick = onClick)
     )
 }

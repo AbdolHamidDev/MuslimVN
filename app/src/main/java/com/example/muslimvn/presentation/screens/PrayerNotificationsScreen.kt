@@ -11,11 +11,15 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Launch
 import androidx.compose.material.icons.automirrored.filled.VolumeUp
+import androidx.compose.material.icons.filled.AccessTime
 import androidx.compose.material.icons.filled.ErrorOutline
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.MusicNote
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.NotificationsOff
+import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -29,6 +33,8 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.example.muslimvn.R
+import com.example.muslimvn.domain.models.AsrMethod
+import com.example.muslimvn.domain.models.PrayerAdjustments
 import com.example.muslimvn.domain.models.PrayerName
 import com.example.muslimvn.domain.models.PrayerReminder
 import com.example.muslimvn.domain.models.ReminderMode
@@ -41,10 +47,13 @@ import com.example.muslimvn.presentation.viewmodels.PrayerNotificationsViewModel
 @Composable
 fun PrayerNotificationsScreen(
     onBackClick: () -> Unit,
+    onNavigateToCalculationDetails: () -> Unit = {},
     viewModel: PrayerNotificationsViewModel = hiltViewModel()
 ) {
     val reminders by viewModel.reminders.collectAsState()
     val calculationMethod by viewModel.calculationMethod.collectAsState()
+    val asrMethod by viewModel.asrMethod.collectAsState()
+    val prayerAdjustments by viewModel.prayerAdjustments.collectAsState()
     val isSystemNotificationEnabled by viewModel.isSystemNotificationEnabled.collectAsState()
     val context = LocalContext.current
     
@@ -62,6 +71,8 @@ fun PrayerNotificationsScreen(
     var selectedPrayerForModeDialog by remember { mutableStateOf<String?>(null) }
     var selectedPrayerForAudioDialog by remember { mutableStateOf<String?>(null) }
     var showCalculationMethodDialog by remember { mutableStateOf(false) }
+    var showAsrMethodDialog by remember { mutableStateOf(false) }
+    var showAdjustmentsDialog by remember { mutableStateOf(false) }
 
     Scaffold(
         topBar = {
@@ -99,7 +110,34 @@ fun PrayerNotificationsScreen(
                     title = "Phương pháp tính",
                     subtitle = formatMethodName(calculationMethod),
                     icon = Icons.Default.Settings,
+                    trailingContent = {
+                        IconButton(onClick = onNavigateToCalculationDetails) {
+                            Icon(
+                                imageVector = Icons.Outlined.Info,
+                                contentDescription = "Chi tiết cách tính",
+                                tint = MaterialTheme.colorScheme.primary
+                            )
+                        }
+                    },
                     onClick = { showCalculationMethodDialog = true }
+                )
+                PreferenceItem(
+                    title = "Chi tiết cách tính giờ",
+                    subtitle = "Giải thích phương pháp, mốc thời gian và công thức Nửa đêm Islam",
+                    icon = Icons.Default.Info,
+                    onClick = onNavigateToCalculationDetails
+                )
+                PreferenceItem(
+                    title = "Phương pháp tính Asr (Madhhab)",
+                    subtitle = if (asrMethod == AsrMethod.STANDARD) "Tiêu chuẩn / Shafi'i (Bóng = 1)" else "Hanafi (Bóng = 2)",
+                    icon = Icons.Default.Schedule,
+                    onClick = { showAsrMethodDialog = true }
+                )
+                PreferenceItem(
+                    title = "Điều chỉnh phút thủ công",
+                    subtitle = formatAdjustmentsSummary(prayerAdjustments),
+                    icon = Icons.Default.AccessTime,
+                    onClick = { showAdjustmentsDialog = true }
                 )
             }
 
@@ -171,6 +209,28 @@ fun PrayerNotificationsScreen(
             onDismiss = { showCalculationMethodDialog = false }
         )
     }
+
+    if (showAsrMethodDialog) {
+        AsrMethodDialog(
+            currentMethod = asrMethod,
+            onMethodSelected = {
+                viewModel.onAsrMethodChanged(it)
+                showAsrMethodDialog = false
+            },
+            onDismiss = { showAsrMethodDialog = false }
+        )
+    }
+
+    if (showAdjustmentsDialog) {
+        PrayerAdjustmentsDialog(
+            currentAdjustments = prayerAdjustments,
+            onSave = {
+                viewModel.onPrayerAdjustmentsChanged(it)
+                showAdjustmentsDialog = false
+            },
+            onDismiss = { showAdjustmentsDialog = false }
+        )
+    }
 }
 
 @Composable
@@ -180,17 +240,18 @@ private fun CalculationMethodDialog(
     onDismiss: () -> Unit
 ) {
     val methods = listOf(
-        "MUSLIM_WORLD_LEAGUE" to "Liên đoàn Thế giới Hồi giáo",
-        "EGYPTIAN" to "Ai Cập",
-        "KARACHI" to "Karachi",
-        "UMM_AL_QURA" to "Umm al-Qura",
+        "MUSLIMVN_DEFAULT" to "MuslimVN mặc định (18° / 18°)",
+        "MUSLIM_WORLD_LEAGUE" to "Liên đoàn Thế giới Hồi giáo (MWL)",
+        "EGYPTIAN" to "Ai Cập (Egyptian General Authority)",
+        "KARACHI" to "Karachi (Univ. of Islamic Sciences)",
+        "UMM_AL_QURA" to "Umm al-Qura (Makkah)",
         "DUBAI" to "Dubai",
         "MOON_SIGHTING_COMMITTEE" to "Ủy ban Quan sát Trăng",
         "NORTH_AMERICA" to "Bắc Mỹ (ISNA)",
         "KUWAIT" to "Kuwait",
         "QATAR" to "Qatar",
-        "SINGAPORE" to "Singapore",
-        "TURKEY" to "Thổ Nhĩ Kỳ"
+        "SINGAPORE" to "Singapore (MUIS)",
+        "TURKEY" to "Thổ Nhĩ Kỳ (Diyanet)"
     )
 
     AlertDialog(
@@ -215,9 +276,104 @@ private fun CalculationMethodDialog(
     )
 }
 
+@Composable
+private fun AsrMethodDialog(
+    currentMethod: AsrMethod,
+    onMethodSelected: (AsrMethod) -> Unit,
+    onDismiss: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Phương pháp tính Asr") },
+        text = {
+            Column {
+                ReminderOption(
+                    title = "Tiêu chuẩn (Shafi'i, Maliki, Hanbali - Bóng = 1)",
+                    selected = currentMethod == AsrMethod.STANDARD,
+                    onClick = { onMethodSelected(AsrMethod.STANDARD) }
+                )
+                ReminderOption(
+                    title = "Hanafi (Bóng = 2)",
+                    selected = currentMethod == AsrMethod.HANAFI,
+                    onClick = { onMethodSelected(AsrMethod.HANAFI) }
+                )
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Hủy")
+            }
+        }
+    )
+}
+
+@Composable
+private fun PrayerAdjustmentsDialog(
+    currentAdjustments: PrayerAdjustments,
+    onSave: (PrayerAdjustments) -> Unit,
+    onDismiss: () -> Unit
+) {
+    var fajr by remember { mutableStateOf(currentAdjustments.fajr) }
+    var dhuhr by remember { mutableStateOf(currentAdjustments.dhuhr) }
+    var asr by remember { mutableStateOf(currentAdjustments.asr) }
+    var maghrib by remember { mutableStateOf(currentAdjustments.maghrib) }
+    var isha by remember { mutableStateOf(currentAdjustments.isha) }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Điều chỉnh phút thủ công") },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                AdjustmentRow(name = "Fajr", value = fajr, onChange = { fajr = it })
+                AdjustmentRow(name = "Dhuhr", value = dhuhr, onChange = { dhuhr = it })
+                AdjustmentRow(name = "Asr", value = asr, onChange = { asr = it })
+                AdjustmentRow(name = "Maghrib", value = maghrib, onChange = { maghrib = it })
+                AdjustmentRow(name = "Isha", value = isha, onChange = { isha = it })
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = {
+                onSave(PrayerAdjustments(fajr, dhuhr, asr, maghrib, isha))
+            }) {
+                Text("Lưu")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Hủy")
+            }
+        }
+    )
+}
+
+@Composable
+private fun AdjustmentRow(name: String, value: Int, onChange: (Int) -> Unit) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(name, fontWeight = FontWeight.SemiBold)
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            IconButton(onClick = { onChange(value - 1) }) {
+                Text("-", style = MaterialTheme.typography.titleLarge)
+            }
+            Text(
+                text = if (value >= 0) "+$value phút" else "$value phút",
+                style = MaterialTheme.typography.bodyMedium,
+                modifier = Modifier.padding(horizontal = 8.dp)
+            )
+            IconButton(onClick = { onChange(value + 1) }) {
+                Text("+", style = MaterialTheme.typography.titleLarge)
+            }
+        }
+    }
+}
+
 private fun formatMethodName(id: String): String {
     return when (id) {
-        "MUSLIM_WORLD_LEAGUE" -> "Liên đoàn Thế giới Hồi giáo"
+        "MUSLIMVN_DEFAULT" -> "MuslimVN mặc định (18° / 18°)"
+        "MUSLIM_WORLD_LEAGUE" -> "Liên đoàn Thế giới Hồi giáo (MWL)"
         "EGYPTIAN" -> "Ai Cập"
         "KARACHI" -> "Karachi"
         "UMM_AL_QURA" -> "Umm al-Qura"
@@ -230,6 +386,16 @@ private fun formatMethodName(id: String): String {
         "TURKEY" -> "Thổ Nhĩ Kỳ"
         else -> id
     }
+}
+
+private fun formatAdjustmentsSummary(adjustments: PrayerAdjustments): String {
+    val items = mutableListOf<String>()
+    if (adjustments.fajr != 0) items.add("Fajr: ${adjustments.fajr}m")
+    if (adjustments.dhuhr != 0) items.add("Dhuhr: ${adjustments.dhuhr}m")
+    if (adjustments.asr != 0) items.add("Asr: ${adjustments.asr}m")
+    if (adjustments.maghrib != 0) items.add("Maghrib: ${adjustments.maghrib}m")
+    if (adjustments.isha != 0) items.add("Isha: ${adjustments.isha}m")
+    return if (items.isEmpty()) "Mặc định (0 phút)" else items.joinToString(", ")
 }
 
 @Composable
@@ -338,11 +504,9 @@ private fun AdhanAudioSelectionDialog(
     onAudioSelected: (String) -> Unit,
     onDismiss: () -> Unit
 ) {
-    // Nếu là Fajr, ưu tiên hiện các Adhan có isFajrSpecific = true lên đầu
     val sortedAdhans = if (isFajr) {
         availableAdhans.sortedByDescending { it.isFajrSpecific }
     } else {
-        // Nếu không phải Fajr, có thể ẩn các Adhan chỉ dành cho Fajr để tránh nhầm lẫn
         availableAdhans.filter { !it.isFajrSpecific }
     }
 
