@@ -117,10 +117,11 @@ class AudioPlayerManager @Inject constructor(
         )
     }
 
-    /** Phát danh sách nhiều mục (vd: toàn bộ Surah) để đạt Gapless Playback. */
+    /** Phát danh sách nhiều mục (vd: toàn bộ Surah hoặc Podcast playlist) để đạt Gapless Playback. */
     fun playList(
         items: List<AudioPlayItem>,
         startIndex: Int = 0,
+        startPositionMs: Long = 0L,
         isPodcast: Boolean = false,
         playWhenReady: Boolean = true
     ) {
@@ -163,7 +164,7 @@ class AudioPlayerManager @Inject constructor(
         exoPlayer?.apply {
             stop() // Dừng hẳn và xoá buffer cũ để nạp URL mới hoàn toàn
             clearMediaItems()
-            setMediaItems(mediaItems, safeIndex, 0L)
+            setMediaItems(mediaItems, safeIndex, startPositionMs)
             setPlaybackSpeed(_playbackSpeed.value)
             prepare()
             this.playWhenReady = playWhenReady

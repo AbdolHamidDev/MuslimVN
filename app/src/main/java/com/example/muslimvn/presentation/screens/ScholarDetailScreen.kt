@@ -85,6 +85,11 @@ fun ScholarDetailScreen(
     val currentEpisodeId by viewModel.currentEpisodeId.collectAsStateWithLifecycle()
     val isPlaying by viewModel.isPlaying.collectAsStateWithLifecycle()
     val episodes = viewModel.episodesPagingData.collectAsLazyPagingItems()
+    val scholarEpisodes by viewModel.scholarEpisodes.collectAsStateWithLifecycle()
+
+    val isPlayingScholar = remember(isPlaying, currentEpisodeId, scholarEpisodes) {
+        isPlaying && scholarEpisodes.any { it.id == currentEpisodeId }
+    }
 
     // Trạng thái hiển thị BottomSheet tùy chọn cho tập podcast được chọn
     var selectedEpisodeForMenu by remember { mutableStateOf<PodcastEpisode?>(null) }
@@ -184,7 +189,10 @@ fun ScholarDetailScreen(
                     item(key = "header") {
                         ScholarHeader(
                             scholar = state.scholar,
-                            backgroundColor = backgroundColor
+                            backgroundColor = backgroundColor,
+                            isPlayingScholar = isPlayingScholar,
+                            onPlayAllClick = viewModel::onPlayAllClicked,
+                            onShuffleClick = viewModel::onShuffleClicked
                         )
                     }
                     if (state.isRefreshing) {

@@ -2,6 +2,7 @@ package com.example.muslimvn.presentation.viewmodels
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.muslimvn.data.util.AudioPlayItem
 import com.example.muslimvn.data.util.AudioPlayerManager
 import com.example.muslimvn.domain.models.PodcastEpisode
 import com.example.muslimvn.domain.models.Scholar
@@ -23,6 +24,7 @@ import kotlinx.coroutines.launch
  * kèm refresh nền RSS. Điều khiển phát qua [AudioPlayerManager] dùng chung — phát tiếp
  * từ lastPositionMs, tua ±10s, đổi tốc độ.
  */
+@androidx.media3.common.util.UnstableApi
 @HiltViewModel(assistedFactory = ScholarDetailViewModel.Factory::class)
 class ScholarDetailViewModel @AssistedInject constructor(
     private val podcastRepository: PodcastRepository,
@@ -45,6 +47,9 @@ class ScholarDetailViewModel @AssistedInject constructor(
     private val _uiState = MutableStateFlow(UiState())
     val uiState = _uiState.asStateFlow()
 
+    private val _scholarEpisodes = MutableStateFlow<List<PodcastEpisode>>(emptyList())
+    val scholarEpisodes = _scholarEpisodes.asStateFlow()
+
     // Pass-through trạng thái trình phát (giống SurahDetailViewModel).
     val isPlaying = audioPlayerManager.isPlaying
     val isBuffering = audioPlayerManager.isBuffering
@@ -60,9 +65,10 @@ class ScholarDetailViewModel @AssistedInject constructor(
     init {
         viewModelScope.launch {
             _uiState.update { it.copy(scholar = podcastRepository.getScholarById(scholarId)) }
-            // Theo dõi số lượng tập để hiển thị ở header.
+            // Theo dõi danh sách & số lượng tập từ Room (sắp xếp pubDate DESC - mới nhất lên đầu)
             launch {
                 podcastRepository.getEpisodesByScholar(scholarId).collect { episodes ->
+                    _scholarEpisodes.value = episodes
                     _uiState.update { it.copy(totalEpisodesCount = episodes.size, isLoading = false) }
                 }
             }
@@ -82,23 +88,110 @@ class ScholarDetailViewModel @AssistedInject constructor(
         }
     }
 
-    /** Phát/tạm dừng một tập; nếu tập khác đang phát thì chuyển sang tập được chọn. */
+    /**
+     * Nút "Nghe" chính ở Header: phát toàn bộ danh sách tập của học giả từ mới nhất xuống oldest.
+     * Nếu học giả này đang phát thì toggle pause/resume.
+     */
+    fun onPlayAllClicked() {
+        val episodes = _scholarEpisodes.value
+        if (episodes.isEmpty()) return
+
+        val currentId = currentEpisodeId.value
+        val isScholarEpisodeActive = episodes.any { it.id == currentId }
+
+        if (isScholarEpisodeActive) {
+            if (isPlaying.value) audioPlayerManager.pause() else audioPlayerManager.resume()
+        } else {
+            val items = episodes.map { ep ->
+                AudioPlayItem(
+                    url = ep.audioUrl,
+                    mediaId = ep.id,
+                    title = ep.title,
+                    artist = _uiState.value.scholar?.name,
+                    artworkPath = ep.artworkUrl ?: _uiState.value.scholar?.avatarPath
+                )
+            }
+            val firstEp = episodes[0]
+            val nearEnd = firstEp.duration > 0 && firstEp.lastPositionMs >= firstEp.duration - 15_000L
+            val startPosition = firstEp.lastPositionMs.takeIf { it > 0 && !nearEnd } ?: 0L
+
+            audioPlayerManager.playList(
+                items = items,
+                startIndex = 0,
+                startPositionMs = startPosition,
+                isPodcast = true
+            )
+        }
+    }
+
+    /**
+     * Nút "Nghe ngẫu nhiên" ở Header: trộn ngẫu nhiên danh sách tập và phát.
+     */
+    fun onShuffleClicked() {
+        val episodes = _scholarEpisodes.value.shuffled()
+        if (episodes.isEmpty()) return
+
+        val items = episodes.map { ep ->
+            AudioPlayItem(
+                url = ep.audioUrl,
+                mediaId = ep.id,
+                title = ep.title,
+                artist = _uiState.value.scholar?.name,
+                artworkPath = ep.artworkUrl ?: _uiState.value.scholar?.avatarPath
+            )
+        }
+        audioPlayerManager.playList(
+            items = items,
+            startIndex = 0,
+            startPositionMs = 0L,
+            isPodcast = true
+        )
+    }
+
+    /**
+     * Phát/tạm dừng một tập cụ thể trong danh sách.
+     * Khi bắt đầu tập mới, nạp toàn bộ danh sách từ tập được chọn trở đi vào player để tự động phát chuyển bài.
+     */
     fun onPlayPauseClicked(episode: PodcastEpisode, scholarName: String?) {
         if (currentEpisodeId.value == episode.id) {
             if (isPlaying.value) audioPlayerManager.pause() else audioPlayerManager.resume()
             return
         }
-        // Phát tiếp tục: chỉ resume khi còn vị trí hợp lệ (>0s và chưa gần hết tập).
-        val nearEnd = episode.duration > 0 && episode.lastPositionMs >= episode.duration - 15_000L
-        val startPosition = episode.lastPositionMs.takeIf { it > 0 && !nearEnd } ?: 0L
-        audioPlayerManager.playPodcast(
-            url = episode.audioUrl,
-            mediaId = episode.id,
-            startPositionMs = startPosition,
-            title = episode.title,
-            artist = scholarName,
-            artworkPath = episode.artworkUrl ?: _uiState.value.scholar?.avatarPath
-        )
+
+        val episodes = _scholarEpisodes.value
+        val startIndex = episodes.indexOfFirst { it.id == episode.id }.coerceAtLeast(0)
+        val targetEpisode = episodes.getOrNull(startIndex) ?: episode
+
+        val nearEnd = targetEpisode.duration > 0 && targetEpisode.lastPositionMs >= targetEpisode.duration - 15_000L
+        val startPosition = targetEpisode.lastPositionMs.takeIf { it > 0 && !nearEnd } ?: 0L
+
+        val items = episodes.map { ep ->
+            AudioPlayItem(
+                url = ep.audioUrl,
+                mediaId = ep.id,
+                title = ep.title,
+                artist = scholarName ?: _uiState.value.scholar?.name,
+                artworkPath = ep.artworkUrl ?: _uiState.value.scholar?.avatarPath
+            )
+        }
+
+        if (items.isNotEmpty()) {
+            audioPlayerManager.playList(
+                items = items,
+                startIndex = startIndex,
+                startPositionMs = startPosition,
+                isPodcast = true
+            )
+        } else {
+            audioPlayerManager.playPodcast(
+                url = episode.audioUrl,
+                mediaId = episode.id,
+                startPositionMs = startPosition,
+                title = episode.title,
+                artist = scholarName,
+                artworkPath = episode.artworkUrl ?: _uiState.value.scholar?.avatarPath
+            )
+        }
     }
 
     fun seekForward() = audioPlayerManager.seekForward()

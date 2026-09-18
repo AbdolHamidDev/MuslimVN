@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Download
+import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Shuffle
 import androidx.compose.material3.Button
@@ -45,12 +46,13 @@ import com.example.muslimvn.presentation.components.toAndroidAssetUri
  * - Chiếm 60% chiều cao màn hình.
  * - Ảnh học giả chính tràn viền phần trên cùng.
  * - Gradient overlay đồng bộ hòa quyện mượt mà vào màu động (Dynamic Color) từ Palette ảnh.
- * - Hàng 3 nút thao tác: 1. Nghe ngẫu nhiên (tròn), 2. Nghe (trắng chữ đen ở giữa), 3. Download (tròn).
+ * - Hàng 3 nút thao tác: 1. Nghe ngẫu nhiên (tròn), 2. Nghe / Dừng (trắng chữ đen ở giữa), 3. Download (tròn).
  */
 @Composable
 fun ScholarHeader(
     scholar: Scholar?,
     backgroundColor: Color,
+    isPlayingScholar: Boolean = false,
     onShuffleClick: () -> Unit = {},
     onPlayAllClick: () -> Unit = {},
     onDownloadAllClick: () -> Unit = {}
@@ -160,7 +162,7 @@ fun ScholarHeader(
                     }
                 }
 
-                // Nút 2: Nút "Nghe" chính ở giữa - NỀN TRẮNG CHỮ ĐEN chuẩn YouTube Music
+                // Nút 2: Nút "Nghe" / "Dừng" chính ở giữa - NỀN TRẮNG CHỮ ĐEN chuẩn YouTube Music
                 Button(
                     onClick = onPlayAllClick,
                     shape = CircleShape,
@@ -172,14 +174,14 @@ fun ScholarHeader(
                     modifier = Modifier.height(48.dp)
                 ) {
                     Icon(
-                        imageVector = Icons.Default.PlayArrow,
+                        imageVector = if (isPlayingScholar) Icons.Default.Pause else Icons.Default.PlayArrow,
                         contentDescription = null,
                         tint = Color.Black,
                         modifier = Modifier.size(22.dp)
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
-                        text = "Nghe",
+                        text = if (isPlayingScholar) "Dừng" else "Nghe",
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
                         color = Color.Black
