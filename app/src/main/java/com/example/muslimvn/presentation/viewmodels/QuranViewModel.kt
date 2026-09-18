@@ -66,4 +66,11 @@ class QuranViewModel @Inject constructor(
             // Nếu chưa phát thì không cần start tự động ở đây để tránh gây phiền hà.
         }
     }
+
+    fun onDismissReciterSelection() {
+        val defaultReciter = com.example.muslimvn.domain.models.availableReciters.firstOrNull { 
+            it.name.contains("Mishary", ignoreCase = true) 
+        } ?: com.example.muslimvn.domain.models.availableReciters[0]
+        onReciterSelected(defaultReciter)
+    }
 }

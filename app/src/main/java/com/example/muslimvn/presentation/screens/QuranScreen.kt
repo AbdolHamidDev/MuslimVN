@@ -60,7 +60,7 @@ fun QuranScreen(
     if (!hasSelectedReciter) {
         ReciterSelectionDialog(
             onReciterSelected = viewModel::onReciterSelected,
-            onDismiss = { /* Tuỳ chọn: Có cho phép bỏ qua không? */ }
+            onDismiss = viewModel::onDismissReciterSelection
         )
     }
 
