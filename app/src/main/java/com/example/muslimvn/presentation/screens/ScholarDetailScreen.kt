@@ -10,18 +10,23 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -78,6 +83,7 @@ fun ScholarDetailScreen(
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val currentEpisodeId by viewModel.currentEpisodeId.collectAsStateWithLifecycle()
+    val isPlaying by viewModel.isPlaying.collectAsStateWithLifecycle()
     val episodes = viewModel.episodesPagingData.collectAsLazyPagingItems()
 
     // Trạng thái hiển thị BottomSheet tùy chọn cho tập podcast được chọn
@@ -178,7 +184,6 @@ fun ScholarDetailScreen(
                     item(key = "header") {
                         ScholarHeader(
                             scholar = state.scholar,
-                            episodeCount = state.totalEpisodesCount,
                             backgroundColor = backgroundColor
                         )
                     }
@@ -193,13 +198,34 @@ fun ScholarDetailScreen(
                         }
                     }
                     item(key = "episodes_title") {
-                        Text(
-                            text = stringResource(R.string.podcast_episodes_title),
-                            style = MaterialTheme.typography.titleLarge,
-                            fontWeight = FontWeight.Bold,
-                            color = Color.White,
-                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
-                        )
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp, vertical = 8.dp)
+                        ) {
+                            Text(
+                                text = stringResource(R.string.podcast_episodes_title),
+                                style = MaterialTheme.typography.titleLarge,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.White
+                            )
+                            if (state.totalEpisodesCount > 0) {
+                                Spacer(modifier = Modifier.width(10.dp))
+                                Surface(
+                                    shape = CircleShape,
+                                    color = Color.White.copy(alpha = 0.2f)
+                                ) {
+                                    Text(
+                                        text = stringResource(R.string.podcast_total_episodes, state.totalEpisodesCount),
+                                        style = MaterialTheme.typography.labelMedium,
+                                        fontWeight = FontWeight.SemiBold,
+                                        color = Color.White,
+                                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp)
+                                    )
+                                }
+                            }
+                        }
                     }
 
                     // Loading state cho trang đầu tiên của Paging
@@ -235,6 +261,7 @@ fun ScholarDetailScreen(
                             EpisodeRow(
                                 episode = episode,
                                 isCurrent = currentEpisodeId == episode.id,
+                                isPlaying = isPlaying,
                                 onPlay = { viewModel.onPlayPauseClicked(episode, state.scholar?.name) },
                                 onMoreClick = { selectedEpisodeForMenu = episode }
                             )
@@ -271,7 +298,8 @@ fun ScholarDetailScreen(
                 EpisodeMoreMenuBottomSheet(
                     episode = selectedEpisodeForMenu!!,
                     scholar = state.scholar,
-                    onDismiss = { selectedEpisodeForMenu = null }
+                    onDismiss = { selectedEpisodeForMenu = null },
+                    containerColor = miniPlayerColor
                 )
             }
         }

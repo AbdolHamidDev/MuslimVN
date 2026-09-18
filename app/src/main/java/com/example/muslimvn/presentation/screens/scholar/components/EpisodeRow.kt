@@ -1,6 +1,7 @@
 package com.example.muslimvn.presentation.screens.scholar.components
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -17,13 +18,19 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.airbnb.lottie.compose.LottieAnimation
+import com.airbnb.lottie.compose.LottieCompositionSpec
+import com.airbnb.lottie.compose.LottieConstants
+import com.airbnb.lottie.compose.animateLottieCompositionAsState
+import com.airbnb.lottie.compose.rememberLottieComposition
 import com.example.muslimvn.R
 import com.example.muslimvn.domain.models.PodcastEpisode
 import com.example.muslimvn.presentation.components.bouncyClick
@@ -31,38 +38,62 @@ import com.example.muslimvn.presentation.components.formatDurationMs
 import com.example.muslimvn.presentation.components.formatPubDate
 
 /**
- * Một dòng tập phát: tiêu đề, ngày phát • thời lượng (chữ màu trắng),
- * nút 3 chấm bên phải để mở BottomSheet chứa các tùy chọn thao tác.
+ * Một dòng tập phát:
+ * - Khi đang nghe (isCurrent), hiển thị Lottie voice wave animation tràn vừa tầm với kích thước chữ tiêu đề.
+ * - Loại bỏ nền active highlight khi đang nghe.
+ * - Tiêu đề tập podcast có hiệu ứng tự động trôi chữ (basicMarquee) nếu tiêu đề quá dài.
+ * - Nút 3 chấm bên phải để mở BottomSheet tùy chọn.
  */
 @Composable
 fun EpisodeRow(
     episode: PodcastEpisode,
     isCurrent: Boolean,
+    isPlaying: Boolean = false,
     onPlay: () -> Unit,
     onMoreClick: () -> Unit
 ) {
-    val containerColor = if (isCurrent) {
-        Color.White.copy(alpha = 0.15f)
-    } else {
-        Color.Transparent
-    }
     Column(modifier = Modifier.fillMaxWidth()) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier
                 .fillMaxWidth()
-                .background(containerColor)
+                .background(Color.Transparent)
                 .bouncyClick(onClick = onPlay)
                 .padding(horizontal = 16.dp, vertical = 12.dp)
         ) {
+            // Lottie wave voice animation hiển thị bên trái với kích thước lớn cùng tầm font chữ tiêu đề (24.dp height)
+            if (isCurrent) {
+                val composition by rememberLottieComposition(
+                    LottieCompositionSpec.RawRes(R.raw.lottie_voice_line_wave_animation)
+                )
+                val lottieProgress by animateLottieCompositionAsState(
+                    composition = composition,
+                    isPlaying = isPlaying,
+                    iterations = LottieConstants.IterateForever
+                )
+                LottieAnimation(
+                    composition = composition,
+                    progress = { lottieProgress },
+                    contentScale = ContentScale.FillHeight,
+                    modifier = Modifier
+                        .height(24.dp)
+                        .width(48.dp)
+                        .padding(end = 8.dp)
+                )
+            }
+
             Column(modifier = Modifier.weight(1f)) {
+                // Tiêu đề tập podcast với hiệu ứng tự động trôi chữ mượt mà nếu văn bản quá dài
                 Text(
                     text = episode.title,
                     style = MaterialTheme.typography.titleSmall,
                     fontWeight = if (isCurrent) FontWeight.Bold else FontWeight.Medium,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis,
-                    color = Color.White
+                    maxLines = 1,
+                    color = Color.White,
+                    modifier = Modifier.basicMarquee(
+                        iterations = Int.MAX_VALUE,
+                        repeatDelayMillis = 1200
+                    )
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Row(verticalAlignment = Alignment.CenterVertically) {
@@ -87,8 +118,7 @@ fun EpisodeRow(
                             ),
                             style = MaterialTheme.typography.labelSmall,
                             color = Color(0xFFFFD700),
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
+                            maxLines = 1
                         )
                     }
                 }

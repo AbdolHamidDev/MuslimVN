@@ -32,13 +32,11 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
-import com.example.muslimvn.R
 import com.example.muslimvn.domain.models.Scholar
 import com.example.muslimvn.presentation.components.toAndroidAssetUri
 
@@ -52,7 +50,6 @@ import com.example.muslimvn.presentation.components.toAndroidAssetUri
 @Composable
 fun ScholarHeader(
     scholar: Scholar?,
-    episodeCount: Int,
     backgroundColor: Color,
     onShuffleClick: () -> Unit = {},
     onPlayAllClick: () -> Unit = {},
@@ -122,22 +119,6 @@ fun ScholarHeader(
                     textAlign = TextAlign.Center,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
-                )
-            }
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            // Badge tổng số tập (chữ trắng)
-            Surface(
-                shape = CircleShape,
-                color = Color.White.copy(alpha = 0.2f)
-            ) {
-                Text(
-                    text = stringResource(R.string.podcast_total_episodes, episodeCount),
-                    style = MaterialTheme.typography.labelMedium,
-                    fontWeight = FontWeight.SemiBold,
-                    color = Color.White,
-                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 5.dp)
                 )
             }
 

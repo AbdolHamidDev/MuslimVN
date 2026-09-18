@@ -16,6 +16,7 @@ import androidx.compose.material.icons.filled.CheckCircleOutline
 import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.Share
+import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -41,25 +42,27 @@ import com.example.muslimvn.presentation.components.toAndroidAssetUri
 
 /**
  * BottomSheet menu tùy chọn cho từng tập podcast:
- * 1. Header: Ảnh bìa tập podcast + Tiêu đề + Tên học giả
- * 2. Thêm vào yêu thích
- * 3. Tải xuống
- * 4. Thêm vào danh sách phát
- * 5. Đánh dấu đã nghe
- * 6. Chia sẻ
+ * Đảm bảo màu nền luôn luôn là màu tối (Dark Theme) bất kể hệ thống đang ở Light hay Dark mode.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EpisodeMoreMenuBottomSheet(
     episode: PodcastEpisode,
     scholar: Scholar?,
-    onDismiss: () -> Unit
+    onDismiss: () -> Unit,
+    containerColor: Color? = null
 ) {
+    // Luôn sử dụng màu nền tối đậm (Dark Theme) chuẩn YouTube Music
+    val darkSheetColor = containerColor ?: Color(0xFF202020)
+
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
-        containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
-        contentColor = Color.White
+        containerColor = darkSheetColor,
+        contentColor = Color.White,
+        dragHandle = {
+            BottomSheetDefaults.DragHandle(color = Color.White.copy(alpha = 0.4f))
+        }
     ) {
         Column(
             modifier = Modifier
@@ -81,7 +84,7 @@ fun EpisodeMoreMenuBottomSheet(
                     modifier = Modifier
                         .size(56.dp)
                         .clip(RoundedCornerShape(8.dp))
-                        .background(MaterialTheme.colorScheme.surfaceVariant)
+                        .background(Color.White.copy(alpha = 0.1f))
                 )
                 Spacer(modifier = Modifier.width(16.dp))
                 Column(modifier = Modifier.weight(1f)) {
