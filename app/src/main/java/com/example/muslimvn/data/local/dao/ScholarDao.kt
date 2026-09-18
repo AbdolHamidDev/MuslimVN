@@ -14,6 +14,9 @@ interface ScholarDao {
     @Query("SELECT * FROM scholars ORDER BY featured DESC, name COLLATE NOCASE ASC")
     fun getAllScholars(): Flow<List<ScholarEntity>>
 
+    @Query("SELECT * FROM scholars ORDER BY featured DESC, name COLLATE NOCASE ASC")
+    suspend fun getAllScholarsOnce(): List<ScholarEntity>
+
     @Query("SELECT * FROM scholars WHERE id = :id")
     suspend fun getScholarById(id: String): ScholarEntity?
 

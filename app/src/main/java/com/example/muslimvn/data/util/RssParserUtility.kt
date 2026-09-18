@@ -18,7 +18,8 @@ import javax.inject.Singleton
 
 /**
  * Fetch + parse RSS podcast feed bằng OkHttp và XmlPullParser (streaming, không DOM).
- * Hỗ trợ trích xuất ảnh từ nhiều nguồn phổ biến: itunes:image, media:content, image tag.
+ * Hỗ trợ trích xuất ảnh từ nhiều nguồn phổ biến: itunes:image, media:content, image tag
+ * và bóc tách thông tin Channel Metadata.
  */
 @Singleton
 class RssParserUtility @Inject constructor(
@@ -33,6 +34,13 @@ class RssParserUtility @Inject constructor(
         val artworkUrl: String?,
         val durationMs: Long,
         val pubDateMs: Long
+    )
+
+    data class RssChannelMetadata(
+        val title: String,
+        val description: String,
+        val imageUrl: String?,
+        val author: String?
     )
 
     private enum class TextTarget { TITLE, DESCRIPTION, DURATION, PUB_DATE, IMAGE_URL }
@@ -65,6 +73,79 @@ class RssParserUtility @Inject constructor(
             }
         }
 
+    suspend fun fetchChannelMetadata(rssUrl: String): Result<RssChannelMetadata> =
+        withContext(Dispatchers.IO) {
+            runCatching {
+                val request = Request.Builder()
+                    .url(rssUrl)
+                    .header("User-Agent", USER_AGENT)
+                    .build()
+                okHttpClient.newCall(request).execute().use { response ->
+                    if (!response.isSuccessful) {
+                        throw IOException("HTTP ${response.code} khi tải feed $rssUrl")
+                    }
+                    val body = response.body ?: throw IOException("Feed rỗng: $rssUrl")
+                    parseChannelMetadata(body.byteStream())
+                }
+            }.onFailure { error ->
+                Log.e(TAG, "Lỗi fetch channel metadata: $rssUrl", error)
+            }
+        }
+
+    private fun parseChannelMetadata(inputStream: InputStream): RssChannelMetadata {
+        val parser = Xml.newPullParser().apply {
+            setFeature(XmlPullParser.FEATURE_PROCESS_NAMESPACES, true)
+            setInput(inputStream, null)
+        }
+
+        var channelTitle = ""
+        var channelDescription = ""
+        var channelImageUrl: String? = null
+        var channelAuthor: String? = null
+        val textBuffer = StringBuilder()
+        var isInChannelImage = false
+        var isInItem = false
+
+        var event = parser.eventType
+        while (event != XmlPullParser.END_DOCUMENT) {
+            val tagName = parser.name?.lowercase(Locale.US)
+            when (event) {
+                XmlPullParser.START_TAG -> when (tagName) {
+                    "item" -> isInItem = true
+                    "title" -> if (!isInItem) textBuffer.setLength(0)
+                    "description" -> if (!isInItem) textBuffer.setLength(0)
+                    "author" -> if (!isInItem) textBuffer.setLength(0)
+                    "image" -> {
+                        if (!isInItem) {
+                            val href = parser.getAttributeValue(null, "href")
+                            if (href != null) channelImageUrl = href
+                            else isInChannelImage = true
+                        }
+                    }
+                    "url" -> if (isInChannelImage && !isInItem) textBuffer.setLength(0)
+                }
+                XmlPullParser.TEXT -> if (!isInItem) textBuffer.append(parser.text)
+                XmlPullParser.END_TAG -> when (tagName) {
+                    "title" -> if (!isInItem && channelTitle.isEmpty()) channelTitle = textBuffer.toString().trim()
+                    "description" -> if (!isInItem && channelDescription.isEmpty()) channelDescription = textBuffer.toString().trim()
+                    "author" -> if (!isInItem && channelAuthor == null) channelAuthor = textBuffer.toString().trim()
+                    "image" -> if (!isInItem) isInChannelImage = false
+                    "url" -> if (isInChannelImage && !isInItem && channelImageUrl == null) {
+                        channelImageUrl = textBuffer.toString().trim()
+                    }
+                }
+            }
+            if (isInItem) break
+            event = parser.next()
+        }
+        return RssChannelMetadata(
+            title = channelTitle,
+            description = channelDescription,
+            imageUrl = channelImageUrl,
+            author = channelAuthor
+        )
+    }
+
     private fun parse(inputStream: InputStream): List<RssEpisode> {
         val parser = Xml.newPullParser().apply {
             setFeature(XmlPullParser.FEATURE_PROCESS_NAMESPACES, true)
@@ -76,8 +157,6 @@ class RssParserUtility @Inject constructor(
         var currentItem: ParsedItem? = null
         var textTarget: TextTarget? = null
         val textBuffer = StringBuilder()
-        
-        // Cờ đánh dấu đang ở trong thẻ <image> của channel (để lấy <url>)
         var isInChannelImage = false
 
         var event = parser.eventType
@@ -90,49 +169,39 @@ class RssParserUtility @Inject constructor(
                     "description" -> textTarget = beginText(currentItem, TextTarget.DESCRIPTION, textBuffer)
                     "duration" -> textTarget = beginText(currentItem, TextTarget.DURATION, textBuffer)
                     "pubdate" -> textTarget = beginText(currentItem, TextTarget.PUB_DATE, textBuffer)
-                    
                     "image" -> {
-                        // Trường hợp 1: itunes:image hoặc image có thuộc tính href
                         val href = parser.getAttributeValue(null, "href")
                         if (href != null) {
                             if (currentItem != null) currentItem.artworkUrl = href
                             else channelImageUrl = href
                         } else if (currentItem == null) {
-                            // Trường hợp 2: Thẻ <image> của RSS chuẩn (chứa <url> bên trong)
                             isInChannelImage = true
                         }
                     }
-                    
                     "url" -> {
                         if (isInChannelImage) {
                             textTarget = TextTarget.IMAGE_URL
                             textBuffer.setLength(0)
                         }
                     }
-                    
                     "content", "thumbnail" -> {
-                        // media:content hoặc media:thumbnail
                         val url = parser.getAttributeValue(null, "url")
                         val type = parser.getAttributeValue(null, "type")
                         if (url != null && currentItem != null) {
-                            // Nếu là media:content, check type để chắc chắn là ảnh
                             if (tagName == "thumbnail" || type?.contains("image") == true) {
                                 if (currentItem.artworkUrl == null) currentItem.artworkUrl = url
                             }
                         }
                     }
-
                     "enclosure" -> currentItem?.let { item ->
                         if (item.audioUrl.isEmpty() && isAudioEnclosure(parser)) {
                             item.audioUrl = parser.getAttributeValue(null, "url").orEmpty().trim()
                         }
                     }
                 }
-
                 XmlPullParser.TEXT -> if (textTarget != null) {
                     textBuffer.append(parser.text)
                 }
-
                 XmlPullParser.END_TAG -> when (tagName) {
                     "item" -> {
                         if (currentItem?.artworkUrl == null) currentItem?.artworkUrl = channelImageUrl
@@ -140,9 +209,7 @@ class RssParserUtility @Inject constructor(
                         currentItem = null
                         textTarget = null
                     }
-                    "image" -> {
-                        isInChannelImage = false
-                    }
+                    "image" -> isInChannelImage = false
                     "url" -> {
                         if (isInChannelImage && textTarget == TextTarget.IMAGE_URL) {
                             channelImageUrl = textBuffer.toString().trim()

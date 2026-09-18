@@ -14,7 +14,8 @@ import javax.inject.Inject
 
 /**
  * ViewModel trang chủ Podcast: nạp học giả từ Room (offline-first), seed nếu DB trống,
- * và lọc theo phân loại được chọn. Featured = học giả có cờ featured trong scholars.json.
+ * tự động đồng bộ ngầm thông tin/ảnh mới từ Muslim Central API/RSS,
+ * và lọc theo phân loại được chọn.
  */
 @HiltViewModel
 class PodcastHomeViewModel @Inject constructor(
@@ -46,6 +47,11 @@ class PodcastHomeViewModel @Inject constructor(
 
             _uiState.update { it.copy(categories = podcastRepository.getCategories()) }
 
+            // Chạy đồng bộ tự động từ xa ngầm để nạp thông tin/ảnh học giả mới
+            launch {
+                runCatching { podcastRepository.syncMuslimCentralDirectory() }
+            }
+
             podcastRepository.getScholars().collect { list ->
                 allScholars = list
                 _uiState.update { state ->
@@ -75,6 +81,7 @@ class PodcastHomeViewModel @Inject constructor(
         viewModelScope.launch {
             runCatching { podcastRepository.initializeData() }
                 .onFailure { _uiState.update { s -> s.copy(isLoading = false, loadError = true) } }
+            runCatching { podcastRepository.syncMuslimCentralDirectory() }
         }
     }
 

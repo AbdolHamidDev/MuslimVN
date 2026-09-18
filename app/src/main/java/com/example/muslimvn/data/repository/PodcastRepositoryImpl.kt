@@ -2,6 +2,10 @@ package com.example.muslimvn.data.repository
 
 import android.content.Context
 import android.util.Log
+import androidx.paging.Pager
+import androidx.paging.PagingConfig
+import androidx.paging.PagingData
+import androidx.paging.map
 import com.example.muslimvn.data.local.dao.PodcastEpisodeDao
 import com.example.muslimvn.data.local.dao.ScholarDao
 import com.example.muslimvn.data.local.entities.PodcastEpisodeEntity
@@ -17,10 +21,6 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
-import androidx.paging.Pager
-import androidx.paging.PagingConfig
-import androidx.paging.PagingData
-import androidx.paging.map
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
@@ -82,9 +82,9 @@ class PodcastRepositoryImpl @Inject constructor(
     override fun getEpisodesByScholar(scholarId: String): Flow<List<PodcastEpisode>> =
         episodeDao.getEpisodesByScholar(scholarId).map { list -> list.map { it.toDomain() } }
 
-    override fun getEpisodesByScholarPaging(scholarId: String): Flow<androidx.paging.PagingData<PodcastEpisode>> {
-        return androidx.paging.Pager(
-            config = androidx.paging.PagingConfig(
+    override fun getEpisodesByScholarPaging(scholarId: String): Flow<PagingData<PodcastEpisode>> {
+        return Pager(
+            config = PagingConfig(
                 pageSize = 20,
                 enablePlaceholders = false,
                 initialLoadSize = 20
@@ -129,6 +129,95 @@ class PodcastRepositoryImpl @Inject constructor(
         runCatching { episodeDao.updateLastPosition(episodeId, positionMs) }
     }
 
+    override suspend fun syncScholarMetadata(scholarId: String): Result<Unit> = withContext(Dispatchers.IO) {
+        val scholar = scholarDao.getScholarById(scholarId)
+            ?: return@withContext Result.failure(IllegalArgumentException("Scholar $scholarId not found"))
+
+        rssParser.fetchChannelMetadata(scholar.rssUrl).mapCatching { meta ->
+            val updated = scholar.copy(
+                name = meta.title.ifEmpty { scholar.name },
+                bio = meta.description.ifEmpty { scholar.bio },
+                avatarPath = if (scholar.avatarPath.startsWith("images/")) scholar.avatarPath
+                             else (meta.imageUrl ?: scholar.avatarPath)
+            )
+            scholarDao.insertScholars(listOf(updated))
+        }
+    }
+
+    override suspend fun syncMuslimCentralDirectory(): Result<Int> = withContext(Dispatchers.IO) {
+        runCatching {
+            val existingMap = scholarDao.getAllScholarsOnce().associateBy { it.id }
+            val newEntities = mutableListOf<ScholarEntity>()
+
+            MUSLIM_CENTRAL_DIRECTORY_SLUGS.forEach { slug ->
+                val rssUrl = "https://rss.muslimcentral.com/$slug.rss"
+                val existing = existingMap[slug]
+
+                if (existing == null) {
+                    // Học giả mới chưa có trong DB -> Fetch channel metadata từ xa
+                    rssParser.fetchChannelMetadata(rssUrl).onSuccess { meta ->
+                        if (meta.title.isNotBlank()) {
+                            val newEntity = ScholarEntity(
+                                id = slug,
+                                name = meta.title,
+                                title = "Học Giả Muslim Central",
+                                bio = meta.description.ifEmpty { "Học giả thuộc hệ thống phát thanh Muslim Central." },
+                                avatarPath = meta.imageUrl ?: "https://artwork.muslimcentral.com/$slug.jpg",
+                                rssUrl = rssUrl,
+                                tags = inferScholarTags(meta.title, meta.description),
+                                featured = false
+                            )
+                            newEntities.add(newEntity)
+                            // Insert từng học giả mới vào Room để Flow phát ngay dữ liệu mới ra UI
+                            scholarDao.insertScholars(listOf(newEntity))
+                        }
+                    }
+                } else {
+                    // Học giả đã có -> Cập nhật thông tin/ảnh từ xa nếu avatarPath là URL HTTP
+                    rssParser.fetchChannelMetadata(rssUrl).onSuccess { meta ->
+                        if (meta.title.isNotBlank()) {
+                            val updated = existing.copy(
+                                name = meta.title.ifEmpty { existing.name },
+                                bio = meta.description.ifEmpty { existing.bio },
+                                avatarPath = if (existing.avatarPath.startsWith("images/")) existing.avatarPath
+                                             else (meta.imageUrl ?: existing.avatarPath)
+                            )
+                            scholarDao.insertScholars(listOf(updated))
+                        }
+                    }
+                }
+            }
+            newEntities.size
+        }.onFailure { error ->
+            Log.e(TAG, "Lỗi đồng bộ Muslim Central Directory", error)
+        }
+    }
+
+    private fun inferScholarTags(title: String, bio: String): List<String> {
+        val text = "$title $bio".lowercase()
+        val tags = mutableListOf<String>()
+
+        if (text.contains("tafsir") || text.contains("quran") || text.contains("koran") || text.contains("recitation")) {
+            tags.add("tafsir")
+        }
+        if (text.contains("fiqh") || text.contains("law") || text.contains("jurisprudence") || text.contains("hajj") || text.contains("fatwa")) {
+            tags.add("fiqh")
+        }
+        if (text.contains("aqidah") || text.contains("creed") || text.contains("theology") || text.contains("belief")) {
+            tags.add("aqidah")
+        }
+        if (text.contains("tazkiyah") || text.contains("heart") || text.contains("spiritual") || text.contains("ethics") || text.contains("character")) {
+            tags.add("tazkiyah")
+        }
+        if (text.contains("contemporary") || text.contains("modern") || text.contains("youth") || text.contains("social") || text.contains("society")) {
+            tags.add("contemporary")
+        }
+        if (tags.isEmpty() || text.contains("inspiration") || text.contains("dawah") || text.contains("speaker") || text.contains("motivational")) {
+            tags.add("inspiration")
+        }
+        return tags.distinct()
+    }
+
     private fun ScholarEntity.toDomain() = Scholar(
         id, name, title, bio, avatarPath, rssUrl, tags, featured
     )
@@ -140,6 +229,33 @@ class PodcastRepositoryImpl @Inject constructor(
     companion object {
         private const val TAG = "PodcastRepository"
         private const val ASSET_FILE = "scholars.json"
+
+        /** Mở rộng danh mục slug hơn 70+ học giả Muslim Central được tự động phát hiện và đồng bộ */
+        private val MUSLIM_CENTRAL_DIRECTORY_SLUGS = listOf(
+            // Core Scholars
+            "mufti-menk", "nouman-ali-khan", "omar-suleiman", "yasir-qadhi",
+            "bilal-philips", "hamza-yusuf", "abdul-nasir-jangda", "wahaj-tarin",
+            "mohamed-hoblos", "haifaa-younis", "abdulbary-yahya", "zahir-mahmood",
+            "taimiyyah-zubair", "hasan-ali", "shady-alsuleiman", "moutasem-al-hameedy",
+            "muhammad-west", "muiz-bukhary",
+
+            // Global Muslim Central Scholars & Preachers
+            "zakir-naik", "majed-mahmoud", "siraj-wahhaj", "khalid-yasin",
+            "yusuf-estes", "ahmed-deedat", "zaid-shakir", "yaser-birjas",
+            "ismail-kamdar", "saajid-lipham", "mikaeel-smith", "abdullah-hakim-quick",
+            "sulaiman-moola", "usama-canon", "yahya-ibrahim", "zohra-sarwari",
+            "hussain-yee", "hassan-elwan", "tariq-appleby", "assim-al-hakeem",
+            "abdur-raheem-green", "suhaib-webb", "waleed-basyouni", "ammar-al-shukry",
+            "hasib-noor", "ammar-nakshawani", "yusha-evans", "toure-roberts",
+            "tawfique-chowdhury", "tariq-ramadan", "salman-al-odah", "sajid-umar",
+            "saad-tasleem", "muhammad-salah", "muhammad-al-shareef", "muhammad-al-yaqoubi",
+            "khalid-green", "kamal-el-zant", "ismail-london", "idrees-zubair",
+            "hussain-kamani", "hisham-al-awadi", "hatem-al-haj", "hamza-tzortzis",
+            "habib-ali-al-jifri", "fariq-naik", "ebrahim-bham", "daood-butt",
+            "boonaa-mohammed", "azhar-iqbal", "asif-uddin", "alaa-elsayed",
+            "adnan-rashid", "abdur-rahman-ibn-yusuf", "abdullah-oduro", "abdullah-hashem",
+            "abdul-wahab-saleem", "abdul-aziz-suraqah", "abdelrahman-murphy"
+        )
     }
 }
 

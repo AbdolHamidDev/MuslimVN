@@ -8,8 +8,8 @@ import kotlinx.coroutines.flow.Flow
 /**
  * Kho dữ liệu Podcast theo chiến lược OFFLINE-FIRST:
  * - Học giả được nạp một lần từ assets/scholars.json vào Room lúc khởi động app.
- * - Tập phát được cache vào Room sau khi fetch RSS; UI luôn đọc từ Room (Flow)
- *   nên mở màn hình là thấy dữ liệu cũ ngay, mạng chỉ để làm mới nền.
+ * - Tự động đồng bộ các học giả mới từ xa (Muslim Central) vào Room mà không cần sửa file JSON.
+ * - Tập phát được cache vào Room sau khi fetch RSS; UI luôn đọc từ Room (Flow).
  */
 interface PodcastRepository {
 
@@ -31,8 +31,7 @@ interface PodcastRepository {
 
     /**
      * Fetch + parse RSS feed của học giả rồi ghi đè cache trong Room.
-     * @return Result số lượng tập sau khi merge; failure khi offline/feed lỗi
-     * (cache cũ trong Room vẫn nguyên vẹn).
+     * @return Result số lượng tập sau khi merge; failure khi offline/feed lỗi.
      */
     suspend fun refreshEpisodes(scholarId: String): Result<Int>
 
@@ -40,4 +39,10 @@ interface PodcastRepository {
 
     /** Lưu vị trí nghe để lần sau phát tiếp tục. */
     suspend fun savePlaybackPosition(episodeId: String, positionMs: Long)
+
+    /** Cập nhật thông tin chi tiết (tên, bio, ảnh đại diện) của 1 học giả từ RSS channel metadata. */
+    suspend fun syncScholarMetadata(scholarId: String): Result<Unit>
+
+    /** Tự động đồng bộ danh sách học giả từ nguồn Muslim Central vào Room DB. */
+    suspend fun syncMuslimCentralDirectory(): Result<Int>
 }
