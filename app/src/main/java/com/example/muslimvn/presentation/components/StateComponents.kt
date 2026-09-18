@@ -56,20 +56,25 @@ import com.example.muslimvn.R
 @Composable
 fun LoadingIndicator(
     modifier: Modifier = Modifier,
-    label: String? = null
+    label: String? = null,
+    color: androidx.compose.ui.graphics.Color? = null
 ) {
     Column(
         modifier = modifier.padding(24.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        CircularProgressIndicator()
+        if (color != null) {
+            CircularProgressIndicator(color = color)
+        } else {
+            CircularProgressIndicator()
+        }
         if (label != null) {
             Spacer(modifier = Modifier.height(16.dp))
             Text(
                 text = label,
                 style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                color = color ?: MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
     }

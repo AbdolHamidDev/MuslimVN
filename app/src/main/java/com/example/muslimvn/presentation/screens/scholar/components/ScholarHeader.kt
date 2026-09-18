@@ -16,8 +16,8 @@ import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Download
+import androidx.compose.material.icons.filled.DownloadForOffline
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Shuffle
@@ -192,7 +192,7 @@ fun ScholarHeader(
                     )
                 }
 
-                // Nút 3: Download toàn bộ playlist (tròn)
+                // Nút 3: Download toàn bộ playlist (tròn) - Tương đồng với Nút 1 Nghe ngẫu nhiên (nền mờ bán trong suốt, icon trắng)
                 Surface(
                     onClick = onDownloadAllClick,
                     shape = CircleShape,
@@ -207,7 +207,7 @@ fun ScholarHeader(
                                     CircularProgressIndicator(
                                         strokeWidth = 2.5.dp,
                                         color = Color.White,
-                                        modifier = Modifier.size(30.dp)
+                                        modifier = Modifier.size(28.dp)
                                     )
                                     Icon(
                                         imageVector = Icons.Default.Pause,
@@ -219,9 +219,9 @@ fun ScholarHeader(
                             }
                             playlistProgress != null && playlistProgress.completedEpisodes == playlistProgress.totalEpisodes && playlistProgress.totalEpisodes > 0 -> {
                                 Icon(
-                                    imageVector = Icons.Default.CheckCircle,
+                                    imageVector = Icons.Default.DownloadForOffline,
                                     contentDescription = "Đã tải xong toàn bộ",
-                                    tint = Color(0xFF4CAF50),
+                                    tint = Color.White,
                                     modifier = Modifier.size(24.dp)
                                 )
                             }
@@ -229,6 +229,7 @@ fun ScholarHeader(
                                 Icon(
                                     imageVector = Icons.Default.Download,
                                     contentDescription = "Tải toàn bộ playlist",
+                                    tint = Color.White,
                                     modifier = Modifier.size(22.dp)
                                 )
                             }

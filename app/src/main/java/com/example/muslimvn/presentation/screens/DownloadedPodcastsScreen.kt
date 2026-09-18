@@ -314,7 +314,8 @@ fun DownloadedPodcastsScreen(
                 TextButton(onClick = { showClearAllDialog = false }) {
                     Text(text = "Hủy")
                 }
-            }
+            },
+            containerColor = Color(0xFF151E28)
         )
     }
 
@@ -352,7 +353,8 @@ fun DownloadedPodcastsScreen(
                 TextButton(onClick = { itemToDelete = null }) {
                     Text(text = "Hủy")
                 }
-            }
+            },
+            containerColor = Color(0xFF151E28)
         )
     }
 }

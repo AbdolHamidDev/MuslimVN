@@ -119,6 +119,7 @@ fun PodcastHomeScreen(
             when {
                 state.isLoading -> LoadingIndicator(
                     label = stringResource(R.string.loading_please_wait),
+                    color = androidx.compose.ui.graphics.Color.White,
                     modifier = Modifier.fillMaxSize()
                 )
                 state.loadError && state.scholars.isEmpty() -> ErrorState(

@@ -93,7 +93,7 @@ fun MiniPlayerBar(
                     modifier = Modifier
                         .fillMaxWidth(fraction)
                         .height(2.dp)
-                        .background(MaterialTheme.colorScheme.primary)
+                        .background(Color.White)
                 )
             }
 

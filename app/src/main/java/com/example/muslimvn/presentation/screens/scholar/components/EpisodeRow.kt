@@ -11,7 +11,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.DownloadForOffline
 import androidx.compose.material.icons.filled.ErrorOutline
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.CircularProgressIndicator
@@ -67,7 +67,7 @@ fun EpisodeRow(
                 .bouncyClick(onClick = onPlay)
                 .padding(horizontal = 16.dp, vertical = 12.dp)
         ) {
-            // Lottie wave voice animation hiển thị bên trái với kích thước lớn cùng tầm font chữ tiêu đề (24.dp height)
+            // Lottie wave voice animation dạng vòng tròn chuẩn 36.dp không bị cắt xén lề
             if (isCurrent) {
                 val composition by rememberLottieComposition(
                     LottieCompositionSpec.RawRes(R.raw.lottie_voice_line_wave_animation)
@@ -80,11 +80,10 @@ fun EpisodeRow(
                 LottieAnimation(
                     composition = composition,
                     progress = { lottieProgress },
-                    contentScale = ContentScale.FillHeight,
+                    contentScale = ContentScale.Fit,
                     modifier = Modifier
-                        .height(24.dp)
-                        .width(48.dp)
-                        .padding(end = 8.dp)
+                        .size(36.dp)
+                        .padding(end = 6.dp)
                 )
             }
 
@@ -117,10 +116,10 @@ fun EpisodeRow(
                     if (isDownloaded) {
                         Spacer(modifier = Modifier.width(6.dp))
                         Icon(
-                            imageVector = Icons.Default.CheckCircle,
+                            imageVector = Icons.Default.DownloadForOffline,
                             contentDescription = "Đã tải offline",
-                            tint = Color(0xFF4CAF50),
-                            modifier = Modifier.size(13.dp)
+                            tint = Color.White,
+                            modifier = Modifier.size(16.dp)
                         )
                     } else when (downloadState) {
                         is PodcastDownloadState.Downloading -> {

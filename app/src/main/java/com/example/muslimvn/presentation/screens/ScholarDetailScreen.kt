@@ -184,6 +184,7 @@ fun ScholarDetailScreen(
             when {
                 state.isLoading -> LoadingIndicator(
                     label = stringResource(R.string.loading_please_wait),
+                    color = Color.White,
                     modifier = Modifier.fillMaxSize()
                 )
                 else -> LazyColumn(
@@ -206,7 +207,11 @@ fun ScholarDetailScreen(
                     }
                     if (state.isRefreshing) {
                         item(key = "refreshing") {
-                            LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
+                            LinearProgressIndicator(
+                                modifier = Modifier.fillMaxWidth(),
+                                color = Color.White,
+                                trackColor = Color.White.copy(alpha = 0.2f)
+                            )
                         }
                     }
                     if (state.offlineError) {
@@ -325,8 +330,7 @@ fun ScholarDetailScreen(
                     downloadState = selectedEpDownloadState,
                     onDownloadClick = { viewModel.downloadEpisode(selectedEp) },
                     onCancelDownloadClick = { viewModel.cancelDownload(selectedEp.id) },
-                    onDeleteDownloadClick = { viewModel.deleteDownloadedEpisode(selectedEp) },
-                    containerColor = miniPlayerColor
+                    onDeleteDownloadClick = { viewModel.deleteDownloadedEpisode(selectedEp) }
                 )
             }
 
@@ -365,7 +369,7 @@ fun ScholarDetailScreen(
                             Text(if (batchCount > 0) "Hủy" else "Đóng", color = Color.White.copy(alpha = 0.7f))
                         }
                     },
-                    containerColor = miniPlayerColor
+                    containerColor = Color(0xFF151E28)
                 )
             }
 
@@ -397,7 +401,7 @@ fun ScholarDetailScreen(
                             Text("Tiếp tục tải", color = Color.White.copy(alpha = 0.7f))
                         }
                     },
-                    containerColor = miniPlayerColor
+                    containerColor = Color(0xFF151E28)
                 )
             }
         }

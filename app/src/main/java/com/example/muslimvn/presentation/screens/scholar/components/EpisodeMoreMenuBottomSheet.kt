@@ -60,8 +60,8 @@ fun EpisodeMoreMenuBottomSheet(
     onDeleteDownloadClick: () -> Unit = {},
     containerColor: Color? = null
 ) {
-    // Luôn sử dụng màu nền tối đậm (Dark Theme) chuẩn YouTube Music
-    val darkSheetColor = containerColor ?: Color(0xFF202020)
+    // Luôn sử dụng màu nền tối chuẩn Dark Theme trong Color.kt (#151E28)
+    val darkSheetColor = Color(0xFF151E28)
 
     ModalBottomSheet(
         onDismissRequest = onDismiss,
@@ -127,19 +127,16 @@ fun EpisodeMoreMenuBottomSheet(
             BottomSheetMenuItem(
                 icon = Icons.Default.FavoriteBorder,
                 label = "Thêm vào yêu thích",
-                onClick = onDismiss
+                onClick = { }
             )
 
-            // 2. Tải xuống / Quản lý bản tải xuống
+            // 2. Tải xuống / Quản lý bản tải xuống (Không đóng BottomSheet tự động khi click)
             when (downloadState) {
                 is PodcastDownloadState.Downloaded -> {
                     BottomSheetMenuItem(
                         icon = Icons.Default.Delete,
                         label = "Xóa bản tải xuống",
-                        onClick = {
-                            onDeleteDownloadClick()
-                            onDismiss()
-                        }
+                        onClick = onDeleteDownloadClick
                     )
                 }
                 is PodcastDownloadState.Downloading -> {
@@ -147,40 +144,28 @@ fun EpisodeMoreMenuBottomSheet(
                     BottomSheetMenuItem(
                         icon = Icons.Default.Close,
                         label = "Đang tải xuống ($pct%) - Bấm để hủy",
-                        onClick = {
-                            onCancelDownloadClick()
-                            onDismiss()
-                        }
+                        onClick = onCancelDownloadClick
                     )
                 }
                 is PodcastDownloadState.Queued -> {
                     BottomSheetMenuItem(
                         icon = Icons.Default.Close,
                         label = "Đang chờ trong danh sách tải - Bấm để hủy",
-                        onClick = {
-                            onCancelDownloadClick()
-                            onDismiss()
-                        }
+                        onClick = onCancelDownloadClick
                     )
                 }
                 is PodcastDownloadState.Failed -> {
                     BottomSheetMenuItem(
                         icon = Icons.Default.Refresh,
                         label = "Tải thất bại - Thử lại",
-                        onClick = {
-                            onDownloadClick()
-                            onDismiss()
-                        }
+                        onClick = onDownloadClick
                     )
                 }
                 is PodcastDownloadState.Idle -> {
                     BottomSheetMenuItem(
                         icon = Icons.Default.Download,
                         label = "Tải xuống",
-                        onClick = {
-                            onDownloadClick()
-                            onDismiss()
-                        }
+                        onClick = onDownloadClick
                     )
                 }
             }
@@ -189,21 +174,21 @@ fun EpisodeMoreMenuBottomSheet(
             BottomSheetMenuItem(
                 icon = Icons.AutoMirrored.Filled.PlaylistAdd,
                 label = "Thêm vào danh sách phát",
-                onClick = onDismiss
+                onClick = { }
             )
 
             // 4. Đánh dấu đã nghe
             BottomSheetMenuItem(
                 icon = Icons.Default.CheckCircleOutline,
                 label = "Đánh dấu đã nghe",
-                onClick = onDismiss
+                onClick = { }
             )
 
             // 5. Chia sẻ
             BottomSheetMenuItem(
                 icon = Icons.Default.Share,
                 label = "Chia sẻ",
-                onClick = onDismiss
+                onClick = { }
             )
         }
     }
