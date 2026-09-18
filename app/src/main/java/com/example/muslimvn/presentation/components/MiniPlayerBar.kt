@@ -1,6 +1,7 @@
 package com.example.muslimvn.presentation.components
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.interaction.collectIsDraggedAsState
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -8,7 +9,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.interaction.collectIsDraggedAsState
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -29,6 +29,7 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -41,6 +42,7 @@ import com.example.muslimvn.domain.models.PodcastEpisode
 /**
  * Mini-player dính đáy: hiện khi có tập podcast đang phát.
  * Dạng nổi (floating) kiểu YouTube Music, hỗ trợ lướt để chuyển tập.
+ * Hỗ trợ tùy chỉnh containerColor để đồng bộ màu nền dynamic với màn chi tiết học giả.
  */
 @Composable
 fun MiniPlayerBar(
@@ -59,8 +61,14 @@ fun MiniPlayerBar(
     currentMediaId: String? = null,
     playlist: List<PodcastEpisode> = emptyList(),
     onPlayEpisode: (PodcastEpisode) -> Unit = {},
+    containerColor: Color? = null,
     modifier: Modifier = Modifier
 ) {
+    val barColor = containerColor ?: MaterialTheme.colorScheme.surfaceContainerHigh
+    val titleColor = if (containerColor != null) Color.White else MaterialTheme.colorScheme.onSurface
+    val subtitleColor = if (containerColor != null) Color.White.copy(alpha = 0.7f) else MaterialTheme.colorScheme.onSurfaceVariant
+    val iconColor = if (containerColor != null) Color.White else MaterialTheme.colorScheme.onSurface
+
     Surface(
         modifier = modifier
             .padding(horizontal = 8.dp, vertical = 8.dp)
@@ -68,7 +76,7 @@ fun MiniPlayerBar(
         shape = RoundedCornerShape(20.dp),
         tonalElevation = 8.dp,
         shadowElevation = 4.dp,
-        color = MaterialTheme.colorScheme.surfaceContainerHigh
+        color = barColor
     ) {
         Column(
             modifier = Modifier.fillMaxWidth()
@@ -113,8 +121,6 @@ fun MiniPlayerBar(
             LaunchedEffect(isDragged) {
                 if (isDragged) {
                     snapshotFlow { pagerState.currentPage }.collect { page ->
-                        // CHỈ đổi tập khi người dùng CHỦ ĐỘNG lướt tay (isDragged)
-                        // để tránh xung đột với việc tự động chuyển trang theo code
                         if (playlist.isNotEmpty() && page < playlist.size) {
                             val episode = playlist[page]
                             if (episode.id != currentMediaId) {
@@ -156,30 +162,33 @@ fun MiniPlayerBar(
                                 text = episode?.title ?: title,
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold,
+                                color = titleColor,
                                 maxLines = 1,
                                 overflow = TextOverflow.Ellipsis
                             )
                             Text(
                                 text = subtitle ?: "",
                                 style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                color = subtitleColor,
                                 maxLines = 1,
                                 overflow = TextOverflow.Ellipsis
                             )
                         }
                     }
                 }
-                
+
                 IconButton(onClick = onPlayPauseClick) {
                     if (isBuffering) {
                         CircularProgressIndicator(
                             strokeWidth = 2.dp,
+                            color = iconColor,
                             modifier = Modifier.size(20.dp)
                         )
                     } else {
                         Icon(
                             imageVector = if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
                             contentDescription = stringResource(if (isPlaying) R.string.pause else R.string.play),
+                            tint = iconColor,
                             modifier = Modifier.size(32.dp)
                         )
                     }

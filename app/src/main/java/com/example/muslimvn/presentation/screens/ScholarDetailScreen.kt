@@ -1,79 +1,74 @@
+@file:OptIn(androidx.media3.common.util.UnstableApi::class, ExperimentalMaterial3Api::class)
+
 package com.example.muslimvn.presentation.screens
 
+import android.graphics.drawable.BitmapDrawable
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.CloudOff
-import androidx.compose.material.icons.filled.Pause
-import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilledIconButton
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.paging.LoadState
 import androidx.paging.compose.collectAsLazyPagingItems
-import coil.compose.AsyncImage
+import androidx.palette.graphics.Palette
+import coil.imageLoader
+import coil.request.ImageRequest
+import coil.request.SuccessResult
 import com.example.muslimvn.R
 import com.example.muslimvn.domain.models.PodcastEpisode
-import com.example.muslimvn.domain.models.Scholar
 import com.example.muslimvn.presentation.components.EmptyState
 import com.example.muslimvn.presentation.components.LoadingIndicator
 import com.example.muslimvn.presentation.components.MiniPlayerBar
 import com.example.muslimvn.presentation.components.PodcastPlayerBarState
-import com.example.muslimvn.presentation.components.bouncyClick
-import com.example.muslimvn.presentation.components.formatDurationMs
-import com.example.muslimvn.presentation.components.formatPubDate
 import com.example.muslimvn.presentation.components.formatSpeedLabel
 import com.example.muslimvn.presentation.components.toAndroidAssetUri
+import com.example.muslimvn.presentation.screens.scholar.components.EpisodeMoreMenuBottomSheet
+import com.example.muslimvn.presentation.screens.scholar.components.EpisodeRow
+import com.example.muslimvn.presentation.screens.scholar.components.FloatingBackButton
+import com.example.muslimvn.presentation.screens.scholar.components.OfflineBanner
+import com.example.muslimvn.presentation.screens.scholar.components.ScholarHeader
+import com.example.muslimvn.presentation.screens.scholar.components.toDeepDark
+import com.example.muslimvn.presentation.screens.scholar.components.toMiniPlayerColor
 import com.example.muslimvn.presentation.viewmodels.PodcastPlayerViewModel
 import com.example.muslimvn.presentation.viewmodels.ScholarDetailViewModel
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 /**
- * Màn chi tiết học giả: header avatar/bio/tổng số tập + danh sách tập phát (RSS cache)
- * với nút phát/tạm dừng từng tập và chỉ báo "phát tiếp từ vị trí đã lưu".
+ * Màn chi tiết học giả phong cách Dynamic Color YouTube Music chuẩn Material 3.
+ * Đã tách modular các subcomponents vào package [com.example.muslimvn.presentation.screens.scholar.components]
+ * giúp dễ dàng bảo trì và bổ sung logic tính năng trong tương lai.
  */
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ScholarDetailScreen(
     onBackClick: () -> Unit = {},
@@ -83,33 +78,60 @@ fun ScholarDetailScreen(
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val currentEpisodeId by viewModel.currentEpisodeId.collectAsStateWithLifecycle()
-    val isPlaying by viewModel.isPlaying.collectAsStateWithLifecycle()
-    val isBuffering by viewModel.isBuffering.collectAsStateWithLifecycle()
     val episodes = viewModel.episodesPagingData.collectAsLazyPagingItems()
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        text = state.scholar?.name.orEmpty(),
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                },
-                navigationIcon = {
-                    IconButton(onClick = onBackClick) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = stringResource(R.string.back)
-                        )
+    // Trạng thái hiển thị BottomSheet tùy chọn cho tập podcast được chọn
+    var selectedEpisodeForMenu by remember { mutableStateOf<PodcastEpisode?>(null) }
+
+    // Trích xuất màu đậm tối Material 3 từ ảnh học giả chuẩn YouTube Music
+    val context = LocalContext.current
+    var dynamicBackgroundColor by remember { mutableStateOf<Color?>(null) }
+    val scholarAvatarUri = state.scholar?.avatarPath?.toAndroidAssetUri()
+
+    LaunchedEffect(scholarAvatarUri) {
+        if (!scholarAvatarUri.isNullOrEmpty()) {
+            runCatching {
+                val request = ImageRequest.Builder(context)
+                    .data(scholarAvatarUri)
+                    .allowHardware(false)
+                    .size(200, 200)
+                    .build()
+
+                val result = context.imageLoader.execute(request)
+                if (result is SuccessResult) {
+                    val bitmap = (result.drawable as? BitmapDrawable)?.bitmap
+                    if (bitmap != null) {
+                        val palette = withContext(Dispatchers.Default) {
+                            Palette.from(bitmap).generate()
+                        }
+                        val swatch = palette.darkVibrantSwatch
+                            ?: palette.darkMutedSwatch
+                            ?: palette.dominantSwatch
+                        swatch?.let {
+                            dynamicBackgroundColor = Color(it.rgb).toDeepDark()
+                        }
                     }
                 }
-            )
-        },
+            }
+        }
+    }
+
+    val defaultBg = Color(0xFF121212)
+    val backgroundColor by animateColorAsState(
+        targetValue = dynamicBackgroundColor ?: defaultBg,
+        animationSpec = tween(durationMillis = 600),
+        label = "scholarDynamicBackground"
+    )
+
+    val miniPlayerColor = remember(backgroundColor) {
+        backgroundColor.toMiniPlayerColor()
+    }
+
+    Scaffold(
+        contentWindowInsets = WindowInsets(0, 0, 0, 0),
         bottomBar = {
             PodcastPlayerBarState(playerViewModel) { active ->
-                val isPodcast = active != null && !active.id.contains(":") && !active.id.startsWith("islamhouse_")
+                val isPodcast = active != null && (!active.id.contains(":") && !active.id.startsWith("islamhouse_"))
                 AnimatedVisibility(visible = isPodcast) {
                     if (active != null) {
                         val playlist by playerViewModel.playlist.collectAsStateWithLifecycle()
@@ -128,278 +150,130 @@ fun ScholarDetailScreen(
                             onOpenFullPlayer = onOpenFullPlayer,
                             currentMediaId = active.id,
                             playlist = playlist,
-                            onPlayEpisode = playerViewModel::playEpisode
+                            onPlayEpisode = playerViewModel::playEpisode,
+                            containerColor = miniPlayerColor
                         )
                     }
                 }
             }
         }
     ) { padding ->
-        when {
-            state.isLoading -> LoadingIndicator(
-                label = stringResource(R.string.loading_please_wait),
-                modifier = Modifier.fillMaxSize()
-            )
-            else -> LazyColumn(
-                modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(
-                    top = padding.calculateTopPadding() + 12.dp,
-                    bottom = padding.calculateBottomPadding() + 24.dp
-                ),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                item(key = "header") {
-                    ScholarHeader(scholar = state.scholar, episodeCount = state.totalEpisodesCount)
-                }
-                if (state.isRefreshing) {
-                    item(key = "refreshing") {
-                        LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
-                    }
-                }
-                if (state.offlineError) {
-                    item(key = "offline_banner") {
-                        OfflineBanner(onRetry = viewModel::refreshEpisodes)
-                    }
-                }
-                item(key = "episodes_title") {
-                    Text(
-                        text = stringResource(R.string.podcast_episodes_title),
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold,
-                        modifier = Modifier.padding(horizontal = 16.dp)
-                    )
-                }
-                
-                // Loading state cho trang đầu tiên của Paging
-                if (episodes.loadState.refresh is LoadState.Loading && state.totalEpisodesCount == 0) {
-                    item {
-                        Box(modifier = Modifier.fillMaxWidth().padding(24.dp), contentAlignment = Alignment.Center) {
-                            CircularProgressIndicator()
-                        }
-                    }
-                }
-
-                if (episodes.itemCount == 0 && !state.isLoading && !state.isRefreshing && episodes.loadState.refresh is LoadState.NotLoading) {
-                    item(key = "empty") {
-                        EmptyState(
-                            message = stringResource(R.string.podcast_empty_episodes),
-                            hint = stringResource(R.string.podcast_empty_episodes_hint)
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(backgroundColor)
+        ) {
+            when {
+                state.isLoading -> LoadingIndicator(
+                    label = stringResource(R.string.loading_please_wait),
+                    modifier = Modifier.fillMaxSize()
+                )
+                else -> LazyColumn(
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = PaddingValues(
+                        bottom = padding.calculateBottomPadding() + 24.dp
+                    ),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    item(key = "header") {
+                        ScholarHeader(
+                            scholar = state.scholar,
+                            episodeCount = state.totalEpisodesCount,
+                            backgroundColor = backgroundColor
                         )
                     }
-                }
-                
-                items(
-                    count = episodes.itemCount,
-                    key = { index -> episodes[index]?.id ?: "placeholder_$index" },
-                    contentType = { "episode" }
-                ) { index ->
-                    val episode = episodes[index]
-                    if (episode != null) {
-                        EpisodeRow(
-                            episode = episode,
-                            scholarName = state.scholar?.name,
-                            isCurrent = currentEpisodeId == episode.id,
-                            isPlaying = isPlaying,
-                            isBuffering = isBuffering,
-                            onPlayPause = { viewModel.onPlayPauseClicked(episode, state.scholar?.name) }
-                        )
-                    }
-                }
-
-                // Loading state cho tải thêm trang (Append)
-                if (episodes.loadState.append is LoadState.Loading) {
-                    item {
-                        Box(modifier = Modifier.fillMaxWidth().padding(16.dp), contentAlignment = Alignment.Center) {
-                            CircularProgressIndicator(modifier = Modifier.size(32.dp))
+                    if (state.isRefreshing) {
+                        item(key = "refreshing") {
+                            LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
                         }
                     }
-                }
-            }
-        }
-    }
-}
-
-/** Header học giả: avatar lớn, tên, chức danh, bio và tổng số tập đã cache. */
-@Composable
-private fun ScholarHeader(scholar: Scholar?, episodeCount: Int) {
-    if (scholar == null) return
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 4.dp),
-        shape = MaterialTheme.shapes.extraLarge,
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceContainerLowest
-        )
-    ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(20.dp)
-        ) {
-            AsyncImage(
-                model = scholar.avatarPath.toAndroidAssetUri(),
-                contentDescription = scholar.name,
-                contentScale = ContentScale.Crop,
-                modifier = Modifier
-                    .size(104.dp)
-                    .clip(CircleShape)
-                    .background(MaterialTheme.colorScheme.surfaceVariant)
-            )
-            Spacer(modifier = Modifier.height(12.dp))
-            Text(
-                text = scholar.name,
-                style = MaterialTheme.typography.headlineSmall,
-                fontWeight = FontWeight.Bold,
-                textAlign = TextAlign.Center
-            )
-            Text(
-                text = scholar.title,
-                style = MaterialTheme.typography.titleSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-            Surface(shape = CircleShape, color = MaterialTheme.colorScheme.secondaryContainer) {
-                Text(
-                    text = stringResource(R.string.podcast_total_episodes, episodeCount),
-                    style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.onSecondaryContainer,
-                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp)
-                )
-            }
-            if (scholar.bio.isNotBlank()) {
-                Spacer(modifier = Modifier.height(12.dp))
-                Text(
-                    text = scholar.bio,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    textAlign = TextAlign.Center
-                )
-            }
-        }
-    }
-}
-
-/** Banner nhỏ báo lỗi fetch RSS (offline/feed lỗi) kèm nút thử lại — cache cũ vẫn dùng được. */
-@Composable
-private fun OfflineBanner(onRetry: () -> Unit) {
-    Surface(color = MaterialTheme.colorScheme.errorContainer) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 4.dp)
-        ) {
-            Icon(
-                imageVector = Icons.Default.CloudOff,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.onErrorContainer,
-                modifier = Modifier.size(18.dp)
-            )
-            Spacer(modifier = Modifier.width(8.dp))
-            Text(
-                text = stringResource(R.string.podcast_error_offline),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onErrorContainer,
-                modifier = Modifier.weight(1f)
-            )
-            TextButton(onClick = onRetry) {
-                Text(text = stringResource(R.string.retry))
-            }
-        }
-    }
-}
-
-/**
- * Một dòng tập phát: tiêu đề, ngày phát • thời lượng, badge "phát tiếp tục" nếu còn
- * vị trí lưu, và nút phát/tạm dừng tròn bên phải. Hàng đang phát được tô nền nhạt.
- */
-@Composable
-private fun EpisodeRow(
-    episode: PodcastEpisode,
-    scholarName: String?,
-    isCurrent: Boolean,
-    isPlaying: Boolean,
-    isBuffering: Boolean,
-    onPlayPause: () -> Unit
-) {
-    val containerColor = if (isCurrent) {
-        MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.45f)
-    } else {
-        MaterialTheme.colorScheme.surface
-    }
-    Column(modifier = Modifier.fillMaxWidth()) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(containerColor)
-                .bouncyClick(onClick = onPlayPause)
-                .padding(horizontal = 16.dp, vertical = 12.dp)
-        ) {
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = episode.title,
-                    style = MaterialTheme.typography.titleSmall,
-                    fontWeight = FontWeight.Medium,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis,
-                    color = if (isCurrent) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
-                )
-                Spacer(modifier = Modifier.height(4.dp))
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(
-                        text = buildString {
-                            append(formatPubDate(episode.pubDate))
-                            append(" \u2022 ")
-                            append(formatDurationMs(episode.duration))
-                        },
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    // Còn vị trí nghe hợp lệ -> gợi ý phát tiếp từ đó.
-                    val resumable = episode.lastPositionMs > 60_000L &&
-                        (episode.duration <= 0 || episode.lastPositionMs < episode.duration - 15_000L)
-                    if (resumable) {
-                        Spacer(modifier = Modifier.width(8.dp))
+                    if (state.offlineError) {
+                        item(key = "offline_banner") {
+                            OfflineBanner(onRetry = viewModel::refreshEpisodes)
+                        }
+                    }
+                    item(key = "episodes_title") {
                         Text(
-                            text = stringResource(
-                                R.string.podcast_resume_from,
-                                formatDurationMs(episode.lastPositionMs)
-                            ),
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.primary,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
+                            text = stringResource(R.string.podcast_episodes_title),
+                            style = MaterialTheme.typography.titleLarge,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White,
+                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
                         )
+                    }
+
+                    // Loading state cho trang đầu tiên của Paging
+                    if (episodes.loadState.refresh is LoadState.Loading && state.totalEpisodesCount == 0) {
+                        item {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(24.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                CircularProgressIndicator(color = Color.White)
+                            }
+                        }
+                    }
+
+                    if (episodes.itemCount == 0 && !state.isRefreshing && episodes.loadState.refresh is LoadState.NotLoading) {
+                        item(key = "empty") {
+                            EmptyState(
+                                message = stringResource(R.string.podcast_empty_episodes),
+                                hint = stringResource(R.string.podcast_empty_episodes_hint)
+                            )
+                        }
+                    }
+
+                    items(
+                        count = episodes.itemCount,
+                        key = { index -> episodes[index]?.id ?: "placeholder_$index" },
+                        contentType = { "episode" }
+                    ) { index ->
+                        val episode = episodes[index]
+                        if (episode != null) {
+                            EpisodeRow(
+                                episode = episode,
+                                isCurrent = currentEpisodeId == episode.id,
+                                onPlay = { viewModel.onPlayPauseClicked(episode, state.scholar?.name) },
+                                onMoreClick = { selectedEpisodeForMenu = episode }
+                            )
+                        }
+                    }
+
+                    // Loading state cho tải thêm trang (Append)
+                    if (episodes.loadState.append is LoadState.Loading) {
+                        item {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(16.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                CircularProgressIndicator(modifier = Modifier.size(32.dp), color = Color.White)
+                            }
+                        }
                     }
                 }
             }
-            Spacer(modifier = Modifier.width(10.dp))
-            FilledIconButton(
-                onClick = onPlayPause,
-                colors = IconButtonDefaults.filledIconButtonColors(
-                    containerColor = if (isCurrent) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.secondaryContainer,
-                    contentColor = if (isCurrent) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSecondaryContainer
-                ),
-                modifier = Modifier.size(42.dp)
-            ) {
-                if (isCurrent && isBuffering) {
-                    CircularProgressIndicator(strokeWidth = 2.dp, modifier = Modifier.size(20.dp))
-                } else {
-                    Icon(
-                        imageVector = if (isCurrent && isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
-                        contentDescription = stringResource(if (isCurrent && isPlaying) R.string.pause else R.string.play),
-                        modifier = Modifier.size(24.dp)
-                    )
-                }
+
+            // Floating Back Button ở góc trên bên trái đè lên ảnh nền, có padding an toàn Safe Area / Status Bar
+            FloatingBackButton(
+                onBackClick = onBackClick,
+                modifier = Modifier
+                    .align(Alignment.TopStart)
+                    .statusBarsPadding()
+                    .padding(start = 16.dp, top = 12.dp)
+            )
+
+            // BottomSheet hiển thị khi nhấn nút 3 chấm của một tập podcast
+            if (selectedEpisodeForMenu != null) {
+                EpisodeMoreMenuBottomSheet(
+                    episode = selectedEpisodeForMenu!!,
+                    scholar = state.scholar,
+                    onDismiss = { selectedEpisodeForMenu = null }
+                )
             }
         }
-        HorizontalDivider(
-            thickness = 0.5.dp,
-            color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f),
-            modifier = Modifier.padding(horizontal = 16.dp)
-        )
     }
 }
