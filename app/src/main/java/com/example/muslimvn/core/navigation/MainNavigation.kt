@@ -105,7 +105,21 @@ fun MainNavigation(backStack: NavBackStack<NavKey>, modifier: Modifier = Modifie
                 val viewModel = hiltViewModel<SurahDetailViewModel, SurahDetailViewModel.Factory> { it.create(key.surahNumber, key.startAyah) }
                 SurahDetailScreen(popBack, { backStack.add(Destination.QuranSettings(key.surahNumber)) }, { openFullPlayer(null) }, viewModel)
             }
-            entry<Destination.PodcastHome> { PodcastHomeScreen(popBack, { backStack.add(Destination.ScholarDetail(it)) }, { openFullPlayer(null) }) }
+            entry<Destination.PodcastHome> {
+                PodcastHomeScreen(
+                    onBackClick = popBack,
+                    onScholarClick = { backStack.add(Destination.ScholarDetail(it)) },
+                    onSeeAllMuslimCentralClick = { backStack.add(Destination.MuslimCentralScholars) },
+                    onOpenFullPlayer = { openFullPlayer(null) }
+                )
+            }
+            entry<Destination.MuslimCentralScholars> {
+                com.example.muslimvn.presentation.screens.podcast.MuslimCentralScholarsScreen(
+                    onBackClick = popBack,
+                    onScholarClick = { backStack.add(Destination.ScholarDetail(it)) },
+                    onOpenFullPlayer = { openFullPlayer(null) }
+                )
+            }
             entry<Destination.ScholarDetail> { key ->
                 val viewModel = hiltViewModel<ScholarDetailViewModel, ScholarDetailViewModel.Factory> { it.create(key.scholarId) }
                 ScholarDetailScreen(popBack, { openFullPlayer(null) }, viewModel)

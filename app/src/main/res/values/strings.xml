@@ -170,8 +170,8 @@
 
     <!-- Podcast học giả Islam -->
     <string name="nav_podcast">Podcast</string>
-    <string name="podcast_title">Podcast Học Giả Islam</string>
-    <string name="podcast_featured_scholars">Học giả thế giới</string>
+    <string name="podcast_title">Podcast Học Giả thế giới</string>
+    <string name="podcast_featured_scholars">Học giả nổi bật</string>
     <string name="podcast_all_scholars">Tất cả học giả</string>
     <string name="podcast_category_all">Tất cả</string>
     <string name="podcast_episodes_title">Các tập phát</string>

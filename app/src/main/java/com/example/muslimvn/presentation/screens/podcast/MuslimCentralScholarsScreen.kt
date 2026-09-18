@@ -1,6 +1,6 @@
 @file:OptIn(androidx.media3.common.util.UnstableApi::class, ExperimentalMaterial3Api::class)
 
-package com.example.muslimvn.presentation.screens
+package com.example.muslimvn.presentation.screens.podcast
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
@@ -12,74 +12,69 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.GridItemSpan
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.muslimvn.R
+import com.example.muslimvn.domain.models.PodcastEpisode
+import com.example.muslimvn.presentation.components.EmptyState
 import com.example.muslimvn.presentation.components.ErrorState
 import com.example.muslimvn.presentation.components.LoadingIndicator
 import com.example.muslimvn.presentation.components.MiniPlayerBar
 import com.example.muslimvn.presentation.components.PodcastPlayerBarState
 import com.example.muslimvn.presentation.components.formatSpeedLabel
+import com.example.muslimvn.presentation.components.toAndroidAssetUri
 import com.example.muslimvn.presentation.screens.podcast.components.BrandSectionTitle
 import com.example.muslimvn.presentation.screens.podcast.components.CategoryChipsRow
-import com.example.muslimvn.presentation.screens.podcast.components.FeaturedScholarsSection
-import com.example.muslimvn.presentation.screens.podcast.components.MuslimCentralSection
-import com.example.muslimvn.presentation.screens.podcast.components.SectionTitle
+import com.example.muslimvn.presentation.screens.podcast.components.MuslimCentralScholarCard
 import com.example.muslimvn.presentation.screens.scholar.components.FloatingBackButton
 import com.example.muslimvn.presentation.viewmodels.PodcastHomeViewModel
 import com.example.muslimvn.presentation.viewmodels.PodcastPlayerViewModel
 
 /**
- * Trang chủ Podcast học giả Islam phong cách Edge-to-Edge tràn viền cao cấp:
- * - Hàng FilterChip phân loại bo tròn dạng viên thuốc.
- * - Carousel Hero Cards "Học giả nổi bật" lớn đầy ấn tượng (Mufti Menk số 1, Hamza Yusuf số 2).
- * - Danh sách học giả thương hiệu Muslim Central dạng Carousel cuộn ngang Hero Cards có hiệu ứng ám mờ 2 bên.
- * - Nút mũi tên bên phải tiêu đề Muslim Central mở màn hình Lưới 2 cột tất cả học giả.
- * - Mini-player dính đáy khi có tập đang phát.
+ * Màn hình danh sách tất cả học giả Muslim Central dạng Lưới 2 Cột (2-Column Grid):
+ * - Thiết kế Edge-to-Edge tràn viền với nút Back hình tròn nổi bán trong suốt.
+ * - Header thương hiệu Logo + Muslim Central và hàng chip lọc danh mục.
+ * - Lưới 2 cột chứa các Card học giả tràn viền cao cấp.
  */
 @Composable
-fun PodcastHomeScreen(
+fun MuslimCentralScholarsScreen(
     onBackClick: () -> Unit = {},
     onScholarClick: (String) -> Unit = {},
-    onSeeAllMuslimCentralClick: () -> Unit = {},
     onOpenFullPlayer: () -> Unit = {},
     viewModel: PodcastHomeViewModel = hiltViewModel(),
     playerViewModel: PodcastPlayerViewModel = hiltViewModel()
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
 
-    // Sắp xếp thứ tự Danh sách Nổi bật: 1. Mufti Menk, 2. Hamza Yusuf
-    val orderedFeaturedScholars = remember(state.featuredScholars) {
-        val priorityOrder = listOf("mufti-menk", "hamza-yusuf")
-        state.featuredScholars.sortedBy { scholar ->
-            val index = priorityOrder.indexOf(scholar.id)
-            if (index != -1) index else Int.MAX_VALUE
-        }
-    }
-
-    // Deduplication: Lọc bỏ các học giả đã xuất hiện trong danh sách "Nổi bật" & Mufti Menk khỏi Muslim Central
-    val featuredIds = remember(orderedFeaturedScholars) {
-        orderedFeaturedScholars.map { it.id }.toSet()
+    // Deduplication: Lọc bỏ các học giả Nổi bật & Mufti Menk
+    val featuredIds = remember(state.featuredScholars) {
+        state.featuredScholars.map { it.id }.toSet()
     }
     val muslimCentralScholars = remember(state.scholars, featuredIds) {
         state.scholars.filter { scholar ->
             scholar.id !in featuredIds && scholar.id != "mufti-menk"
         }
     }
+
+    val displayScholars = if (state.selectedCategoryId == null) muslimCentralScholars else state.scholars
 
     Scaffold(
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
@@ -126,32 +121,32 @@ fun PodcastHomeScreen(
                     onRetry = viewModel::retryLoading,
                     modifier = Modifier.fillMaxSize()
                 )
-                else -> LazyColumn(
+                else -> LazyVerticalGrid(
+                    columns = GridCells.Fixed(2),
                     modifier = Modifier.fillMaxSize(),
                     contentPadding = PaddingValues(
                         bottom = padding.calculateBottomPadding() + 24.dp
                     ),
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                    horizontalArrangement = Arrangement.spacedBy(14.dp),
+                    verticalArrangement = Arrangement.spacedBy(14.dp)
                 ) {
-                    // Tiêu đề trang Magazine Header nằm dưới nút Back floating
-                    item(key = "top_header") {
+                    // Header thương hiệu nằm dưới nút Back floating (Chiếm toàn bộ 2 cột)
+                    item(span = { GridItemSpan(2) }, key = "brand_header") {
                         Column(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .statusBarsPadding()
-                                .padding(top = 56.dp, start = 16.dp, end = 16.dp, bottom = 4.dp)
+                                .padding(top = 56.dp, bottom = 4.dp)
                         ) {
-                            Text(
-                                text = stringResource(R.string.podcast_title),
-                                style = MaterialTheme.typography.headlineMedium,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onBackground
+                            BrandSectionTitle(
+                                title = "Muslim Central",
+                                logoPath = "images/brand/muslim_central.webp"
                             )
                         }
                     }
 
-                    // Hàng chip phân loại
-                    item(key = "chips") {
+                    // Hàng chip phân loại (Chiếm toàn bộ 2 cột)
+                    item(span = { GridItemSpan(2) }, key = "chips") {
                         CategoryChipsRow(
                             categories = state.categories,
                             selectedCategoryId = state.selectedCategoryId,
@@ -159,41 +154,15 @@ fun PodcastHomeScreen(
                         )
                     }
 
-                    // Phần học giả nổi bật (khi không lọc hoặc chọn chip "Tất cả")
-                    if (orderedFeaturedScholars.isNotEmpty() && state.selectedCategoryId == null) {
-                        item(key = "featured_title") {
-                            SectionTitle(text = stringResource(R.string.podcast_featured_scholars))
-                        }
-                        item(key = "featured_row") {
-                            FeaturedScholarsSection(
-                                scholars = orderedFeaturedScholars,
-                                onScholarClick = onScholarClick
+                    // Danh sách học giả dạng Lưới 2 Cột
+                    items(displayScholars, key = { it.id }) { scholar ->
+                        Box(modifier = Modifier.padding(horizontal = 4.dp)) {
+                            MuslimCentralScholarCard(
+                                scholar = scholar,
+                                modifier = Modifier.fillMaxWidth(),
+                                onClick = { onScholarClick(scholar.id) }
                             )
                         }
-                    }
-
-                    // Tiêu đề danh sách chính Muslim Central kèm Nút Mũi Tên Mở Trang Mới
-                    item(key = "all_title") {
-                        if (state.selectedCategoryId == null) {
-                            BrandSectionTitle(
-                                title = "Muslim Central",
-                                logoPath = "images/brand/muslim_central.webp",
-                                onSeeAllClick = onSeeAllMuslimCentralClick
-                            )
-                        } else {
-                            SectionTitle(
-                                text = state.categories.find { it.id == state.selectedCategoryId }?.name
-                                    ?: stringResource(R.string.podcast_all_scholars)
-                            )
-                        }
-                    }
-
-                    // Danh sách học giả Muslim Central dạng Hero Cards cuộn ngang cao cấp
-                    item(key = "muslim_central_row") {
-                        MuslimCentralSection(
-                            scholars = if (state.selectedCategoryId == null) muslimCentralScholars else state.scholars,
-                            onScholarClick = onScholarClick
-                        )
                     }
                 }
             }
