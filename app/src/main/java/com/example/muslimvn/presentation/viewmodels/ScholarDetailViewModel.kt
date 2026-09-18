@@ -89,8 +89,9 @@ class ScholarDetailViewModel @AssistedInject constructor(
     }
 
     /**
-     * Nút "Nghe" chính ở Header: phát toàn bộ danh sách tập của học giả từ mới nhất xuống oldest.
-     * Nếu học giả này đang phát thì toggle pause/resume.
+     * Nút "Nghe" chính ở Header:
+     * - Khi đang phát (isPlaying == true) -> Tạm dừng / Dừng.
+     * - Khi đang dừng (isPlaying == false) -> Trở về chức năng cốt lõi: phát từ đầu danh sách mới nhất (index 0).
      */
     fun onPlayAllClicked() {
         val episodes = _scholarEpisodes.value
@@ -99,8 +100,8 @@ class ScholarDetailViewModel @AssistedInject constructor(
         val currentId = currentEpisodeId.value
         val isScholarEpisodeActive = episodes.any { it.id == currentId }
 
-        if (isScholarEpisodeActive) {
-            if (isPlaying.value) audioPlayerManager.pause() else audioPlayerManager.resume()
+        if (isScholarEpisodeActive && isPlaying.value) {
+            audioPlayerManager.pause()
         } else {
             val items = episodes.map { ep ->
                 AudioPlayItem(
@@ -125,13 +126,16 @@ class ScholarDetailViewModel @AssistedInject constructor(
     }
 
     /**
-     * Nút "Nghe ngẫu nhiên" ở Header: trộn ngẫu nhiên danh sách tập và phát.
+     * Nút "Nghe ngẫu nhiên" ở Header:
+     * - Trộn ngẫu nhiên danh sách tập không bị lặp lại và phát.
+     * - Nút ở giữa chuyển sang "Dừng" nhờ [isPlaying] và [currentEpisodeId].
      */
     fun onShuffleClicked() {
-        val episodes = _scholarEpisodes.value.shuffled()
+        val episodes = _scholarEpisodes.value
         if (episodes.isEmpty()) return
 
-        val items = episodes.map { ep ->
+        val shuffledEpisodes = episodes.shuffled()
+        val items = shuffledEpisodes.map { ep ->
             AudioPlayItem(
                 url = ep.audioUrl,
                 mediaId = ep.id,
@@ -140,10 +144,14 @@ class ScholarDetailViewModel @AssistedInject constructor(
                 artworkPath = ep.artworkUrl ?: _uiState.value.scholar?.avatarPath
             )
         }
+        val firstEp = shuffledEpisodes[0]
+        val nearEnd = firstEp.duration > 0 && firstEp.lastPositionMs >= firstEp.duration - 15_000L
+        val startPosition = firstEp.lastPositionMs.takeIf { it > 0 && !nearEnd } ?: 0L
+
         audioPlayerManager.playList(
             items = items,
             startIndex = 0,
-            startPositionMs = 0L,
+            startPositionMs = startPosition,
             isPodcast = true
         )
     }
