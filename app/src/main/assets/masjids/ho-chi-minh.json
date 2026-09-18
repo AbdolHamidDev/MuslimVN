@@ -1,0 +1,845 @@
+{
+  "schemaVersion": 1,
+  "province": {
+    "id": "ho-chi-minh",
+    "name": "Ho Chi Minh City",
+    "countryCode": "VN"
+  },
+  "managementOrganizations": [
+    {
+      "id": "hcm-islamic-representative-board",
+      "name": "Ban Đại diện Cộng đồng Hồi giáo Thành phố Hồ Chí Minh",
+      "type": "PROVINCIAL_ISLAMIC_REPRESENTATIVE_BOARD",
+      "address": "52 Nguyễn Văn Trỗi, Phường Cầu Kiệu, Thành phố Hồ Chí Minh",
+      "phone": null,
+      "website": null
+    }
+  ],
+  "masjids": [
+    {
+      "id": "hcm-001",
+      "name": "Masjid al-Rahim",
+      "nativeName": null,
+      "aliases": [],
+      "type": "MASJID",
+      "location": {
+        "address": "45 Nam Kỳ Khởi Nghĩa, Phường Bến Thành",
+        "province": "Ho Chi Minh City",
+        "district": null,
+        "commune": null,
+        "latitude": null,
+        "longitude": null
+      },
+      "contact": null,
+      "prayer": {
+        "jummah": [
+          "12:30"
+        ],
+        "eidPrayer": []
+      },
+      "facilities": {
+        "womenPrayerArea": true,
+        "wudu": null,
+        "parking": null,
+        "quran": null,
+        "quranClass": true
+      },
+      "services": {
+        "iftarRamadan": true,
+        "islamicClasses": null,
+        "funeralPrayer": null,
+        "nikah": null
+      },
+      "management": {
+        "organizationId": "hcm-islamic-representative-board",
+        "boardName": null
+      },
+      "media": {
+        "images": []
+      },
+      "verification": {
+        "status": "COMMUNITY",
+        "sources": [
+          {
+            "name": "Danh sách Masjid TP.HCM",
+            "url": null
+          }
+        ],
+        "lastVerifiedAt": null
+      },
+      "notes": "Giờ Salah: Fajr 05:05 · Dhuhr 12:15 · Asr 15:45 · Maghrib 18:10 · Isha 19:30"
+    },
+    {
+      "id": "hcm-002",
+      "name": "Masjid Nurul Islam",
+      "nativeName": null,
+      "aliases": [],
+      "type": "MASJID",
+      "location": {
+        "address": "512/513 Chung cư 86/1 Phan Văn Hân, Phường Gia Định",
+        "province": "Ho Chi Minh City",
+        "district": null,
+        "commune": null,
+        "latitude": null,
+        "longitude": null
+      },
+      "contact": null,
+      "prayer": {
+        "jummah": [
+          "12:15"
+        ],
+        "eidPrayer": []
+      },
+      "facilities": {
+        "womenPrayerArea": null,
+        "wudu": null,
+        "parking": null,
+        "quran": null,
+        "quranClass": true
+      },
+      "services": {
+        "iftarRamadan": true,
+        "islamicClasses": true,
+        "funeralPrayer": null,
+        "nikah": null
+      },
+      "management": {
+        "organizationId": "hcm-islamic-representative-board",
+        "boardName": null
+      },
+      "media": {
+        "images": []
+      },
+      "verification": {
+        "status": "COMMUNITY",
+        "sources": [
+          {
+            "name": "Danh sách Masjid TP.HCM",
+            "url": null
+          }
+        ],
+        "lastVerifiedAt": null
+      },
+      "notes": "Giờ Salah: Fajr 05:00 · Dhuhr 12:10 · Asr 15:40 · Maghrib 18:05 · Isha 19:20"
+    },
+    {
+      "id": "hcm-003",
+      "name": "Masjid Al Muslimeen",
+      "nativeName": null,
+      "aliases": [],
+      "type": "MASJID",
+      "location": {
+        "address": "52 Nguyễn Văn Trỗi, Phường Cầu Kiệu",
+        "province": "Ho Chi Minh City",
+        "district": null,
+        "commune": null,
+        "latitude": null,
+        "longitude": null
+      },
+      "contact": null,
+      "prayer": {
+        "jummah": [
+          "12:15"
+        ],
+        "eidPrayer": []
+      },
+      "facilities": {
+        "womenPrayerArea": true,
+        "wudu": null,
+        "parking": null,
+        "quran": null,
+        "quranClass": true
+      },
+      "services": {
+        "iftarRamadan": true,
+        "islamicClasses": true,
+        "funeralPrayer": null,
+        "nikah": null
+      },
+      "management": {
+        "organizationId": "hcm-islamic-representative-board",
+        "boardName": null
+      },
+      "media": {
+        "images": []
+      },
+      "verification": {
+        "status": "COMMUNITY",
+        "sources": [
+          {
+            "name": "Danh sách Masjid TP.HCM",
+            "url": null
+          }
+        ],
+        "lastVerifiedAt": null
+      },
+      "notes": "Giờ Salah: Fajr 05:00 · Dhuhr 12:10 · Asr 15:40 · Maghrib 18:05 · Isha 19:20"
+    },
+    {
+      "id": "hcm-004",
+      "name": "Masjid Musulmane",
+      "nativeName": null,
+      "aliases": [],
+      "type": "MASJID",
+      "location": {
+        "address": "66 Đông Du, Phường Sài Gòn",
+        "province": "Ho Chi Minh City",
+        "district": null,
+        "commune": null,
+        "latitude": null,
+        "longitude": null
+      },
+      "contact": null,
+      "prayer": {
+        "jummah": [
+          "12:30"
+        ],
+        "eidPrayer": []
+      },
+      "facilities": {
+        "womenPrayerArea": true,
+        "wudu": null,
+        "parking": null,
+        "quran": null,
+        "quranClass": true
+      },
+      "services": {
+        "iftarRamadan": true,
+        "islamicClasses": true,
+        "funeralPrayer": null,
+        "nikah": null
+      },
+      "management": {
+        "organizationId": "hcm-islamic-representative-board",
+        "boardName": null
+      },
+      "media": {
+        "images": []
+      },
+      "verification": {
+        "status": "COMMUNITY",
+        "sources": [
+          {
+            "name": "Danh sách Masjid TP.HCM",
+            "url": null
+          }
+        ],
+        "lastVerifiedAt": null
+      },
+      "notes": "Giờ Salah: Fajr 05:05 · Dhuhr 12:15 · Asr 15:45 · Maghrib 18:10 · Isha 19:30"
+    },
+    {
+      "id": "hcm-005",
+      "name": "Masjid Jamiul Islamiyah",
+      "nativeName": null,
+      "aliases": [],
+      "type": "MASJID",
+      "location": {
+        "address": "459B Trần Hưng Đạo, Phường Cầu Kho",
+        "province": "Ho Chi Minh City",
+        "district": null,
+        "commune": null,
+        "latitude": null,
+        "longitude": null
+      },
+      "contact": null,
+      "prayer": {
+        "jummah": [
+          "12:15"
+        ],
+        "eidPrayer": []
+      },
+      "facilities": {
+        "womenPrayerArea": null,
+        "wudu": null,
+        "parking": null,
+        "quran": null,
+        "quranClass": true
+      },
+      "services": {
+        "iftarRamadan": true,
+        "islamicClasses": null,
+        "funeralPrayer": null,
+        "nikah": null
+      },
+      "management": {
+        "organizationId": "hcm-islamic-representative-board",
+        "boardName": null
+      },
+      "media": {
+        "images": []
+      },
+      "verification": {
+        "status": "COMMUNITY",
+        "sources": [
+          {
+            "name": "Danh sách Masjid TP.HCM",
+            "url": null
+          }
+        ],
+        "lastVerifiedAt": null
+      },
+      "notes": "Giờ Salah: Fajr 05:00 · Dhuhr 12:10 · Asr 15:40 · Maghrib 18:05 · Isha 19:20"
+    },
+    {
+      "id": "hcm-006",
+      "name": "Masjid Jamiul Anwar",
+      "nativeName": null,
+      "aliases": [],
+      "type": "MASJID",
+      "location": {
+        "address": "157/42B Dương Bá Trạc, Phường Chánh Hưng",
+        "province": "Ho Chi Minh City",
+        "district": null,
+        "commune": null,
+        "latitude": null,
+        "longitude": null
+      },
+      "contact": null,
+      "prayer": {
+        "jummah": [
+          "12:15"
+        ],
+        "eidPrayer": []
+      },
+      "facilities": {
+        "womenPrayerArea": true,
+        "wudu": null,
+        "parking": null,
+        "quran": null,
+        "quranClass": true
+      },
+      "services": {
+        "iftarRamadan": true,
+        "islamicClasses": null,
+        "funeralPrayer": null,
+        "nikah": null
+      },
+      "management": {
+        "organizationId": "hcm-islamic-representative-board",
+        "boardName": null
+      },
+      "media": {
+        "images": []
+      },
+      "verification": {
+        "status": "COMMUNITY",
+        "sources": [
+          {
+            "name": "Danh sách Masjid TP.HCM",
+            "url": null
+          }
+        ],
+        "lastVerifiedAt": null
+      },
+      "notes": "Giờ Salah: Fajr 05:00 · Dhuhr 12:10 · Asr 15:40 · Maghrib 18:05 · Isha 19:20"
+    },
+    {
+      "id": "hcm-007",
+      "name": "Masjid Sa'adah",
+      "nativeName": null,
+      "aliases": [],
+      "type": "MASJID",
+      "location": {
+        "address": "45/67 Bình Tiên, Phường Bình Tiên",
+        "province": "Ho Chi Minh City",
+        "district": null,
+        "commune": null,
+        "latitude": null,
+        "longitude": null
+      },
+      "contact": null,
+      "prayer": {
+        "jummah": [
+          "12:15"
+        ],
+        "eidPrayer": []
+      },
+      "facilities": {
+        "womenPrayerArea": true,
+        "wudu": null,
+        "parking": null,
+        "quran": null,
+        "quranClass": true
+      },
+      "services": {
+        "iftarRamadan": true,
+        "islamicClasses": null,
+        "funeralPrayer": null,
+        "nikah": null
+      },
+      "management": {
+        "organizationId": "hcm-islamic-representative-board",
+        "boardName": null
+      },
+      "media": {
+        "images": []
+      },
+      "verification": {
+        "status": "COMMUNITY",
+        "sources": [
+          {
+            "name": "Danh sách Masjid TP.HCM",
+            "url": null
+          }
+        ],
+        "lastVerifiedAt": null
+      },
+      "notes": "Giờ Salah: Fajr 05:00 · Dhuhr 12:10 · Asr 15:40 · Maghrib 18:05 · Isha 19:20"
+    },
+    {
+      "id": "hcm-008",
+      "name": "Masjid Al Jamia' Chợ lớn",
+      "nativeName": null,
+      "aliases": [],
+      "type": "MASJID",
+      "location": {
+        "address": "641 Nguyễn Trãi, Phường Chợ Lớn",
+        "province": "Ho Chi Minh City",
+        "district": null,
+        "commune": null,
+        "latitude": null,
+        "longitude": null
+      },
+      "contact": null,
+      "prayer": {
+        "jummah": [
+          "12:30"
+        ],
+        "eidPrayer": []
+      },
+      "facilities": {
+        "womenPrayerArea": true,
+        "wudu": null,
+        "parking": null,
+        "quran": null,
+        "quranClass": true
+      },
+      "services": {
+        "iftarRamadan": true,
+        "islamicClasses": true,
+        "funeralPrayer": null,
+        "nikah": null
+      },
+      "management": {
+        "organizationId": "hcm-islamic-representative-board",
+        "boardName": null
+      },
+      "media": {
+        "images": []
+      },
+      "verification": {
+        "status": "COMMUNITY",
+        "sources": [
+          {
+            "name": "Danh sách Masjid TP.HCM",
+            "url": null
+          }
+        ],
+        "lastVerifiedAt": null
+      },
+      "notes": "Giờ Salah: Fajr 05:05 · Dhuhr 12:15 · Asr 15:45 · Maghrib 18:10 · Isha 19:30"
+    },
+    {
+      "id": "hcm-009",
+      "name": "Masjid Hayatul Islam",
+      "nativeName": null,
+      "aliases": [],
+      "type": "MASJID",
+      "location": {
+        "address": "357/11 Cách Mạng Tháng Tám, Phường Hoà Hưng",
+        "province": "Ho Chi Minh City",
+        "district": null,
+        "commune": null,
+        "latitude": null,
+        "longitude": null
+      },
+      "contact": null,
+      "prayer": {
+        "jummah": [
+          "12:15"
+        ],
+        "eidPrayer": []
+      },
+      "facilities": {
+        "womenPrayerArea": true,
+        "wudu": null,
+        "parking": null,
+        "quran": null,
+        "quranClass": true
+      },
+      "services": {
+        "iftarRamadan": true,
+        "islamicClasses": true,
+        "funeralPrayer": null,
+        "nikah": null
+      },
+      "management": {
+        "organizationId": "hcm-islamic-representative-board",
+        "boardName": null
+      },
+      "media": {
+        "images": []
+      },
+      "verification": {
+        "status": "COMMUNITY",
+        "sources": [
+          {
+            "name": "Danh sách Masjid TP.HCM",
+            "url": null
+          }
+        ],
+        "lastVerifiedAt": null
+      },
+      "notes": "Giờ Salah: Fajr 05:00 · Dhuhr 12:10 · Asr 15:40 · Maghrib 18:05 · Isha 19:20"
+    },
+    {
+      "id": "hcm-010",
+      "name": "Masjid Muwahidin",
+      "nativeName": null,
+      "aliases": [],
+      "type": "MASJID",
+      "location": {
+        "address": "9/12 Đường 128, Phường Phước Long",
+        "province": "Ho Chi Minh City",
+        "district": null,
+        "commune": null,
+        "latitude": null,
+        "longitude": null
+      },
+      "contact": null,
+      "prayer": {
+        "jummah": [
+          "12:15"
+        ],
+        "eidPrayer": []
+      },
+      "facilities": {
+        "womenPrayerArea": true,
+        "wudu": null,
+        "parking": null,
+        "quran": null,
+        "quranClass": true
+      },
+      "services": {
+        "iftarRamadan": true,
+        "islamicClasses": true,
+        "funeralPrayer": null,
+        "nikah": null
+      },
+      "management": {
+        "organizationId": "hcm-islamic-representative-board",
+        "boardName": null
+      },
+      "media": {
+        "images": []
+      },
+      "verification": {
+        "status": "COMMUNITY",
+        "sources": [
+          {
+            "name": "Danh sách Masjid TP.HCM",
+            "url": null
+          }
+        ],
+        "lastVerifiedAt": null
+      },
+      "notes": "Giờ Salah: Fajr 05:00 · Dhuhr 12:10 · Asr 15:40 · Maghrib 18:05 · Isha 19:20"
+    },
+    {
+      "id": "hcm-011",
+      "name": "Masjid Muttaqil",
+      "nativeName": null,
+      "aliases": [],
+      "type": "MASJID",
+      "location": {
+        "address": "Ấp Hoà Lộc, Xã Minh Thạnh (Bình Dương cũ)",
+        "province": "Ho Chi Minh City",
+        "district": null,
+        "commune": null,
+        "latitude": null,
+        "longitude": null
+      },
+      "contact": null,
+      "prayer": {
+        "jummah": [
+          "12:15"
+        ],
+        "eidPrayer": []
+      },
+      "facilities": {
+        "womenPrayerArea": true,
+        "wudu": null,
+        "parking": null,
+        "quran": null,
+        "quranClass": true
+      },
+      "services": {
+        "iftarRamadan": true,
+        "islamicClasses": true,
+        "funeralPrayer": null,
+        "nikah": null
+      },
+      "management": {
+        "organizationId": "hcm-islamic-representative-board",
+        "boardName": null
+      },
+      "media": {
+        "images": []
+      },
+      "verification": {
+        "status": "COMMUNITY",
+        "sources": [
+          {
+            "name": "Danh sách Masjid TP.HCM",
+            "url": null
+          }
+        ],
+        "lastVerifiedAt": null
+      },
+      "notes": "Giờ Salah: Fajr 05:00 · Dhuhr 12:10 · Asr 15:40 · Maghrib 18:05 · Isha 19:20"
+    },
+    {
+      "id": "hcm-012",
+      "name": "Surao Nurul Iman",
+      "nativeName": null,
+      "aliases": [],
+      "type": "TIEU_THANG_DUONG",
+      "location": {
+        "address": "24/46 Nguyễn Văn Cừ, Phường Cầu Kho",
+        "province": "Ho Chi Minh City",
+        "district": null,
+        "commune": null,
+        "latitude": null,
+        "longitude": null
+      },
+      "contact": null,
+      "prayer": {
+        "jummah": [],
+        "eidPrayer": []
+      },
+      "facilities": null,
+      "services": null,
+      "management": {
+        "organizationId": "hcm-islamic-representative-board",
+        "boardName": null
+      },
+      "media": {
+        "images": []
+      },
+      "verification": {
+        "status": "COMMUNITY",
+        "sources": [
+          {
+            "name": "Danh sách Masjid TP.HCM",
+            "url": null
+          }
+        ],
+        "lastVerifiedAt": null
+      },
+      "notes": null
+    },
+    {
+      "id": "hcm-013",
+      "name": "Surao Eh'shan",
+      "nativeName": null,
+      "aliases": [],
+      "type": "TIEU_THANG_DUONG",
+      "location": {
+        "address": "111/24A Huỳnh Văn Bánh, Phường Cầu Kiệu",
+        "province": "Ho Chi Minh City",
+        "district": null,
+        "commune": null,
+        "latitude": null,
+        "longitude": null
+      },
+      "contact": null,
+      "prayer": {
+        "jummah": [],
+        "eidPrayer": []
+      },
+      "facilities": {
+        "womenPrayerArea": null,
+        "wudu": null,
+        "parking": null,
+        "quran": null,
+        "quranClass": true
+      },
+      "services": {
+        "iftarRamadan": true,
+        "islamicClasses": true,
+        "funeralPrayer": null,
+        "nikah": null
+      },
+      "management": {
+        "organizationId": "hcm-islamic-representative-board",
+        "boardName": null
+      },
+      "media": {
+        "images": []
+      },
+      "verification": {
+        "status": "COMMUNITY",
+        "sources": [
+          {
+            "name": "Danh sách Masjid TP.HCM",
+            "url": null
+          }
+        ],
+        "lastVerifiedAt": null
+      },
+      "notes": "Giờ Salah: Fajr 05:00 · Dhuhr 12:10 · Asr 15:40 · Maghrib 18:05 · Isha 19:20"
+    },
+    {
+      "id": "hcm-014",
+      "name": "Surao Mubarak",
+      "nativeName": null,
+      "aliases": [],
+      "type": "TIEU_THANG_DUONG",
+      "location": {
+        "address": "85/16 Phạm Thế Hiển, Phường Chánh Hưng",
+        "province": "Ho Chi Minh City",
+        "district": null,
+        "commune": null,
+        "latitude": null,
+        "longitude": null
+      },
+      "contact": null,
+      "prayer": {
+        "jummah": [
+          "12:15"
+        ],
+        "eidPrayer": []
+      },
+      "facilities": {
+        "womenPrayerArea": null,
+        "wudu": null,
+        "parking": null,
+        "quran": null,
+        "quranClass": true
+      },
+      "services": {
+        "iftarRamadan": true,
+        "islamicClasses": true,
+        "funeralPrayer": null,
+        "nikah": null
+      },
+      "management": {
+        "organizationId": "hcm-islamic-representative-board",
+        "boardName": null
+      },
+      "media": {
+        "images": []
+      },
+      "verification": {
+        "status": "COMMUNITY",
+        "sources": [
+          {
+            "name": "Danh sách Masjid TP.HCM",
+            "url": null
+          }
+        ],
+        "lastVerifiedAt": null
+      },
+      "notes": "Giờ Salah: Fajr 05:00 · Dhuhr 12:10 · Asr 15:40 · Maghrib 18:05 · Isha 19:20"
+    },
+    {
+      "id": "hcm-015",
+      "name": "Surao Nurul Islam",
+      "nativeName": null,
+      "aliases": [],
+      "type": "TIEU_THANG_DUONG",
+      "location": {
+        "address": "39 Trần Quang Diệu, Phường Nhiêu Lộc",
+        "province": "Ho Chi Minh City",
+        "district": null,
+        "commune": null,
+        "latitude": null,
+        "longitude": null
+      },
+      "contact": null,
+      "prayer": {
+        "jummah": [
+          "12:15"
+        ],
+        "eidPrayer": []
+      },
+      "facilities": {
+        "womenPrayerArea": null,
+        "wudu": null,
+        "parking": null,
+        "quran": null,
+        "quranClass": true
+      },
+      "services": {
+        "iftarRamadan": true,
+        "islamicClasses": true,
+        "funeralPrayer": null,
+        "nikah": null
+      },
+      "management": {
+        "organizationId": "hcm-islamic-representative-board",
+        "boardName": null
+      },
+      "media": {
+        "images": []
+      },
+      "verification": {
+        "status": "COMMUNITY",
+        "sources": [
+          {
+            "name": "Danh sách Masjid TP.HCM",
+            "url": null
+          }
+        ],
+        "lastVerifiedAt": null
+      },
+      "notes": "Giờ Salah: Fajr 05:00 · Dhuhr 12:10 · Asr 15:40 · Maghrib 18:05 · Isha 19:20"
+    },
+    {
+      "id": "hcm-016",
+      "name": "Surao Khairiyah",
+      "nativeName": null,
+      "aliases": [],
+      "type": "TIEU_THANG_DUONG",
+      "location": {
+        "address": "79/2D Tôn Thất Thuyết, Phường Vĩnh Hội",
+        "province": "Ho Chi Minh City",
+        "district": null,
+        "commune": null,
+        "latitude": null,
+        "longitude": null
+      },
+      "contact": null,
+      "prayer": {
+        "jummah": [],
+        "eidPrayer": []
+      },
+      "facilities": null,
+      "services": {
+        "iftarRamadan": true,
+        "islamicClasses": null,
+        "funeralPrayer": null,
+        "nikah": null
+      },
+      "management": {
+        "organizationId": "hcm-islamic-representative-board",
+        "boardName": null
+      },
+      "media": {
+        "images": []
+      },
+      "verification": {
+        "status": "COMMUNITY",
+        "sources": [
+          {
+            "name": "Danh sách Masjid TP.HCM",
+            "url": null
+          }
+        ],
+        "lastVerifiedAt": null
+      },
+      "notes": "Giờ Salah: Fajr 05:00 · Dhuhr 12:10 · Asr 15:40 · Maghrib 18:05 · Isha 19:20. Hoạt động khác: Iftar Ramadan có tổ chức phát mỗi nhà"
+    }
+  ]
+}
