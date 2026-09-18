@@ -13,6 +13,8 @@ import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.CircularProgressIndicator
@@ -61,6 +63,8 @@ fun MiniPlayerBar(
     currentMediaId: String? = null,
     playlist: List<PodcastEpisode> = emptyList(),
     onPlayEpisode: (PodcastEpisode) -> Unit = {},
+    isFavorite: Boolean = false,
+    onToggleFavorite: () -> Unit = {},
     containerColor: Color? = null,
     modifier: Modifier = Modifier
 ) {
@@ -175,6 +179,15 @@ fun MiniPlayerBar(
                             )
                         }
                     }
+                }
+
+                IconButton(onClick = onToggleFavorite) {
+                    Icon(
+                        imageVector = if (isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
+                        contentDescription = if (isFavorite) "Bỏ khỏi yêu thích" else "Thêm vào yêu thích",
+                        tint = if (isFavorite) Color(0xFFFF5252) else iconColor,
+                        modifier = Modifier.size(24.dp)
+                    )
                 }
 
                 IconButton(onClick = onPlayPauseClick) {

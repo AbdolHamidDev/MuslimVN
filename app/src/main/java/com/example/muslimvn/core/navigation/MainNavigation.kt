@@ -119,21 +119,57 @@ fun MainNavigation(backStack: NavBackStack<NavKey>, modifier: Modifier = Modifie
             entry<Destination.PodcastHome> {
                 PodcastHomeScreen(
                     onBackClick = popBack,
+                    onLibraryClick = { backStack.add(Destination.PodcastLibrary) },
                     onScholarClick = { backStack.add(Destination.ScholarDetail(it)) },
                     onSeeAllMuslimCentralClick = { backStack.add(Destination.MuslimCentralScholars) },
+                    onOpenFullPlayer = { openFullPlayer(null) }
+                )
+            }
+            entry<Destination.PodcastLibrary> {
+                PodcastLibraryScreen(
+                    onBackClick = popBack,
+                    onNavigateToFavorites = { backStack.add(Destination.PodcastFavorites) },
+                    onNavigateToPlaylist = { backStack.add(Destination.PodcastPlaylist) },
+                    onNavigateToDownloadedPodcasts = { backStack.add(Destination.DownloadedPodcasts) },
+                    onNavigateToFollowed = { backStack.add(Destination.PodcastFollowed) },
+                    onOpenFullPlayer = { openFullPlayer(null) }
+                )
+            }
+            entry<Destination.PodcastFavorites> {
+                PodcastFavoritesScreen(
+                    onBackClick = popBack,
+                    onOpenFullPlayer = { openFullPlayer(null) }
+                )
+            }
+            entry<Destination.PodcastPlaylist> {
+                PodcastPlaylistScreen(
+                    onBackClick = popBack,
+                    onOpenFullPlayer = { openFullPlayer(null) }
+                )
+            }
+            entry<Destination.PodcastFollowed> {
+                PodcastFollowedScreen(
+                    onBackClick = popBack,
+                    onScholarClick = { backStack.add(Destination.ScholarDetail(it)) },
                     onOpenFullPlayer = { openFullPlayer(null) }
                 )
             }
             entry<Destination.MuslimCentralScholars> {
                 com.example.muslimvn.presentation.screens.podcast.MuslimCentralScholarsScreen(
                     onBackClick = popBack,
+                    onLibraryClick = { backStack.add(Destination.PodcastLibrary) },
                     onScholarClick = { backStack.add(Destination.ScholarDetail(it)) },
                     onOpenFullPlayer = { openFullPlayer(null) }
                 )
             }
             entry<Destination.ScholarDetail> { key ->
                 val viewModel = hiltViewModel<ScholarDetailViewModel, ScholarDetailViewModel.Factory> { it.create(key.scholarId) }
-                ScholarDetailScreen(popBack, { openFullPlayer(null) }, viewModel)
+                ScholarDetailScreen(
+                    onBackClick = popBack,
+                    onLibraryClick = { backStack.add(Destination.PodcastLibrary) },
+                    onOpenFullPlayer = { openFullPlayer(null) },
+                    viewModel = viewModel
+                )
             }
             entry<Destination.PodcastPlayer> { PodcastPlayerScreen(popBack) }
             entry<Destination.VietnamScholarDetail> { key ->

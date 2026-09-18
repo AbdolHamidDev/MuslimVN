@@ -45,4 +45,25 @@ interface PodcastRepository {
 
     /** Tự động đồng bộ danh sách học giả từ nguồn Muslim Central vào Room DB. */
     suspend fun syncMuslimCentralDirectory(): Result<Int>
+
+    /** Đảo trạng thái yêu thích (Favorite) của 1 tập podcast. */
+    suspend fun toggleFavorite(episodeId: String)
+
+    /** Danh sách tất cả các tập podcast đã yêu thích. */
+    fun getFavoriteEpisodes(): Flow<List<PodcastEpisode>>
+
+    /** Flow danh sách các episodeId đã yêu thích. */
+    fun getFavoriteEpisodeIds(): Flow<List<String>>
+
+    /** Theo dõi trạng thái yêu thích của 1 tập podcast cụ thể. */
+    fun isEpisodeFavorite(episodeId: String): Flow<Boolean>
+
+    /** Đảo trạng thái thêm vào danh sách phát (Playlist chờ) của 1 tập podcast. */
+    suspend fun togglePlaylist(episodeId: String)
+
+    /** Flow danh sách các tập podcast trong danh sách phát cá nhân. */
+    fun getPlaylistEpisodes(): Flow<List<PodcastEpisode>>
+
+    /** Flow danh sách các episodeId nằm trong danh sách phát. */
+    fun getPlaylistEpisodeIds(): Flow<List<String>>
 }

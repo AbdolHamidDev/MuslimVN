@@ -8,9 +8,11 @@ import com.example.muslimvn.domain.repository.IslamHouseRepository
 import com.example.muslimvn.domain.repository.PodcastRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -37,6 +39,9 @@ class PodcastPlayerViewModel @Inject constructor(
     val title = audioPlayerManager.nowPlayingTitle
     val artist = audioPlayerManager.nowPlayingArtist
     val artworkPath = audioPlayerManager.nowPlayingArtworkPath
+
+    val favoriteEpisodeIds: StateFlow<List<String>> = repository.getFavoriteEpisodeIds()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     private val _playlist = MutableStateFlow<List<PodcastEpisode>>(emptyList())
     val playlist: StateFlow<List<PodcastEpisode>> = _playlist.asStateFlow()
@@ -88,6 +93,12 @@ class PodcastPlayerViewModel @Inject constructor(
 
     fun togglePlayPause() {
         if (isPlaying.value) audioPlayerManager.pause() else audioPlayerManager.resume()
+    }
+
+    fun toggleFavorite(episodeId: String) {
+        viewModelScope.launch {
+            repository.toggleFavorite(episodeId)
+        }
     }
 
     fun seekForward() = audioPlayerManager.seekForward()

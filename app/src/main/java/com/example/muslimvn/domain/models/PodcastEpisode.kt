@@ -20,5 +20,9 @@ data class PodcastEpisode(
     val isDownloaded: Boolean,
     val lastPositionMs: Long,
     val localFilePath: String? = null,
-    val downloadStatus: String = "IDLE"
+    val downloadStatus: String = "IDLE",
+    val isFavorite: Boolean = false,
+    val favoritedAt: Long = 0L,
+    val isInPlaylist: Boolean = false,
+    val addedToPlaylistAt: Long = 0L
 )

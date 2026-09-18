@@ -40,6 +40,7 @@ import com.example.muslimvn.presentation.screens.podcast.components.FeaturedScho
 import com.example.muslimvn.presentation.screens.podcast.components.MuslimCentralSection
 import com.example.muslimvn.presentation.screens.podcast.components.SectionTitle
 import com.example.muslimvn.presentation.screens.scholar.components.FloatingBackButton
+import com.example.muslimvn.presentation.screens.scholar.components.FloatingLibraryButton
 import com.example.muslimvn.presentation.viewmodels.PodcastHomeViewModel
 import com.example.muslimvn.presentation.viewmodels.PodcastPlayerViewModel
 
@@ -49,11 +50,13 @@ import com.example.muslimvn.presentation.viewmodels.PodcastPlayerViewModel
  * - Carousel Hero Cards "Học giả nổi bật" lớn đầy ấn tượng (Mufti Menk số 1, Hamza Yusuf số 2).
  * - Danh sách học giả thương hiệu Muslim Central dạng Carousel cuộn ngang Hero Cards có hiệu ứng ám mờ 2 bên.
  * - Nút mũi tên bên phải tiêu đề Muslim Central mở màn hình Lưới 2 cột tất cả học giả.
+ * - Nút Thư viện Podcast (Library Button) ở góc trên bên phải.
  * - Mini-player dính đáy khi có tập đang phát.
  */
 @Composable
 fun PodcastHomeScreen(
     onBackClick: () -> Unit = {},
+    onLibraryClick: () -> Unit = {},
     onScholarClick: (String) -> Unit = {},
     onSeeAllMuslimCentralClick: () -> Unit = {},
     onOpenFullPlayer: () -> Unit = {},
@@ -61,6 +64,7 @@ fun PodcastHomeScreen(
     playerViewModel: PodcastPlayerViewModel = hiltViewModel()
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
+    val favoriteEpisodeIds by playerViewModel.favoriteEpisodeIds.collectAsStateWithLifecycle()
 
     // Sắp xếp thứ tự Danh sách Nổi bật: 1. Mufti Menk, 2. Hamza Yusuf
     val orderedFeaturedScholars = remember(state.featuredScholars) {
@@ -89,6 +93,7 @@ fun PodcastHomeScreen(
                 AnimatedVisibility(visible = isPodcast) {
                     if (active != null) {
                         val playlist by playerViewModel.playlist.collectAsStateWithLifecycle()
+                        val activeIsFav = active.id in favoriteEpisodeIds
                         MiniPlayerBar(
                             title = active.title,
                             subtitle = active.subtitle,
@@ -104,7 +109,9 @@ fun PodcastHomeScreen(
                             onOpenFullPlayer = onOpenFullPlayer,
                             currentMediaId = active.id,
                             playlist = playlist,
-                            onPlayEpisode = playerViewModel::playEpisode
+                            onPlayEpisode = playerViewModel::playEpisode,
+                            isFavorite = activeIsFav,
+                            onToggleFavorite = { playerViewModel.toggleFavorite(active.id) }
                         )
                     }
                 }
@@ -206,6 +213,15 @@ fun PodcastHomeScreen(
                     .align(Alignment.TopStart)
                     .statusBarsPadding()
                     .padding(start = 16.dp, top = 12.dp)
+            )
+
+            // Nút Thư viện Podcast (Library Button) nổi góc trên bên phải
+            FloatingLibraryButton(
+                onLibraryClick = onLibraryClick,
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .statusBarsPadding()
+                    .padding(end = 16.dp, top = 12.dp)
             )
         }
     }

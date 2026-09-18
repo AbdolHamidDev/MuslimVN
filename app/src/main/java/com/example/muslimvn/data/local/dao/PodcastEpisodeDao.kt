@@ -43,6 +43,27 @@ interface PodcastEpisodeDao {
     @Query("SELECT * FROM podcast_episodes WHERE downloadStatus != 'IDLE'")
     suspend fun getNonIdleEpisodesOnce(): List<PodcastEpisodeEntity>
 
+    @Query("UPDATE podcast_episodes SET isFavorite = :isFavorite, favoritedAt = :favoritedAt WHERE id = :episodeId")
+    suspend fun updateFavoriteStatus(episodeId: String, isFavorite: Boolean, favoritedAt: Long)
+
+    @Query("SELECT * FROM podcast_episodes WHERE isFavorite = 1 ORDER BY favoritedAt DESC")
+    fun getFavoriteEpisodes(): Flow<List<PodcastEpisodeEntity>>
+
+    @Query("SELECT id FROM podcast_episodes WHERE isFavorite = 1")
+    fun getFavoriteEpisodeIds(): Flow<List<String>>
+
+    @Query("SELECT isFavorite FROM podcast_episodes WHERE id = :episodeId")
+    fun isEpisodeFavorite(episodeId: String): Flow<Boolean?>
+
+    @Query("UPDATE podcast_episodes SET isInPlaylist = :isInPlaylist, addedToPlaylistAt = :addedToPlaylistAt WHERE id = :episodeId")
+    suspend fun updatePlaylistStatus(episodeId: String, isInPlaylist: Boolean, addedToPlaylistAt: Long)
+
+    @Query("SELECT * FROM podcast_episodes WHERE isInPlaylist = 1 ORDER BY addedToPlaylistAt DESC")
+    fun getPlaylistEpisodes(): Flow<List<PodcastEpisodeEntity>>
+
+    @Query("SELECT id FROM podcast_episodes WHERE isInPlaylist = 1")
+    fun getPlaylistEpisodeIds(): Flow<List<String>>
+
     @Query("SELECT COUNT(*) FROM podcast_episodes WHERE scholarId = :scholarId")
     suspend fun countByScholar(scholarId: String): Int
 }

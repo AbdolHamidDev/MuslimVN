@@ -12,8 +12,10 @@ import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import androidx.paging.PagingData
 import androidx.paging.cachedIn
@@ -61,6 +63,9 @@ class ScholarDetailViewModel @AssistedInject constructor(
     // Theo dõi trạng thái tải xuống từng tập và tổng thể playlist của học giả
     val downloadStates: StateFlow<Map<String, PodcastDownloadState>> = podcastDownloadManager.downloadStates
     val playlistProgresses: StateFlow<Map<String, PlaylistDownloadProgress>> = podcastDownloadManager.playlistProgresses
+
+    val playlistEpisodeIds: StateFlow<List<String>> = podcastRepository.getPlaylistEpisodeIds()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     // Pass-through trạng thái trình phát (giống SurahDetailViewModel).
     val isPlaying = audioPlayerManager.isPlaying
@@ -222,6 +227,20 @@ class ScholarDetailViewModel @AssistedInject constructor(
     /** Hủy tiến trình tải xuống của một tập podcast. */
     fun cancelDownload(episodeId: String) {
         podcastDownloadManager.cancelDownload(episodeId)
+    }
+
+    /** Đảo trạng thái yêu thích của tập podcast. */
+    fun toggleFavorite(episodeId: String) {
+        viewModelScope.launch {
+            podcastRepository.toggleFavorite(episodeId)
+        }
+    }
+
+    /** Đảo trạng thái lưu tập vào danh sách phát cá nhân. */
+    fun togglePlaylist(episodeId: String) {
+        viewModelScope.launch {
+            podcastRepository.togglePlaylist(episodeId)
+        }
     }
 
     /** Xóa file audio offline của một tập podcast. */

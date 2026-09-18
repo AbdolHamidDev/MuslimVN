@@ -116,7 +116,11 @@ class PodcastRepositoryImpl @Inject constructor(
                     isDownloaded = old?.isDownloaded ?: false,
                     lastPositionMs = old?.lastPositionMs ?: 0L,
                     localFilePath = old?.localFilePath,
-                    downloadStatus = old?.downloadStatus ?: "IDLE"
+                    downloadStatus = old?.downloadStatus ?: "IDLE",
+                    isFavorite = old?.isFavorite ?: false,
+                    favoritedAt = old?.favoritedAt ?: 0L,
+                    isInPlaylist = old?.isInPlaylist ?: false,
+                    addedToPlaylistAt = old?.addedToPlaylistAt ?: 0L
                 )
             }
             episodeDao.insertEpisodes(merged)
@@ -220,12 +224,41 @@ class PodcastRepositoryImpl @Inject constructor(
         return tags.distinct()
     }
 
+    override suspend fun toggleFavorite(episodeId: String) {
+        val episode = episodeDao.getEpisodeById(episodeId) ?: return
+        val newFavorite = !episode.isFavorite
+        val timestamp = if (newFavorite) System.currentTimeMillis() else 0L
+        episodeDao.updateFavoriteStatus(episodeId, newFavorite, timestamp)
+    }
+
+    override fun getFavoriteEpisodes(): Flow<List<PodcastEpisode>> =
+        episodeDao.getFavoriteEpisodes().map { list -> list.map { it.toDomain() } }
+
+    override fun getFavoriteEpisodeIds(): Flow<List<String>> =
+        episodeDao.getFavoriteEpisodeIds()
+
+    override fun isEpisodeFavorite(episodeId: String): Flow<Boolean> =
+        episodeDao.isEpisodeFavorite(episodeId).map { it ?: false }
+
+    override suspend fun togglePlaylist(episodeId: String) {
+        val episode = episodeDao.getEpisodeById(episodeId) ?: return
+        val newInPlaylist = !episode.isInPlaylist
+        val timestamp = if (newInPlaylist) System.currentTimeMillis() else 0L
+        episodeDao.updatePlaylistStatus(episodeId, newInPlaylist, timestamp)
+    }
+
+    override fun getPlaylistEpisodes(): Flow<List<PodcastEpisode>> =
+        episodeDao.getPlaylistEpisodes().map { list -> list.map { it.toDomain() } }
+
+    override fun getPlaylistEpisodeIds(): Flow<List<String>> =
+        episodeDao.getPlaylistEpisodeIds()
+
     private fun ScholarEntity.toDomain() = Scholar(
         id, name, title, bio, avatarPath, rssUrl, tags, featured
     )
 
     private fun PodcastEpisodeEntity.toDomain() = PodcastEpisode(
-        id, scholarId, title, audioUrl, artworkUrl, duration, pubDate, description, isDownloaded, lastPositionMs, localFilePath, downloadStatus
+        id, scholarId, title, audioUrl, artworkUrl, duration, pubDate, description, isDownloaded, lastPositionMs, localFilePath, downloadStatus, isFavorite, favoritedAt, isInPlaylist, addedToPlaylistAt
     )
 
     companion object {

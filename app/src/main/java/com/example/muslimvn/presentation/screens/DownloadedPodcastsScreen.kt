@@ -69,6 +69,8 @@ import com.example.muslimvn.presentation.components.formatPubDate
 import com.example.muslimvn.presentation.components.formatSpeedLabel
 import com.example.muslimvn.presentation.components.toAndroidAssetUri
 import com.example.muslimvn.presentation.screens.scholar.components.FloatingBackButton
+import com.example.muslimvn.presentation.screens.scholar.components.LibraryDetailHeader
+import com.example.muslimvn.presentation.screens.scholar.components.rememberDynamicBackgroundColor
 import com.example.muslimvn.presentation.viewmodels.DownloadedPodcastItem
 import com.example.muslimvn.presentation.viewmodels.DownloadedPodcastsViewModel
 import com.example.muslimvn.presentation.viewmodels.PodcastPlayerViewModel
@@ -93,6 +95,9 @@ fun DownloadedPodcastsScreen(
 
     var showClearAllDialog by remember { mutableStateOf(false) }
     var itemToDelete by remember { mutableStateOf<DownloadedPodcastItem?>(null) }
+
+    val imagePath = "images/library/download.webp"
+    val backgroundColor = rememberDynamicBackgroundColor(imagePath)
 
     Scaffold(
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
@@ -127,7 +132,7 @@ fun DownloadedPodcastsScreen(
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(MaterialTheme.colorScheme.background)
+                .background(backgroundColor)
         ) {
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),
@@ -136,95 +141,44 @@ fun DownloadedPodcastsScreen(
                 ),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                // Header tiêu đề trang nằm dưới nút Back floating tròn
-                item(key = "top_header") {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .statusBarsPadding()
-                            .padding(top = 56.dp, start = 16.dp, end = 16.dp, bottom = 4.dp)
-                    ) {
-                        Text(
-                            text = "Podcast đã tải xuống",
-                            style = MaterialTheme.typography.headlineMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onBackground
-                        )
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Text(
-                            text = "Quản lý và giải phóng dung lượng nghe offline",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                }
+                // Immersive Hero Header với ảnh download.webp + Pill Bar 3 Nút UI + Dynamic Background Color
+                item(key = "header") {
+                    val currentPlayingId by playerViewModel.currentEpisodeId.collectAsStateWithLifecycle()
+                    val playerIsPlaying by playerViewModel.isPlaying.collectAsStateWithLifecycle()
+                    val isDownloadedPlaying = playerIsPlaying && downloadedPodcasts.any { it.episode.id == currentPlayingId }
 
-                // Thẻ Thống Kê Dung Lượng & Nút Giải Phóng Bộ Nhớ
-                item(key = "storage_card") {
-                    Surface(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 16.dp),
-                        shape = RoundedCornerShape(20.dp),
-                        color = MaterialTheme.colorScheme.surfaceContainerHigh,
-                        tonalElevation = 4.dp
-                    ) {
-                        Column(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(16.dp)
-                        ) {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                modifier = Modifier.fillMaxWidth()
-                            ) {
-                                Surface(
-                                    shape = CircleShape,
-                                    color = MaterialTheme.colorScheme.primaryContainer,
-                                    modifier = Modifier.size(44.dp)
-                                ) {
-                                    Box(contentAlignment = Alignment.Center) {
-                                        Icon(
-                                            imageVector = Icons.Default.Podcasts,
-                                            contentDescription = null,
-                                            tint = MaterialTheme.colorScheme.onPrimaryContainer,
-                                            modifier = Modifier.size(24.dp)
-                                        )
-                                    }
-                                }
-                                Spacer(modifier = Modifier.width(12.dp))
-                                Column(modifier = Modifier.weight(1f)) {
-                                    Text(
-                                        text = "Dung lượng đã sử dụng",
-                                        style = MaterialTheme.typography.labelLarge,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                                    )
-                                    Text(
-                                        text = "${formatFileSize(totalSizeBytes)} (${downloadedPodcasts.size} tập)",
-                                        style = MaterialTheme.typography.titleMedium,
-                                        fontWeight = FontWeight.Bold,
-                                        color = MaterialTheme.colorScheme.onSurface
-                                    )
-                                }
-                            }
-
+                    LibraryDetailHeader(
+                        title = "Podcast đã tải xuống",
+                        subtitle = "${formatFileSize(totalSizeBytes)} (${downloadedPodcasts.size} tập offline)",
+                        imagePath = imagePath,
+                        backgroundColor = backgroundColor,
+                        isPlaying = isDownloadedPlaying,
+                        onPlayAllClick = {
                             if (downloadedPodcasts.isNotEmpty()) {
-                                Spacer(modifier = Modifier.height(16.dp))
+                                viewModel.playEpisode(downloadedPodcasts[0])
+                            }
+                        },
+                        onShuffleClick = {
+                            if (downloadedPodcasts.isNotEmpty()) {
+                                viewModel.playEpisode(downloadedPodcasts.shuffled()[0])
+                            }
+                        },
+                        extraContent = if (downloadedPodcasts.isNotEmpty()) {
+                            {
                                 Button(
                                     onClick = { showClearAllDialog = true },
                                     colors = ButtonDefaults.buttonColors(
                                         containerColor = MaterialTheme.colorScheme.errorContainer,
                                         contentColor = MaterialTheme.colorScheme.onErrorContainer
                                     ),
-                                    shape = RoundedCornerShape(12.dp),
-                                    modifier = Modifier.fillMaxWidth()
+                                    shape = RoundedCornerShape(12.dp)
                                 ) {
                                     Icon(
                                         imageVector = Icons.Default.CleaningServices,
                                         contentDescription = null,
-                                        modifier = Modifier.size(20.dp)
+                                        modifier = Modifier.size(18.dp)
                                     )
-                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Spacer(modifier = Modifier.width(6.dp))
                                     Text(
                                         text = "Giải phóng dung lượng",
                                         style = MaterialTheme.typography.titleSmall,
@@ -232,8 +186,8 @@ fun DownloadedPodcastsScreen(
                                     )
                                 }
                             }
-                        }
-                    }
+                        } else null
+                    )
                 }
 
                 // Tiêu đề danh sách tập

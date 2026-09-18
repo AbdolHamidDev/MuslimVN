@@ -12,10 +12,12 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.PlaylistAdd
+import androidx.compose.material.icons.automirrored.filled.PlaylistAddCheck
 import androidx.compose.material.icons.filled.CheckCircleOutline
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Download
+import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Share
@@ -55,6 +57,10 @@ fun EpisodeMoreMenuBottomSheet(
     scholar: Scholar?,
     onDismiss: () -> Unit,
     downloadState: PodcastDownloadState = PodcastDownloadState.Idle,
+    isFavorite: Boolean = false,
+    onToggleFavorite: () -> Unit = {},
+    isInPlaylist: Boolean = false,
+    onTogglePlaylist: () -> Unit = {},
     onDownloadClick: () -> Unit = {},
     onCancelDownloadClick: () -> Unit = {},
     onDeleteDownloadClick: () -> Unit = {},
@@ -123,11 +129,12 @@ fun EpisodeMoreMenuBottomSheet(
                 modifier = Modifier.padding(vertical = 8.dp)
             )
 
-            // 1. Thêm vào yêu thích
+            // 1. Thêm / Bỏ yêu thích
             BottomSheetMenuItem(
-                icon = Icons.Default.FavoriteBorder,
-                label = "Thêm vào yêu thích",
-                onClick = { }
+                icon = if (isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
+                label = if (isFavorite) "Bỏ khỏi yêu thích" else "Thêm vào yêu thích",
+                onClick = onToggleFavorite,
+                iconTint = if (isFavorite) Color(0xFFFF5252) else Color.White
             )
 
             // 2. Tải xuống / Quản lý bản tải xuống (Không đóng BottomSheet tự động khi click)
@@ -170,11 +177,12 @@ fun EpisodeMoreMenuBottomSheet(
                 }
             }
 
-            // 3. Thêm vào danh sách phát
+            // 3. Thêm / Bỏ khỏi danh sách phát (Không đóng BottomSheet tự động)
             BottomSheetMenuItem(
-                icon = Icons.AutoMirrored.Filled.PlaylistAdd,
-                label = "Thêm vào danh sách phát",
-                onClick = { }
+                icon = if (isInPlaylist) Icons.AutoMirrored.Filled.PlaylistAddCheck else Icons.AutoMirrored.Filled.PlaylistAdd,
+                label = if (isInPlaylist) "Bỏ khỏi danh sách phát" else "Thêm vào danh sách phát",
+                onClick = onTogglePlaylist,
+                iconTint = if (isInPlaylist) Color(0xFFFFD700) else Color.White
             )
 
             // 4. Đánh dấu đã nghe
@@ -199,7 +207,8 @@ fun EpisodeMoreMenuBottomSheet(
 private fun BottomSheetMenuItem(
     icon: ImageVector,
     label: String,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    iconTint: Color = Color.White
 ) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
@@ -211,7 +220,7 @@ private fun BottomSheetMenuItem(
         Icon(
             imageVector = icon,
             contentDescription = label,
-            tint = Color.White,
+            tint = iconTint,
             modifier = Modifier.size(24.dp)
         )
         Spacer(modifier = Modifier.width(16.dp))

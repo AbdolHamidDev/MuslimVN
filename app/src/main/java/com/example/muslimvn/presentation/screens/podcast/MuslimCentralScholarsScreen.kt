@@ -45,6 +45,7 @@ import com.example.muslimvn.presentation.screens.podcast.components.BrandSection
 import com.example.muslimvn.presentation.screens.podcast.components.CategoryChipsRow
 import com.example.muslimvn.presentation.screens.podcast.components.MuslimCentralScholarCard
 import com.example.muslimvn.presentation.screens.scholar.components.FloatingBackButton
+import com.example.muslimvn.presentation.screens.scholar.components.FloatingLibraryButton
 import com.example.muslimvn.presentation.viewmodels.PodcastHomeViewModel
 import com.example.muslimvn.presentation.viewmodels.PodcastPlayerViewModel
 
@@ -57,12 +58,14 @@ import com.example.muslimvn.presentation.viewmodels.PodcastPlayerViewModel
 @Composable
 fun MuslimCentralScholarsScreen(
     onBackClick: () -> Unit = {},
+    onLibraryClick: () -> Unit = {},
     onScholarClick: (String) -> Unit = {},
     onOpenFullPlayer: () -> Unit = {},
     viewModel: PodcastHomeViewModel = hiltViewModel(),
     playerViewModel: PodcastPlayerViewModel = hiltViewModel()
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
+    val favoriteEpisodeIds by playerViewModel.favoriteEpisodeIds.collectAsStateWithLifecycle()
 
     // Deduplication: Lọc bỏ các học giả Nổi bật & Mufti Menk
     val featuredIds = remember(state.featuredScholars) {
@@ -84,6 +87,7 @@ fun MuslimCentralScholarsScreen(
                 AnimatedVisibility(visible = isPodcast) {
                     if (active != null) {
                         val playlist by playerViewModel.playlist.collectAsStateWithLifecycle()
+                        val activeIsFav = active.id in favoriteEpisodeIds
                         MiniPlayerBar(
                             title = active.title,
                             subtitle = active.subtitle,
@@ -99,7 +103,9 @@ fun MuslimCentralScholarsScreen(
                             onOpenFullPlayer = onOpenFullPlayer,
                             currentMediaId = active.id,
                             playlist = playlist,
-                            onPlayEpisode = playerViewModel::playEpisode
+                            onPlayEpisode = playerViewModel::playEpisode,
+                            isFavorite = activeIsFav,
+                            onToggleFavorite = { playerViewModel.toggleFavorite(active.id) }
                         )
                     }
                 }
@@ -175,6 +181,15 @@ fun MuslimCentralScholarsScreen(
                     .align(Alignment.TopStart)
                     .statusBarsPadding()
                     .padding(start = 16.dp, top = 12.dp)
+            )
+
+            // Nút Thư viện Podcast nổi ở góc trên bên phải
+            FloatingLibraryButton(
+                onLibraryClick = onLibraryClick,
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .statusBarsPadding()
+                    .padding(end = 16.dp, top = 12.dp)
             )
         }
     }

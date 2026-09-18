@@ -63,6 +63,7 @@ import com.example.muslimvn.presentation.components.toAndroidAssetUri
 import com.example.muslimvn.presentation.screens.scholar.components.EpisodeMoreMenuBottomSheet
 import com.example.muslimvn.presentation.screens.scholar.components.EpisodeRow
 import com.example.muslimvn.presentation.screens.scholar.components.FloatingBackButton
+import com.example.muslimvn.presentation.screens.scholar.components.FloatingLibraryButton
 import com.example.muslimvn.presentation.screens.scholar.components.OfflineBanner
 import com.example.muslimvn.presentation.screens.scholar.components.ScholarHeader
 import com.example.muslimvn.presentation.screens.scholar.components.toDeepDark
@@ -80,6 +81,7 @@ import kotlinx.coroutines.withContext
 @Composable
 fun ScholarDetailScreen(
     onBackClick: () -> Unit = {},
+    onLibraryClick: () -> Unit = {},
     onOpenFullPlayer: () -> Unit = {},
     viewModel: ScholarDetailViewModel = hiltViewModel(),
     playerViewModel: PodcastPlayerViewModel = hiltViewModel()
@@ -93,6 +95,8 @@ fun ScholarDetailScreen(
     val downloadStates by viewModel.downloadStates.collectAsStateWithLifecycle()
     val playlistProgresses by viewModel.playlistProgresses.collectAsStateWithLifecycle()
     val scholarPlaylistProgress = playlistProgresses[viewModel.scholarId]
+    val favoriteEpisodeIds by playerViewModel.favoriteEpisodeIds.collectAsStateWithLifecycle()
+    val playlistEpisodeIds by viewModel.playlistEpisodeIds.collectAsStateWithLifecycle()
 
     val isPlayingScholar = remember(isPlaying, currentEpisodeId, scholarEpisodes) {
         isPlaying && scholarEpisodes.any { it.id == currentEpisodeId }
@@ -153,6 +157,7 @@ fun ScholarDetailScreen(
                 AnimatedVisibility(visible = isPodcast) {
                     if (active != null) {
                         val playlist by playerViewModel.playlist.collectAsStateWithLifecycle()
+                        val activeIsFav = active.id in favoriteEpisodeIds
                         MiniPlayerBar(
                             title = active.title,
                             subtitle = active.subtitle,
@@ -169,6 +174,8 @@ fun ScholarDetailScreen(
                             currentMediaId = active.id,
                             playlist = playlist,
                             onPlayEpisode = playerViewModel::playEpisode,
+                            isFavorite = activeIsFav,
+                            onToggleFavorite = { playerViewModel.toggleFavorite(active.id) },
                             containerColor = miniPlayerColor
                         )
                     }
@@ -318,16 +325,32 @@ fun ScholarDetailScreen(
                     .padding(start = 16.dp, top = 12.dp)
             )
 
+            // Floating Library Button ở góc trên bên phải
+            FloatingLibraryButton(
+                onLibraryClick = onLibraryClick,
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .statusBarsPadding()
+                    .padding(end = 16.dp, top = 12.dp)
+            )
+
             // BottomSheet hiển thị khi nhấn nút 3 chấm của một tập podcast
             if (selectedEpisodeForMenu != null) {
                 val selectedEp = selectedEpisodeForMenu!!
                 val selectedEpDownloadState = downloadStates[selectedEp.id]
                     ?: if (selectedEp.isDownloaded) PodcastDownloadState.Downloaded else PodcastDownloadState.Idle
+                val selectedEpIsFav = selectedEp.id in favoriteEpisodeIds
+                val selectedEpInPlaylist = selectedEp.id in playlistEpisodeIds
+
                 EpisodeMoreMenuBottomSheet(
                     episode = selectedEp,
                     scholar = state.scholar,
                     onDismiss = { selectedEpisodeForMenu = null },
                     downloadState = selectedEpDownloadState,
+                    isFavorite = selectedEpIsFav,
+                    onToggleFavorite = { viewModel.toggleFavorite(selectedEp.id) },
+                    isInPlaylist = selectedEpInPlaylist,
+                    onTogglePlaylist = { viewModel.togglePlaylist(selectedEp.id) },
                     onDownloadClick = { viewModel.downloadEpisode(selectedEp) },
                     onCancelDownloadClick = { viewModel.cancelDownload(selectedEp.id) },
                     onDeleteDownloadClick = { viewModel.deleteDownloadedEpisode(selectedEp) }
