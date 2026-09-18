@@ -46,6 +46,7 @@ data class AudioPlayItem(
 class AudioPlayerManager @Inject constructor(
     @ApplicationContext private val context: Context,
     private val podcastEpisodeDao: PodcastEpisodeDao,
+    private val podcastDownloadManager: PodcastDownloadManager,
     private val simpleCache: SimpleCache
 ) {
     private var exoPlayer: ExoPlayer? = null
@@ -154,9 +155,10 @@ class AudioPlayerManager @Inject constructor(
                 .setArtworkUri(artworkUri)
                 .build()
             
+            val effectiveUrl = getEffectiveAudioUrl(item.url, item.mediaId)
             MediaItem.Builder()
                 .setMediaId(item.mediaId)
-                .setUri(item.url.toAudioUri())
+                .setUri(effectiveUrl.toAudioUri())
                 .setMediaMetadata(metadata)
                 .build()
         }
@@ -305,10 +307,11 @@ class AudioPlayerManager @Inject constructor(
                 .setArtist(artist)
                 .setArtworkUri(artworkUri)
                 .build()
+            val effectiveUrl = getEffectiveAudioUrl(url, mediaId)
             setMediaItem(
                 MediaItem.Builder()
                     .setMediaId(mediaId)
-                    .setUri(url.toAudioUri())
+                    .setUri(effectiveUrl.toAudioUri())
                     .setMediaMetadata(metadata)
                     .build()
             )
@@ -317,6 +320,17 @@ class AudioPlayerManager @Inject constructor(
             prepare()
             playWhenReady = true
         }
+    }
+
+    private fun getEffectiveAudioUrl(url: String, mediaId: String?): String {
+        if (mediaId.isNullOrBlank()) return url
+        runCatching {
+            val localFile = podcastDownloadManager.getDownloadedFile(mediaId)
+            if (localFile.exists() && localFile.length() > 0) {
+                return localFile.absolutePath
+            }
+        }
+        return url
     }
 
     private fun initializePlayer() {

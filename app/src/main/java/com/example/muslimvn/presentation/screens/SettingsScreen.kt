@@ -27,6 +27,7 @@ fun SettingsScreen(
     onNavigateToQuranSettings: () -> Unit,
     onNavigateToPrayerNotifications: () -> Unit,
     onNavigateToDownloadedVideos: () -> Unit,
+    onNavigateToDownloadedPodcasts: () -> Unit = {},
     viewModel: SettingsViewModel = hiltViewModel()
 ) {
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
@@ -66,6 +67,14 @@ fun SettingsScreen(
                 }
 
                 item { PreferenceHeader(title = "Nội dung & Thông báo") }
+                item {
+                    PreferenceItem(
+                        title = "Podcast đã tải xuống",
+                        subtitle = "Quản lý và giải phóng dung lượng podcast offline",
+                        icon = Icons.Default.Podcasts,
+                        onClick = onNavigateToDownloadedPodcasts
+                    )
+                }
                 item {
                     PreferenceItem(
                         title = "Nội dung đã tải về",

@@ -16,12 +16,14 @@ import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Shuffle
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -38,6 +40,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
+import com.example.muslimvn.data.util.PlaylistDownloadProgress
 import com.example.muslimvn.domain.models.Scholar
 import com.example.muslimvn.presentation.components.toAndroidAssetUri
 
@@ -46,13 +49,14 @@ import com.example.muslimvn.presentation.components.toAndroidAssetUri
  * - Chiếm 60% chiều cao màn hình.
  * - Ảnh học giả chính tràn viền phần trên cùng.
  * - Gradient overlay đồng bộ hòa quyện mượt mà vào màu động (Dynamic Color) từ Palette ảnh.
- * - Hàng 3 nút thao tác: 1. Nghe ngẫu nhiên (tròn), 2. Nghe / Dừng (trắng chữ đen ở giữa), 3. Download (tròn).
+ * - Hàng 3 nút thao tác: 1. Nghe ngẫu nhiên (tròn), 2. Nghe / Dừng (trắng chữ đen ở giữa), 3. Download playlist (tròn).
  */
 @Composable
 fun ScholarHeader(
     scholar: Scholar?,
     backgroundColor: Color,
     isPlayingScholar: Boolean = false,
+    playlistProgress: PlaylistDownloadProgress? = null,
     onShuffleClick: () -> Unit = {},
     onPlayAllClick: () -> Unit = {},
     onDownloadAllClick: () -> Unit = {}
@@ -188,7 +192,7 @@ fun ScholarHeader(
                     )
                 }
 
-                // Nút 3: Download (tròn, không text)
+                // Nút 3: Download toàn bộ playlist (tròn)
                 Surface(
                     onClick = onDownloadAllClick,
                     shape = CircleShape,
@@ -197,11 +201,38 @@ fun ScholarHeader(
                     modifier = Modifier.size(48.dp)
                 ) {
                     Box(contentAlignment = Alignment.Center) {
-                        Icon(
-                            imageVector = Icons.Default.Download,
-                            contentDescription = "Tải xuống",
-                            modifier = Modifier.size(22.dp)
-                        )
+                        when {
+                            playlistProgress?.isDownloading == true -> {
+                                Box(contentAlignment = Alignment.Center) {
+                                    CircularProgressIndicator(
+                                        strokeWidth = 2.5.dp,
+                                        color = Color.White,
+                                        modifier = Modifier.size(30.dp)
+                                    )
+                                    Icon(
+                                        imageVector = Icons.Default.Pause,
+                                        contentDescription = "Bấm để dừng tải playlist",
+                                        tint = Color.White,
+                                        modifier = Modifier.size(16.dp)
+                                    )
+                                }
+                            }
+                            playlistProgress != null && playlistProgress.completedEpisodes == playlistProgress.totalEpisodes && playlistProgress.totalEpisodes > 0 -> {
+                                Icon(
+                                    imageVector = Icons.Default.CheckCircle,
+                                    contentDescription = "Đã tải xong toàn bộ",
+                                    tint = Color(0xFF4CAF50),
+                                    modifier = Modifier.size(24.dp)
+                                )
+                            }
+                            else -> {
+                                Icon(
+                                    imageVector = Icons.Default.Download,
+                                    contentDescription = "Tải toàn bộ playlist",
+                                    modifier = Modifier.size(22.dp)
+                                )
+                            }
+                        }
                     }
                 }
             }

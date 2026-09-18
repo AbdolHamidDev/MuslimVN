@@ -13,8 +13,11 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.PlaylistAdd
 import androidx.compose.material.icons.filled.CheckCircleOutline
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.FavoriteBorder
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -35,6 +38,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
+import com.example.muslimvn.data.util.PodcastDownloadState
 import com.example.muslimvn.domain.models.PodcastEpisode
 import com.example.muslimvn.domain.models.Scholar
 import com.example.muslimvn.presentation.components.bouncyClick
@@ -50,6 +54,10 @@ fun EpisodeMoreMenuBottomSheet(
     episode: PodcastEpisode,
     scholar: Scholar?,
     onDismiss: () -> Unit,
+    downloadState: PodcastDownloadState = PodcastDownloadState.Idle,
+    onDownloadClick: () -> Unit = {},
+    onCancelDownloadClick: () -> Unit = {},
+    onDeleteDownloadClick: () -> Unit = {},
     containerColor: Color? = null
 ) {
     // Luôn sử dụng màu nền tối đậm (Dark Theme) chuẩn YouTube Music
@@ -122,12 +130,60 @@ fun EpisodeMoreMenuBottomSheet(
                 onClick = onDismiss
             )
 
-            // 2. Tải xuống
-            BottomSheetMenuItem(
-                icon = Icons.Default.Download,
-                label = "Tải xuống",
-                onClick = onDismiss
-            )
+            // 2. Tải xuống / Quản lý bản tải xuống
+            when (downloadState) {
+                is PodcastDownloadState.Downloaded -> {
+                    BottomSheetMenuItem(
+                        icon = Icons.Default.Delete,
+                        label = "Xóa bản tải xuống",
+                        onClick = {
+                            onDeleteDownloadClick()
+                            onDismiss()
+                        }
+                    )
+                }
+                is PodcastDownloadState.Downloading -> {
+                    val pct = (downloadState.progress * 100).toInt()
+                    BottomSheetMenuItem(
+                        icon = Icons.Default.Close,
+                        label = "Đang tải xuống ($pct%) - Bấm để hủy",
+                        onClick = {
+                            onCancelDownloadClick()
+                            onDismiss()
+                        }
+                    )
+                }
+                is PodcastDownloadState.Queued -> {
+                    BottomSheetMenuItem(
+                        icon = Icons.Default.Close,
+                        label = "Đang chờ trong danh sách tải - Bấm để hủy",
+                        onClick = {
+                            onCancelDownloadClick()
+                            onDismiss()
+                        }
+                    )
+                }
+                is PodcastDownloadState.Failed -> {
+                    BottomSheetMenuItem(
+                        icon = Icons.Default.Refresh,
+                        label = "Tải thất bại - Thử lại",
+                        onClick = {
+                            onDownloadClick()
+                            onDismiss()
+                        }
+                    )
+                }
+                is PodcastDownloadState.Idle -> {
+                    BottomSheetMenuItem(
+                        icon = Icons.Default.Download,
+                        label = "Tải xuống",
+                        onClick = {
+                            onDownloadClick()
+                            onDismiss()
+                        }
+                    )
+                }
+            }
 
             // 3. Thêm vào danh sách phát
             BottomSheetMenuItem(

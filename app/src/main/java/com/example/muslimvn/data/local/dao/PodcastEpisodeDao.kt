@@ -31,6 +31,18 @@ interface PodcastEpisodeDao {
     @Query("UPDATE podcast_episodes SET lastPositionMs = :positionMs WHERE id = :episodeId")
     suspend fun updateLastPosition(episodeId: String, positionMs: Long)
 
+    @Query("UPDATE podcast_episodes SET isDownloaded = :isDownloaded, localFilePath = :localFilePath, downloadStatus = :downloadStatus WHERE id = :episodeId")
+    suspend fun updateDownloadStatus(episodeId: String, isDownloaded: Boolean, localFilePath: String?, downloadStatus: String)
+
+    @Query("SELECT * FROM podcast_episodes WHERE isDownloaded = 1")
+    fun getDownloadedEpisodes(): Flow<List<PodcastEpisodeEntity>>
+
+    @Query("SELECT * FROM podcast_episodes WHERE isDownloaded = 1")
+    suspend fun getDownloadedEpisodesOnce(): List<PodcastEpisodeEntity>
+
+    @Query("SELECT * FROM podcast_episodes WHERE downloadStatus != 'IDLE'")
+    suspend fun getNonIdleEpisodesOnce(): List<PodcastEpisodeEntity>
+
     @Query("SELECT COUNT(*) FROM podcast_episodes WHERE scholarId = :scholarId")
     suspend fun countByScholar(scholarId: String): Int
 }

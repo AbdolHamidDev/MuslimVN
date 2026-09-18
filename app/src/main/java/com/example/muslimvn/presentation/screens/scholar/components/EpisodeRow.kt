@@ -11,7 +11,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.ErrorOutline
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -32,6 +35,7 @@ import com.airbnb.lottie.compose.LottieConstants
 import com.airbnb.lottie.compose.animateLottieCompositionAsState
 import com.airbnb.lottie.compose.rememberLottieComposition
 import com.example.muslimvn.R
+import com.example.muslimvn.data.util.PodcastDownloadState
 import com.example.muslimvn.domain.models.PodcastEpisode
 import com.example.muslimvn.presentation.components.bouncyClick
 import com.example.muslimvn.presentation.components.formatDurationMs
@@ -42,6 +46,7 @@ import com.example.muslimvn.presentation.components.formatPubDate
  * - Khi đang nghe (isCurrent), hiển thị Lottie voice wave animation tràn vừa tầm với kích thước chữ tiêu đề.
  * - Loại bỏ nền active highlight khi đang nghe.
  * - Tiêu đề tập podcast có hiệu ứng tự động trôi chữ (basicMarquee) nếu tiêu đề quá dài.
+ * - Hiển thị trạng thái tải xuống offline.
  * - Nút 3 chấm bên phải để mở BottomSheet tùy chọn.
  */
 @Composable
@@ -49,6 +54,7 @@ fun EpisodeRow(
     episode: PodcastEpisode,
     isCurrent: Boolean,
     isPlaying: Boolean = false,
+    downloadState: PodcastDownloadState = PodcastDownloadState.Idle,
     onPlay: () -> Unit,
     onMoreClick: () -> Unit
 ) {
@@ -106,6 +112,51 @@ fun EpisodeRow(
                         style = MaterialTheme.typography.labelSmall,
                         color = Color.White.copy(alpha = 0.7f)
                     )
+
+                    val isDownloaded = episode.isDownloaded || downloadState is PodcastDownloadState.Downloaded
+                    if (isDownloaded) {
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Icon(
+                            imageVector = Icons.Default.CheckCircle,
+                            contentDescription = "Đã tải offline",
+                            tint = Color(0xFF4CAF50),
+                            modifier = Modifier.size(13.dp)
+                        )
+                    } else when (downloadState) {
+                        is PodcastDownloadState.Downloading -> {
+                            Spacer(modifier = Modifier.width(6.dp))
+                            CircularProgressIndicator(
+                                strokeWidth = 1.5.dp,
+                                color = Color.White,
+                                modifier = Modifier.size(12.dp)
+                            )
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(
+                                text = "${(downloadState.progress * 100).toInt()}%",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = Color.White.copy(alpha = 0.8f)
+                            )
+                        }
+                        is PodcastDownloadState.Queued -> {
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text(
+                                text = "\u2022 Đang chờ tải",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = Color.White.copy(alpha = 0.6f)
+                            )
+                        }
+                        is PodcastDownloadState.Failed -> {
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Icon(
+                                imageVector = Icons.Default.ErrorOutline,
+                                contentDescription = "Tải thất bại",
+                                tint = Color(0xFFFF5252),
+                                modifier = Modifier.size(13.dp)
+                            )
+                        }
+                        else -> {}
+                    }
+
                     // Còn vị trí nghe hợp lệ -> gợi ý phát tiếp từ đó.
                     val resumable = episode.lastPositionMs > 60_000L &&
                         (episode.duration <= 0 || episode.lastPositionMs < episode.duration - 15_000L)

@@ -18,5 +18,7 @@ data class PodcastEpisode(
     val pubDate: Long,
     val description: String,
     val isDownloaded: Boolean,
-    val lastPositionMs: Long
+    val lastPositionMs: Long,
+    val localFilePath: String? = null,
+    val downloadStatus: String = "IDLE"
 )

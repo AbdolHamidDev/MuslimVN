@@ -92,7 +92,18 @@ fun MainNavigation(backStack: NavBackStack<NavKey>, modifier: Modifier = Modifie
             entry<Destination.NamesOfAllah> { NamesOfAllahScreen(popBack) }
             entry<Destination.Zakat> { ZakatScreen(popBack) }
             entry<Destination.Settings> {
-                SettingsScreen({ backStack.add(Destination.QuranSettings()) }, { backStack.add(Destination.PrayerNotifications) }, { backStack.add(Destination.DownloadedVideos) })
+                SettingsScreen(
+                    onNavigateToQuranSettings = { backStack.add(Destination.QuranSettings()) },
+                    onNavigateToPrayerNotifications = { backStack.add(Destination.PrayerNotifications) },
+                    onNavigateToDownloadedVideos = { backStack.add(Destination.DownloadedVideos) },
+                    onNavigateToDownloadedPodcasts = { backStack.add(Destination.DownloadedPodcasts) }
+                )
+            }
+            entry<Destination.DownloadedPodcasts> {
+                DownloadedPodcastsScreen(
+                    onBackClick = popBack,
+                    onOpenFullPlayer = { openFullPlayer(null) }
+                )
             }
             entry<Destination.DownloadedVideos> {
                 DownloadedVideosScreen(

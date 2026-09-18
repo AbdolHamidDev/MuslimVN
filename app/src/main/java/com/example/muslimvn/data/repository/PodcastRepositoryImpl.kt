@@ -114,7 +114,9 @@ class PodcastRepositoryImpl @Inject constructor(
                     pubDate = rss.pubDateMs,
                     description = rss.description,
                     isDownloaded = old?.isDownloaded ?: false,
-                    lastPositionMs = old?.lastPositionMs ?: 0L
+                    lastPositionMs = old?.lastPositionMs ?: 0L,
+                    localFilePath = old?.localFilePath,
+                    downloadStatus = old?.downloadStatus ?: "IDLE"
                 )
             }
             episodeDao.insertEpisodes(merged)
@@ -223,7 +225,7 @@ class PodcastRepositoryImpl @Inject constructor(
     )
 
     private fun PodcastEpisodeEntity.toDomain() = PodcastEpisode(
-        id, scholarId, title, audioUrl, artworkUrl, duration, pubDate, description, isDownloaded, lastPositionMs
+        id, scholarId, title, audioUrl, artworkUrl, duration, pubDate, description, isDownloaded, lastPositionMs, localFilePath, downloadStatus
     )
 
     companion object {

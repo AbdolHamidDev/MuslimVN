@@ -21,6 +21,7 @@ import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.LinearProgressIndicator
@@ -28,6 +29,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -50,6 +52,7 @@ import coil.imageLoader
 import coil.request.ImageRequest
 import coil.request.SuccessResult
 import com.example.muslimvn.R
+import com.example.muslimvn.data.util.PodcastDownloadState
 import com.example.muslimvn.domain.models.PodcastEpisode
 import com.example.muslimvn.presentation.components.EmptyState
 import com.example.muslimvn.presentation.components.LoadingIndicator
@@ -86,6 +89,10 @@ fun ScholarDetailScreen(
     val isPlaying by viewModel.isPlaying.collectAsStateWithLifecycle()
     val episodes = viewModel.episodesPagingData.collectAsLazyPagingItems()
     val scholarEpisodes by viewModel.scholarEpisodes.collectAsStateWithLifecycle()
+
+    val downloadStates by viewModel.downloadStates.collectAsStateWithLifecycle()
+    val playlistProgresses by viewModel.playlistProgresses.collectAsStateWithLifecycle()
+    val scholarPlaylistProgress = playlistProgresses[viewModel.scholarId]
 
     val isPlayingScholar = remember(isPlaying, currentEpisodeId, scholarEpisodes) {
         isPlaying && scholarEpisodes.any { it.id == currentEpisodeId }
@@ -191,8 +198,10 @@ fun ScholarDetailScreen(
                             scholar = state.scholar,
                             backgroundColor = backgroundColor,
                             isPlayingScholar = isPlayingScholar,
+                            playlistProgress = scholarPlaylistProgress,
                             onPlayAllClick = viewModel::onPlayAllClicked,
-                            onShuffleClick = viewModel::onShuffleClicked
+                            onShuffleClick = viewModel::onShuffleClicked,
+                            onDownloadAllClick = viewModel::downloadScholarPlaylist
                         )
                     }
                     if (state.isRefreshing) {
@@ -266,10 +275,13 @@ fun ScholarDetailScreen(
                     ) { index ->
                         val episode = episodes[index]
                         if (episode != null) {
+                            val epDownloadState = downloadStates[episode.id]
+                                ?: if (episode.isDownloaded) PodcastDownloadState.Downloaded else PodcastDownloadState.Idle
                             EpisodeRow(
                                 episode = episode,
                                 isCurrent = currentEpisodeId == episode.id,
                                 isPlaying = isPlaying,
+                                downloadState = epDownloadState,
                                 onPlay = { viewModel.onPlayPauseClicked(episode, state.scholar?.name) },
                                 onMoreClick = { selectedEpisodeForMenu = episode }
                             )
@@ -303,10 +315,88 @@ fun ScholarDetailScreen(
 
             // BottomSheet hiển thị khi nhấn nút 3 chấm của một tập podcast
             if (selectedEpisodeForMenu != null) {
+                val selectedEp = selectedEpisodeForMenu!!
+                val selectedEpDownloadState = downloadStates[selectedEp.id]
+                    ?: if (selectedEp.isDownloaded) PodcastDownloadState.Downloaded else PodcastDownloadState.Idle
                 EpisodeMoreMenuBottomSheet(
-                    episode = selectedEpisodeForMenu!!,
+                    episode = selectedEp,
                     scholar = state.scholar,
                     onDismiss = { selectedEpisodeForMenu = null },
+                    downloadState = selectedEpDownloadState,
+                    onDownloadClick = { viewModel.downloadEpisode(selectedEp) },
+                    onCancelDownloadClick = { viewModel.cancelDownload(selectedEp.id) },
+                    onDeleteDownloadClick = { viewModel.deleteDownloadedEpisode(selectedEp) },
+                    containerColor = miniPlayerColor
+                )
+            }
+
+            // Dialog xác nhận tải xuống playlist
+            if (state.showDownloadPlaylistDialog) {
+                val batchCount = state.pendingBatchCount
+                val scholarName = state.scholar?.name ?: "học giả"
+                AlertDialog(
+                    onDismissRequest = viewModel::dismissPlaylistDialogs,
+                    title = {
+                        Text(
+                            text = "Xác nhận tải playlist",
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White
+                        )
+                    },
+                    text = {
+                        Text(
+                            text = if (batchCount > 0) {
+                                "Bạn có muốn tải xuống $batchCount tập mới nhất chưa có offline của $scholarName để nghe ngoại tuyến không?\n(Dung lượng ước tính: ~${batchCount * 15} MB)"
+                            } else {
+                                "Tất cả các tập hiện tại của $scholarName đã được tải xuống offline."
+                            },
+                            color = Color.White.copy(alpha = 0.9f)
+                        )
+                    },
+                    confirmButton = {
+                        if (batchCount > 0) {
+                            TextButton(onClick = viewModel::confirmDownloadPlaylist) {
+                                Text("Tải xuống", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+                            }
+                        }
+                    },
+                    dismissButton = {
+                        TextButton(onClick = viewModel::dismissPlaylistDialogs) {
+                            Text(if (batchCount > 0) "Hủy" else "Đóng", color = Color.White.copy(alpha = 0.7f))
+                        }
+                    },
+                    containerColor = miniPlayerColor
+                )
+            }
+
+            // Dialog xác nhận dừng/hủy tải playlist
+            if (state.showCancelPlaylistDialog) {
+                val scholarName = state.scholar?.name ?: "học giả"
+                AlertDialog(
+                    onDismissRequest = viewModel::dismissPlaylistDialogs,
+                    title = {
+                        Text(
+                            text = "Dừng tải playlist?",
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White
+                        )
+                    },
+                    text = {
+                        Text(
+                            text = "Tiến trình tải playlist của $scholarName đang diễn ra. Bạn có muốn dừng và hủy danh sách chờ tải không?",
+                            color = Color.White.copy(alpha = 0.9f)
+                        )
+                    },
+                    confirmButton = {
+                        TextButton(onClick = viewModel::confirmCancelPlaylist) {
+                            Text("Dừng tải", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.error)
+                        }
+                    },
+                    dismissButton = {
+                        TextButton(onClick = viewModel::dismissPlaylistDialogs) {
+                            Text("Tiếp tục tải", color = Color.White.copy(alpha = 0.7f))
+                        }
+                    },
                     containerColor = miniPlayerColor
                 )
             }

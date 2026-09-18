@@ -32,6 +32,7 @@ sealed interface Destination : NavKey {
     @Serializable data object PrayerNotifications : Destination
     @Serializable data object PrayerCalculationDetails : Destination
     @Serializable data object DownloadedVideos : Destination
+    @Serializable data object DownloadedPodcasts : Destination
     @Serializable data class SurahDetail(val surahNumber: Int, val startAyah: Int = 1) : Destination
     @Serializable data class DailyReminder(val hadithId: String) : Destination
     @Serializable data object PodcastHome : Destination

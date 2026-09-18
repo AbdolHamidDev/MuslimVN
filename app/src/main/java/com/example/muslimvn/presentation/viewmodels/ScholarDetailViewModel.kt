@@ -12,23 +12,28 @@ import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import androidx.paging.PagingData
 import androidx.paging.cachedIn
 import kotlinx.coroutines.flow.Flow
+import com.example.muslimvn.data.util.PodcastDownloadManager
+import com.example.muslimvn.data.util.PodcastDownloadState
+import com.example.muslimvn.data.util.PlaylistDownloadProgress
 import kotlinx.coroutines.launch
 
 /**
  * ViewModel màn chi tiết học giả: header (bio, tổng số tập) + danh sách tập từ cache Room,
  * kèm refresh nền RSS. Điều khiển phát qua [AudioPlayerManager] dùng chung — phát tiếp
- * từ lastPositionMs, tua ±10s, đổi tốc độ.
+ * từ lastPositionMs, tua ±10s, đổi tốc độ. Quản lý tải xuống qua [PodcastDownloadManager].
  */
 @androidx.media3.common.util.UnstableApi
 @HiltViewModel(assistedFactory = ScholarDetailViewModel.Factory::class)
 class ScholarDetailViewModel @AssistedInject constructor(
     private val podcastRepository: PodcastRepository,
     private val audioPlayerManager: AudioPlayerManager,
+    private val podcastDownloadManager: PodcastDownloadManager,
     @Assisted val scholarId: String
 ) : ViewModel() {
     @AssistedFactory
@@ -41,7 +46,10 @@ class ScholarDetailViewModel @AssistedInject constructor(
         /** Đang fetch RSS nền (hiển thị indicator mảnh trên đầu danh sách). */
         val isRefreshing: Boolean = false,
         /** Fetch RSS thất bại (offline/feed lỗi) — banner nhỏ + nút thử lại. */
-        val offlineError: Boolean = false
+        val offlineError: Boolean = false,
+        val showDownloadPlaylistDialog: Boolean = false,
+        val showCancelPlaylistDialog: Boolean = false,
+        val pendingBatchCount: Int = 0
     )
 
     private val _uiState = MutableStateFlow(UiState())
@@ -49,6 +57,10 @@ class ScholarDetailViewModel @AssistedInject constructor(
 
     private val _scholarEpisodes = MutableStateFlow<List<PodcastEpisode>>(emptyList())
     val scholarEpisodes = _scholarEpisodes.asStateFlow()
+
+    // Theo dõi trạng thái tải xuống từng tập và tổng thể playlist của học giả
+    val downloadStates: StateFlow<Map<String, PodcastDownloadState>> = podcastDownloadManager.downloadStates
+    val playlistProgresses: StateFlow<Map<String, PlaylistDownloadProgress>> = podcastDownloadManager.playlistProgresses
 
     // Pass-through trạng thái trình phát (giống SurahDetailViewModel).
     val isPlaying = audioPlayerManager.isPlaying
@@ -198,6 +210,63 @@ class ScholarDetailViewModel @AssistedInject constructor(
                 title = episode.title,
                 artist = scholarName,
                 artworkPath = episode.artworkUrl ?: _uiState.value.scholar?.avatarPath
+            )
+        }
+    }
+
+    /** Yêu cầu tải xuống một tập podcast đơn lẻ. */
+    fun downloadEpisode(episode: PodcastEpisode) {
+        podcastDownloadManager.enqueueEpisode(episode, isPriority = true)
+    }
+
+    /** Hủy tiến trình tải xuống của một tập podcast. */
+    fun cancelDownload(episodeId: String) {
+        podcastDownloadManager.cancelDownload(episodeId)
+    }
+
+    /** Xóa file audio offline của một tập podcast. */
+    fun deleteDownloadedEpisode(episode: PodcastEpisode) {
+        podcastDownloadManager.deleteDownloadedFile(episode)
+    }
+
+    /** Xử lý khi nhấn nút Tải playlist ở Header: kiểm tra trạng thái để hiện Dialog tương ứng. */
+    fun downloadScholarPlaylist() {
+        val currentProgress = playlistProgresses.value[scholarId]
+        if (currentProgress?.isDownloading == true) {
+            _uiState.update { it.copy(showCancelPlaylistDialog = true) }
+        } else {
+            val episodes = _scholarEpisodes.value
+            val batch = podcastDownloadManager.getPendingBatch(episodes)
+            _uiState.update {
+                it.copy(
+                    showDownloadPlaylistDialog = true,
+                    pendingBatchCount = batch.size
+                )
+            }
+        }
+    }
+
+    /** Xác nhận tải playlist từ Dialog. */
+    fun confirmDownloadPlaylist() {
+        _uiState.update { it.copy(showDownloadPlaylistDialog = false) }
+        val episodes = _scholarEpisodes.value
+        if (episodes.isNotEmpty()) {
+            podcastDownloadManager.enqueuePlaylist(scholarId, episodes)
+        }
+    }
+
+    /** Xác nhận hủy/dừng tiến trình tải playlist từ Dialog. */
+    fun confirmCancelPlaylist() {
+        _uiState.update { it.copy(showCancelPlaylistDialog = false) }
+        podcastDownloadManager.cancelPlaylistDownload(scholarId)
+    }
+
+    /** Đóng các Dialog xác nhận. */
+    fun dismissPlaylistDialogs() {
+        _uiState.update {
+            it.copy(
+                showDownloadPlaylistDialog = false,
+                showCancelPlaylistDialog = false
             )
         }
     }
