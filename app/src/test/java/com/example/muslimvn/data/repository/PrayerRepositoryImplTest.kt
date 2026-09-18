@@ -40,6 +40,10 @@ class PrayerRepositoryImplTest {
         override suspend fun updateAsrMethod(method: AsrMethod) { asrMethod = method }
         override fun getPrayerAdjustments(): Flow<PrayerAdjustments> = flowOf(adjustments)
         override suspend fun updatePrayerAdjustments(adjustments: PrayerAdjustments) { this.adjustments = adjustments }
+        override fun isOnboardingCompleted(): Flow<Boolean> = flowOf(true)
+        override suspend fun setOnboardingCompleted(completed: Boolean) {}
+        override fun getLastLocation(): Flow<Triple<Double, Double, String?>?> = flowOf(null)
+        override suspend fun saveLastLocation(lat: Double, lng: Double, address: String?) {}
     }
 
     private lateinit var fakeSettings: FakeSettingsRepository

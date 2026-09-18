@@ -52,11 +52,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
-import com.airbnb.lottie.compose.LottieAnimation
-import com.airbnb.lottie.compose.LottieCompositionSpec
-import com.airbnb.lottie.compose.LottieConstants
-import com.airbnb.lottie.compose.animateLottieCompositionAsState
-import com.airbnb.lottie.compose.rememberLottieComposition
 import com.example.muslimvn.R
 import com.example.muslimvn.domain.models.PrayerTimes
 import com.example.muslimvn.domain.util.HijriCalendarUtils
@@ -144,15 +139,6 @@ fun NextPrayerHero(
             "$day $month $year AH"
         }.orEmpty()
     }
-
-    // Lottie Composition for Masjid Icon
-    val lottieComposition by rememberLottieComposition(
-        LottieCompositionSpec.Asset("lottiefiles/masjid_home.json")
-    )
-    val lottieProgress by animateLottieCompositionAsState(
-        composition = lottieComposition,
-        iterations = LottieConstants.IterateForever
-    )
 
     Box(
         modifier = modifier
@@ -253,57 +239,6 @@ fun NextPrayerHero(
                                 maxLines = 1
                             )
                         }
-                    }
-                }
-
-                Spacer(modifier = Modifier.width(8.dp))
-
-                // Thought Bubble ABOVE Lottie Icon
-                Column(
-                    horizontalAlignment = Alignment.End,
-                    modifier = Modifier.clickable(
-                        interactionSource = remember { MutableInteractionSource() },
-                        indication = null,
-                        onClick = onMasjidClick
-                    )
-                ) {
-                    Surface(
-                        shape = RoundedCornerShape(10.dp),
-                        color = Color.White.copy(alpha = 0.95f),
-                        shadowElevation = 2.dp
-                    ) {
-                        Text(
-                            text = "Bạn đang tìm masjid?",
-                            style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
-                            fontWeight = FontWeight.Bold,
-                            color = Color.Black,
-                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
-                        )
-                    }
-                    Spacer(modifier = Modifier.height(1.dp))
-                    Box(
-                        modifier = Modifier
-                            .padding(end = 16.dp)
-                            .size(3.dp)
-                            .background(Color.White.copy(alpha = 0.9f), CircleShape)
-                    )
-                    Spacer(modifier = Modifier.height(1.dp))
-                    Box(
-                        modifier = Modifier
-                            .padding(end = 18.dp)
-                            .size(2.dp)
-                            .background(Color.White.copy(alpha = 0.7f), CircleShape)
-                    )
-
-                    Box(
-                        modifier = Modifier.size(72.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        LottieAnimation(
-                            composition = lottieComposition,
-                            progress = { lottieProgress },
-                            modifier = Modifier.fillMaxSize()
-                        )
                     }
                 }
             }

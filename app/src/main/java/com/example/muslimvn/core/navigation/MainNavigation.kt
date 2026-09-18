@@ -54,7 +54,7 @@ fun MainNavigation(backStack: NavBackStack<NavKey>, modifier: Modifier = Modifie
                     onVietnamScholarClick = { backStack.add(Destination.VietnamScholarDetail(it)) },
                     onDailyReminderClick = { backStack.add(Destination.DailyReminder(it)) },
                     onOpenFullPlayer = { openFullPlayer(null) },
-                    onMasjidClick = { backStack.add(Destination.MasjidList) },
+                    onMasjidClick = {},
                     onHijriCalendarClick = { backStack.add(Destination.HijriCalendar) }
                 )
             }
@@ -124,7 +124,8 @@ fun MainNavigation(backStack: NavBackStack<NavKey>, modifier: Modifier = Modifie
                 YoutubePlayerDetailScreen(popBack, viewModel)
             }
             entry<Destination.DocumentReader> { key -> DocumentReaderScreen(key.url, key.title, popBack) }
-            entry<Destination.MasjidList> { MasjidListScreen(onBackClick = popBack) }
+            // Temporarily hidden for v1 release scope
+            // entry<Destination.MasjidList> { MasjidListScreen(onBackClick = popBack) }
         }
     )
 }
