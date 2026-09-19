@@ -94,34 +94,14 @@ class PodcastLibraryViewModel @Inject constructor(
 
     fun playEpisode(episode: PodcastEpisode, scholarName: String?) {
         viewModelScope.launch {
-            val favorites = favoriteEpisodes.value.map { it.episode }
-            val startIndex = favorites.indexOfFirst { it.id == episode.id }.coerceAtLeast(0)
-            val items = favorites.map { ep ->
-                AudioPlayItem(
-                    url = ep.localFilePath ?: ep.audioUrl,
-                    mediaId = ep.id,
-                    title = ep.title,
-                    artist = scholarName ?: "Học giả Islam",
-                    artworkPath = ep.artworkUrl
-                )
-            }
-            if (items.isNotEmpty()) {
-                audioPlayerManager.playList(
-                    items = items,
-                    startIndex = startIndex,
-                    startPositionMs = episode.lastPositionMs.takeIf { it > 0 } ?: 0L,
-                    isPodcast = true
-                )
-            } else {
-                audioPlayerManager.playPodcast(
-                    url = episode.localFilePath ?: episode.audioUrl,
-                    mediaId = episode.id,
-                    startPositionMs = episode.lastPositionMs,
-                    title = episode.title,
-                    artist = scholarName,
-                    artworkPath = episode.artworkUrl
-                )
-            }
+            audioPlayerManager.playPodcast(
+                url = episode.localFilePath ?: episode.audioUrl,
+                mediaId = episode.id,
+                startPositionMs = episode.lastPositionMs.takeIf { it > 0 } ?: 0L,
+                title = episode.title,
+                artist = scholarName ?: "Học giả Islam",
+                artworkPath = episode.artworkUrl
+            )
         }
     }
 

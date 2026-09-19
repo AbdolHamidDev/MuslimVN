@@ -4,6 +4,7 @@ package com.example.muslimvn.presentation.screens
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
+import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -338,9 +339,12 @@ private fun RecentlyPlayedRow(
                     text = item.episode.title,
                     style = MaterialTheme.typography.titleSmall,
                     fontWeight = if (isCurrent) FontWeight.Bold else FontWeight.SemiBold,
-                    color = MaterialTheme.colorScheme.onSurface,
+                    color = if (isCurrent) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
                     maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
+                    modifier = Modifier.basicMarquee(
+                        iterations = Int.MAX_VALUE,
+                        repeatDelayMillis = 1200
+                    )
                 )
                 Spacer(modifier = Modifier.height(2.dp))
                 Text(
