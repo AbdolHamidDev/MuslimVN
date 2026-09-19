@@ -383,7 +383,7 @@ private fun DownloadedPodcastCardItem(
                 contentScale = ContentScale.Crop,
                 modifier = Modifier
                     .size(56.dp)
-                    .clip(RoundedCornerShape(10.dp))
+                    .clip(MaterialTheme.shapes.small)
                     .background(Color.White.copy(alpha = 0.12f))
             )
 

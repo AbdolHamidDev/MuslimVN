@@ -155,7 +155,7 @@ fun MuslimCentralScholarCard(
         modifier = modifier
             .height(225.dp)
             .bouncyClick(onClick = onClick),
-        shape = RoundedCornerShape(18.dp),
+        shape = MaterialTheme.shapes.large,
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
         Box(modifier = Modifier.fillMaxSize()) {

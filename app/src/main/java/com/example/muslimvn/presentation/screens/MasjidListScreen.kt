@@ -322,7 +322,7 @@ private fun MasjidScreenCardItem(
                     horizontalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
                     Surface(
-                        shape = RoundedCornerShape(6.dp),
+                        shape = MaterialTheme.shapes.extraSmall,
                         color = if (isMasjid)
                             MaterialTheme.extendedColors.success.copy(alpha = 0.15f)
                         else
@@ -339,7 +339,7 @@ private fun MasjidScreenCardItem(
 
                     item.distanceKm?.let { dist ->
                         Surface(
-                            shape = RoundedCornerShape(6.dp),
+                            shape = MaterialTheme.shapes.extraSmall,
                             color = MaterialTheme.colorScheme.surfaceVariant
                         ) {
                             Text(
@@ -355,7 +355,7 @@ private fun MasjidScreenCardItem(
 
                 masjid.prayer?.jummah?.firstOrNull()?.let { jummahTime ->
                     Surface(
-                        shape = RoundedCornerShape(6.dp),
+                        shape = MaterialTheme.shapes.extraSmall,
                         color = MaterialTheme.colorScheme.surfaceVariant
                     ) {
                         Row(
@@ -462,7 +462,7 @@ private fun MasjidScreenCardItem(
             ) {
                 Button(
                     onClick = onDirectionsClick,
-                    shape = RoundedCornerShape(10.dp),
+                    shape = MaterialTheme.shapes.small,
                     contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
                 ) {
                     Icon(

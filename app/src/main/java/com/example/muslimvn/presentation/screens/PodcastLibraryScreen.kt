@@ -311,7 +311,7 @@ private fun RecentlyPlayedRow(
         modifier = modifier
             .fillMaxWidth()
             .bouncyClick(onClick = onPlay),
-        shape = RoundedCornerShape(14.dp),
+        shape = MaterialTheme.shapes.medium,
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
         )
@@ -329,7 +329,7 @@ private fun RecentlyPlayedRow(
                 contentScale = ContentScale.Crop,
                 modifier = Modifier
                     .size(52.dp)
-                    .clip(RoundedCornerShape(10.dp))
+                    .clip(MaterialTheme.shapes.small)
                     .background(MaterialTheme.colorScheme.surfaceVariant)
             )
 
@@ -386,7 +386,7 @@ private fun RecentlyPlayedRow(
                             modifier = Modifier
                                 .weight(1f)
                                 .height(3.dp)
-                                .clip(RoundedCornerShape(2.dp)),
+                                .clip(MaterialTheme.shapes.extraSmall),
                             color = MaterialTheme.colorScheme.primary,
                             trackColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)
                         )
@@ -434,7 +434,7 @@ private fun LibraryGridCard(
         modifier = modifier
             .height(100.dp)
             .bouncyClick(onClick = onClick),
-        shape = RoundedCornerShape(18.dp),
+        shape = MaterialTheme.shapes.large,
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
         )

@@ -34,6 +34,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.muslimvn.ui.theme.CategoryColors
+import com.example.muslimvn.ui.theme.BadgeShape
+import com.example.muslimvn.ui.theme.badge
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import coil.compose.AsyncImage
 import com.example.muslimvn.domain.models.PodcastEpisode
@@ -582,7 +584,7 @@ fun MachZenDocumentItemCard(
                             )
                             
                             Surface(
-                                shape = RoundedCornerShape(4.dp),
+                                shape = BadgeShape,
                                 color = Color.White.copy(alpha = 0.2f),
                                 modifier = Modifier.padding(top = 2.dp)
                             ) {
@@ -706,7 +708,7 @@ fun MachZenVideoListItem(
                         modifier = Modifier
                             .align(Alignment.BottomEnd)
                             .padding(4.dp)
-                            .background(Color.Black.copy(alpha = 0.8f), RoundedCornerShape(4.dp))
+                            .background(Color.Black.copy(alpha = 0.8f), BadgeShape)
                             .padding(horizontal = 4.dp, vertical = 2.dp)
                     ) {
                         val hours = video.duration / 3600
@@ -787,7 +789,7 @@ fun MachZenVideoCardItem(
                         modifier = Modifier
                             .align(Alignment.BottomEnd)
                             .padding(6.dp)
-                            .background(Color.Black.copy(alpha = 0.8f), RoundedCornerShape(4.dp))
+                            .background(Color.Black.copy(alpha = 0.8f), BadgeShape)
                             .padding(horizontal = 4.dp, vertical = 2.dp)
                     ) {
                         val hours = video.duration / 3600
@@ -838,8 +840,8 @@ fun MachZenFloatingPillBar(
 ) {
     Surface(
         modifier = modifier
-            .shadow(12.dp, RoundedCornerShape(32.dp)),
-        shape = RoundedCornerShape(32.dp),
+            .shadow(12.dp, MaterialTheme.shapes.extraLarge),
+        shape = MaterialTheme.shapes.extraLarge,
         color = MaterialTheme.colorScheme.surface.copy(alpha = 0.85f),
         tonalElevation = 8.dp,
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
@@ -985,7 +987,7 @@ fun MachZenItemShimmer(brush: Brush) {
                     modifier = Modifier
                         .fillMaxWidth(0.8f)
                         .height(16.dp)
-                        .clip(RoundedCornerShape(4.dp))
+                        .clip(BadgeShape)
                         .background(brush)
                 )
                 Spacer(modifier = Modifier.height(8.dp))
@@ -993,7 +995,7 @@ fun MachZenItemShimmer(brush: Brush) {
                     modifier = Modifier
                         .fillMaxWidth(0.4f)
                         .height(12.dp)
-                        .clip(RoundedCornerShape(4.dp))
+                        .clip(BadgeShape)
                         .background(brush)
                 )
             }
@@ -1027,7 +1029,7 @@ fun MachZenCardItemShimmer(brush: Brush) {
                     modifier = Modifier
                         .fillMaxWidth(0.9f)
                         .height(16.dp)
-                        .clip(RoundedCornerShape(4.dp))
+                        .clip(BadgeShape)
                         .background(brush)
                 )
                 Spacer(modifier = Modifier.height(8.dp))
@@ -1035,7 +1037,7 @@ fun MachZenCardItemShimmer(brush: Brush) {
                     modifier = Modifier
                         .fillMaxWidth(0.5f)
                         .height(12.dp)
-                        .clip(RoundedCornerShape(4.dp))
+                        .clip(BadgeShape)
                         .background(brush)
                 )
             }
@@ -1072,14 +1074,14 @@ fun MachZenDocumentItemShimmer(brush: Brush) {
                     modifier = Modifier
                         .fillMaxWidth(0.7f)
                         .height(18.dp)
-                        .clip(RoundedCornerShape(4.dp))
+                        .clip(BadgeShape)
                         .background(brush)
                 )
                 Box(
                     modifier = Modifier
                         .fillMaxWidth(0.4f)
                         .height(14.dp)
-                        .clip(RoundedCornerShape(4.dp))
+                        .clip(BadgeShape)
                         .background(brush)
                 )
             }

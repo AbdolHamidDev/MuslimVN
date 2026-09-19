@@ -238,7 +238,7 @@ fun DailyProgressHeader(prayers: List<PrayerTrackerState>) {
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 8.dp),
         color = MaterialTheme.colorScheme.surfaceContainerHigh,
-        shape = RoundedCornerShape(24.dp)
+        shape = com.example.muslimvn.ui.theme.ExtraLarge2Shape
     ) {
         Row(
             modifier = Modifier.padding(20.dp),

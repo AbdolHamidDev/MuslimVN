@@ -163,7 +163,7 @@ private fun HijriCalendarContent(
         item {
             Surface(
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(24.dp),
+                shape = com.example.muslimvn.ui.theme.ExtraLarge2Shape,
                 color = MaterialTheme.colorScheme.surfaceContainerLow
             ) {
                 Column(modifier = Modifier.padding(8.dp)) {

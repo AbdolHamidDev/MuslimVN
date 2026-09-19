@@ -5,7 +5,7 @@ import androidx.annotation.OptIn
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.RoundedCornerShape
+import com.example.muslimvn.ui.theme.ExtraLarge2Shape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.FullscreenExit
 import androidx.compose.material3.CircularProgressIndicator
@@ -62,7 +62,7 @@ fun FullscreenPlayer(
             IconButton(
                 onClick = onToggleFullscreen,
                 modifier = Modifier
-                    .background(Color.Black.copy(alpha = 0.5f), RoundedCornerShape(24.dp))
+                    .background(Color.Black.copy(alpha = 0.5f), ExtraLarge2Shape)
             ) {
                 Icon(
                     imageVector = Icons.Default.FullscreenExit,

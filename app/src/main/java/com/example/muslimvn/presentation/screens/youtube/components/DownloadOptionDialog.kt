@@ -185,7 +185,7 @@ private fun DownloadOptionItem(
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(6.dp)
-                            .clip(RoundedCornerShape(3.dp)),
+                            .clip(com.example.muslimvn.ui.theme.BadgeShape),
                         color = MaterialTheme.colorScheme.primary
                     )
                 }

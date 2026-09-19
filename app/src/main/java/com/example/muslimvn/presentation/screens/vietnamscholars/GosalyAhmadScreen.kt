@@ -32,6 +32,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.example.muslimvn.ui.theme.BadgeShape
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import coil.compose.AsyncImage
 import com.example.muslimvn.domain.models.YoutubeVideo
@@ -214,8 +215,8 @@ fun GosalyAhmadFloatingPillBar(
 ) {
     Surface(
         modifier = modifier
-            .shadow(12.dp, RoundedCornerShape(32.dp)),
-        shape = RoundedCornerShape(32.dp),
+            .shadow(12.dp, MaterialTheme.shapes.extraLarge),
+        shape = MaterialTheme.shapes.extraLarge,
         color = MaterialTheme.colorScheme.surface.copy(alpha = 0.85f),
         tonalElevation = 8.dp,
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
@@ -334,7 +335,7 @@ fun GosalyAhmadVideoListItem(
                         modifier = Modifier
                             .align(Alignment.BottomEnd)
                             .padding(4.dp)
-                            .background(Color.Black.copy(alpha = 0.8f), RoundedCornerShape(4.dp))
+                            .background(Color.Black.copy(alpha = 0.8f), BadgeShape)
                             .padding(horizontal = 4.dp, vertical = 2.dp)
                     ) {
                         val hours = video.duration / 3600
@@ -415,7 +416,7 @@ fun GosalyAhmadVideoCardItem(
                         modifier = Modifier
                             .align(Alignment.BottomEnd)
                             .padding(6.dp)
-                            .background(Color.Black.copy(alpha = 0.8f), RoundedCornerShape(4.dp))
+                            .background(Color.Black.copy(alpha = 0.8f), BadgeShape)
                             .padding(horizontal = 4.dp, vertical = 2.dp)
                     ) {
                         val hours = video.duration / 3600
@@ -516,7 +517,7 @@ fun GosalyAhmadItemShimmer(brush: Brush) {
                     modifier = Modifier
                         .fillMaxWidth(0.8f)
                         .height(16.dp)
-                        .clip(RoundedCornerShape(4.dp))
+                        .clip(BadgeShape)
                         .background(brush)
                 )
                 Spacer(modifier = Modifier.height(8.dp))
@@ -524,7 +525,7 @@ fun GosalyAhmadItemShimmer(brush: Brush) {
                     modifier = Modifier
                         .fillMaxWidth(0.4f)
                         .height(12.dp)
-                        .clip(RoundedCornerShape(4.dp))
+                        .clip(BadgeShape)
                         .background(brush)
                 )
             }
@@ -558,11 +559,11 @@ fun GosalyAhmadCardItemShimmer(brush: Brush) {
                 modifier = Modifier.padding(12.dp)
             ) {
                 Box(
-                    modifier = Modifier.fillMaxWidth(0.9f).height(16.dp).clip(RoundedCornerShape(4.dp)).background(brush)
+                    modifier = Modifier.fillMaxWidth(0.9f).height(16.dp).clip(BadgeShape).background(brush)
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 Box(
-                    modifier = Modifier.fillMaxWidth(0.5f).height(12.dp).clip(RoundedCornerShape(4.dp)).background(brush)
+                    modifier = Modifier.fillMaxWidth(0.5f).height(12.dp).clip(BadgeShape).background(brush)
                 )
             }
         }

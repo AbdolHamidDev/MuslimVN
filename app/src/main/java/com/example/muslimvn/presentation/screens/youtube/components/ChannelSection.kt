@@ -3,9 +3,8 @@ package com.example.muslimvn.presentation.screens.youtube.components
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
@@ -67,19 +66,28 @@ fun ChannelSection(
             )
         }
 
-        Button(
-            onClick = { isFollowed = !isFollowed },
-            colors = ButtonDefaults.buttonColors(
-                containerColor = if (isFollowed) MaterialTheme.colorScheme.surfaceVariant else MaterialTheme.colorScheme.onSurface,
-                contentColor = if (isFollowed) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.surface
-            ),
-            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
-            shape = RoundedCornerShape(20.dp)
-        ) {
-            Text(
-                text = if (isFollowed) "Đã theo dõi" else "Theo dõi",
-                style = MaterialTheme.typography.labelLarge
-            )
+        if (isFollowed) {
+            OutlinedButton(
+                onClick = { isFollowed = false },
+                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+                shape = MaterialTheme.shapes.large
+            ) {
+                Text(
+                    text = "Đã theo dõi",
+                    style = MaterialTheme.typography.labelLarge
+                )
+            }
+        } else {
+            Button(
+                onClick = { isFollowed = true },
+                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+                shape = MaterialTheme.shapes.large
+            ) {
+                Text(
+                    text = "Theo dõi",
+                    style = MaterialTheme.typography.labelLarge
+                )
+            }
         }
     }
 }

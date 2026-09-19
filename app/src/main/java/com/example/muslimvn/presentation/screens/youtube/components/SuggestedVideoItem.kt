@@ -20,6 +20,8 @@ import com.example.muslimvn.core.utils.TimeUtils
 import com.example.muslimvn.domain.models.YoutubeVideo
 import java.util.Locale
 
+import com.example.muslimvn.ui.theme.BadgeShape
+
 @Composable
 fun SuggestedVideoItem(
     video: YoutubeVideo,
@@ -51,7 +53,7 @@ fun SuggestedVideoItem(
                     modifier = Modifier
                         .align(Alignment.BottomEnd)
                         .padding(4.dp)
-                        .background(Color.Black.copy(alpha = 0.8f), RoundedCornerShape(4.dp))
+                        .background(Color.Black.copy(alpha = 0.8f), BadgeShape)
                         .padding(horizontal = 4.dp, vertical = 2.dp)
                 ) {
                     val hours = video.duration / 3600

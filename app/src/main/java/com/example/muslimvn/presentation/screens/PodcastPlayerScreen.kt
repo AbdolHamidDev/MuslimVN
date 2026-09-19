@@ -271,7 +271,7 @@ fun PodcastPlayerScreen(
                     Surface(
                         modifier = Modifier
                             .size(320.dp)
-                            .clip(RoundedCornerShape(24.dp)),
+                            .clip(com.example.muslimvn.ui.theme.ExtraLarge2Shape),
                         tonalElevation = 12.dp,
                         shadowElevation = 8.dp
                     ) {
