@@ -31,6 +31,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import com.example.muslimvn.presentation.components.ShimmerPlaceholder
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -566,13 +567,16 @@ private fun TafsirBottomSheet(
                 when (state) {
                     is TafsirState.Loading -> {
                         item {
-                            Box(
+                            Column(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .height(200.dp),
-                                contentAlignment = Alignment.Center
+                                    .padding(vertical = 16.dp),
+                                verticalArrangement = Arrangement.spacedBy(12.dp)
                             ) {
-                                CircularProgressIndicator(strokeWidth = 3.dp)
+                                ShimmerPlaceholder(modifier = Modifier.fillMaxWidth().height(24.dp))
+                                ShimmerPlaceholder(modifier = Modifier.fillMaxWidth().height(16.dp))
+                                ShimmerPlaceholder(modifier = Modifier.fillMaxWidth(0.8f).height(16.dp))
+                                ShimmerPlaceholder(modifier = Modifier.fillMaxWidth().height(80.dp))
                             }
                         }
                     }

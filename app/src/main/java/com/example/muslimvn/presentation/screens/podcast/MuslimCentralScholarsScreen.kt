@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
@@ -118,11 +119,19 @@ fun MuslimCentralScholarsScreen(
                 .background(MaterialTheme.colorScheme.background)
         ) {
             when {
-                state.isLoading -> LoadingIndicator(
-                    label = stringResource(R.string.loading_please_wait),
-                    color = androidx.compose.ui.graphics.Color.White,
-                    modifier = Modifier.fillMaxSize()
-                )
+                state.isLoading -> LazyVerticalGrid(
+                    columns = GridCells.Fixed(2),
+                    modifier = Modifier.fillMaxSize().statusBarsPadding().padding(top = 56.dp, start = 16.dp, end = 16.dp),
+                    horizontalArrangement = Arrangement.spacedBy(14.dp),
+                    verticalArrangement = Arrangement.spacedBy(14.dp)
+                ) {
+                    items(6) {
+                        com.example.muslimvn.presentation.components.ShimmerPlaceholder(
+                            modifier = Modifier.fillMaxWidth().height(180.dp),
+                            shape = MaterialTheme.shapes.medium
+                        )
+                    }
+                }
                 state.loadError && state.scholars.isEmpty() -> ErrorState(
                     message = stringResource(R.string.podcast_load_error),
                     onRetry = viewModel::retryLoading,

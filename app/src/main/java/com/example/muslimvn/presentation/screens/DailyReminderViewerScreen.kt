@@ -3,8 +3,9 @@ package com.example.muslimvn.presentation.screens
 import android.Manifest
 import android.content.pm.PackageManager
 import android.os.Build
-import androidx.activity.compose.BackHandler
+import androidx.activity.compose.PredictiveBackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
+import kotlinx.coroutines.CancellationException
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
@@ -65,7 +66,14 @@ fun DailyReminderViewerScreen(initialHadithId: String, onBackClick: () -> Unit, 
     val permission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
         if (granted) save() else scope.launch { snackbar.showSnackbar("Cần quyền truy cập thư viện ảnh để lưu hình ảnh.") }
     }
-    BackHandler(onBack = onBackClick)
+
+    PredictiveBackHandler { progress ->
+        try {
+            progress.collect { }
+            onBackClick()
+        } catch (_: CancellationException) {
+        }
+    }
     LaunchedEffect(state.stories.size, initialHadithId) {
         val target = state.stories.indexOfFirst { it.id == initialHadithId }
         if (target >= 0 && pagerState.currentPage == 0 && initialHadithId != state.stories.firstOrNull()?.id) pagerState.scrollToPage(target)

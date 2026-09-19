@@ -147,19 +147,30 @@ val MaterialTheme.extendedColors: ExtendedColors
  * Theme chính của MuslimVN.
  *
  * @param themeMode Chế độ theme được chọn (Hệ thống, Sáng, Tối).
+ * @param useDynamicColor Sử dụng màu động Material You từ hình nền máy (Android 12+).
  */
 @Composable
 fun MuslimVNTheme(
     themeMode: AppTheme = AppTheme.FOLLOW_SYSTEM,
+    useDynamicColor: Boolean = false,
     content: @Composable () -> Unit
 ) {
+    val context = androidx.compose.ui.platform.LocalContext.current
     val darkTheme = when (themeMode) {
         AppTheme.FOLLOW_SYSTEM -> isSystemInDarkTheme()
         AppTheme.LIGHT -> false
         AppTheme.DARK -> true
     }
 
-    val colorScheme = if (darkTheme) DarkColorScheme else LightColorScheme
+    val supportsDynamicColor = android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S
+
+    val colorScheme = when {
+        useDynamicColor && supportsDynamicColor && darkTheme -> dynamicDarkColorScheme(context)
+        useDynamicColor && supportsDynamicColor && !darkTheme -> dynamicLightColorScheme(context)
+        darkTheme -> DarkColorScheme
+        else -> LightColorScheme
+    }
+
     val extendedColors = if (darkTheme) darkExtendedColors() else lightExtendedColors()
 
     CompositionLocalProvider(LocalExtendedColors provides extendedColors) {

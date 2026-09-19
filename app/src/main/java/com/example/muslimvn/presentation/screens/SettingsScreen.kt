@@ -32,6 +32,8 @@ fun SettingsScreen(
 ) {
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
     val appTheme by viewModel.appTheme.collectAsState()
+    val useDynamicColor by viewModel.useDynamicColor.collectAsState()
+    val supportsDynamicColor = remember { android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S }
     val context = LocalContext.current
     val snackbarHostState = remember { SnackbarHostState() }
     
@@ -63,6 +65,25 @@ fun SettingsScreen(
                         },
                         icon = Icons.Default.DarkMode,
                         onClick = { showThemeDialog = true }
+                    )
+                }
+                item {
+                    ListItem(
+                        headlineContent = { Text("Màu động (Material You)") },
+                        supportingContent = {
+                            Text(
+                                if (supportsDynamicColor) "Tự động đổi tông màu app theo hình nền thiết bị"
+                                else "Chỉ khả dụng trên Android 12 trở lên"
+                            )
+                        },
+                        leadingContent = { Icon(Icons.Default.Palette, contentDescription = null) },
+                        trailingContent = {
+                            Switch(
+                                checked = useDynamicColor && supportsDynamicColor,
+                                onCheckedChange = { viewModel.onDynamicColorChanged(it) },
+                                enabled = supportsDynamicColor
+                            )
+                        }
                     )
                 }
 

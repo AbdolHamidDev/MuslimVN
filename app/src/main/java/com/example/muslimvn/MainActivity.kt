@@ -44,7 +44,8 @@ class MainActivity : ComponentActivity() {
         setContent {
             val settingsViewModel: SettingsViewModel = hiltViewModel()
             val themeMode by settingsViewModel.appTheme.collectAsState()
-            MuslimVNTheme(themeMode = themeMode) { MainScreen() }
+            val useDynamicColor by settingsViewModel.useDynamicColor.collectAsState()
+            MuslimVNTheme(themeMode = themeMode, useDynamicColor = useDynamicColor) { MainScreen() }
         }
     }
 }

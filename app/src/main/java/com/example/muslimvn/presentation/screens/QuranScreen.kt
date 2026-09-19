@@ -162,7 +162,8 @@ fun QuranScreen(
                             surah = surah,
                             isPlaying = isThisSurahPlaying && isPlayingAudio,
                             reciterImageUrl = if (isThisSurahPlaying) currentReciter?.imageUrl else null,
-                            onClick = { onSurahClick(surah.number, 1) }
+                            onClick = { onSurahClick(surah.number, 1) },
+                            modifier = Modifier.animateItem()
                         )
                     }
                 }
@@ -186,12 +187,13 @@ private fun QuranLoadingSkeleton() {
 @Composable
 fun SurahItem(
     surah: Surah,
+    modifier: Modifier = Modifier,
     isPlaying: Boolean = false,
     reciterImageUrl: String? = null,
     onClick: () -> Unit
 ) {
     Column(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .background(
                 if (isPlaying) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.2f)

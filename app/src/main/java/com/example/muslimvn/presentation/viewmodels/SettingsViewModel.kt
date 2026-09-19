@@ -23,9 +23,22 @@ class SettingsViewModel @Inject constructor(
             initialValue = AppTheme.FOLLOW_SYSTEM
         )
 
+    val useDynamicColor: StateFlow<Boolean> = repository.useDynamicColor()
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = false
+        )
+
     fun onThemeSelected(theme: AppTheme) {
         viewModelScope.launch {
             repository.updateAppTheme(theme)
+        }
+    }
+
+    fun onDynamicColorChanged(useDynamicColor: Boolean) {
+        viewModelScope.launch {
+            repository.updateUseDynamicColor(useDynamicColor)
         }
     }
 }

@@ -98,6 +98,7 @@ fun PodcastLibraryScreen(
     val favoriteEpisodeIds by playerViewModel.favoriteEpisodeIds.collectAsStateWithLifecycle()
     val playlistEpisodeIds by viewModel.playlistEpisodeIds.collectAsStateWithLifecycle()
     val downloadStates by viewModel.downloadStates.collectAsStateWithLifecycle()
+    val isRefreshing by viewModel.isRefreshing.collectAsStateWithLifecycle()
 
     var selectedEpisodeForMenu by remember { mutableStateOf<PodcastEpisode?>(null) }
 
@@ -139,13 +140,18 @@ fun PodcastLibraryScreen(
                 .fillMaxSize()
                 .background(MaterialTheme.colorScheme.background)
         ) {
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(bottom = padding.calculateBottomPadding()),
-                contentPadding = PaddingValues(bottom = 24.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
+            androidx.compose.material3.pulltorefresh.PullToRefreshBox(
+                isRefreshing = isRefreshing,
+                onRefresh = { viewModel.refresh() },
+                modifier = Modifier.fillMaxSize()
             ) {
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(bottom = padding.calculateBottomPadding()),
+                    contentPadding = PaddingValues(bottom = 24.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
                 // 1. Top Header: Nút Back + Tiêu đề "Thư viện" góc trái
                 item(key = "top_header") {
                     Row(
@@ -265,11 +271,14 @@ fun PodcastLibraryScreen(
                             isPlaying = isPlaying,
                             onPlay = { viewModel.playEpisode(item.episode, item.scholarName) },
                             onMoreClick = { selectedEpisodeForMenu = item.episode },
-                            modifier = Modifier.padding(horizontal = 16.dp)
+                            modifier = Modifier
+                                .animateItem()
+                                .padding(horizontal = 16.dp)
                         )
                     }
                 }
             }
+}
 
             // BottomSheet khi chọn menu 3 chấm của 1 tập trong Lịch sử nghe
             if (selectedEpisodeForMenu != null) {

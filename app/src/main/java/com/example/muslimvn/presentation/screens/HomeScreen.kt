@@ -82,6 +82,7 @@ fun HomeScreen(
     onHijriCalendarClick: () -> Unit = {},
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val isRefreshing by viewModel.isRefreshing.collectAsStateWithLifecycle()
     val dailyReminderViewModel: DailyReminderViewModel = hiltViewModel()
     val dailyReminderState by dailyReminderViewModel.uiState.collectAsStateWithLifecycle()
     var showPrayerSheet by remember { mutableStateOf(false) }
@@ -139,13 +140,18 @@ fun HomeScreen(
     ) { padding ->
         val prayerTimes = uiState.prayerTimes
 
-        LazyColumn(
-            modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(
-                bottom = padding.calculateBottomPadding() + 32.dp
-            ),
-            verticalArrangement = Arrangement.spacedBy(20.dp)
+        androidx.compose.material3.pulltorefresh.PullToRefreshBox(
+            isRefreshing = isRefreshing,
+            onRefresh = { viewModel.refresh() },
+            modifier = Modifier.fillMaxSize()
         ) {
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(
+                    bottom = padding.calculateBottomPadding() + 32.dp
+                ),
+                verticalArrangement = Arrangement.spacedBy(20.dp)
+            ) {
             // 1. Next Prayer Hero Section (Always visible, show skeleton if null)
             item {
                 if (prayerTimes != null) {
@@ -202,6 +208,7 @@ fun HomeScreen(
                     ShimmerPlaceholder(modifier = Modifier.fillMaxWidth().height(120.dp).padding(horizontal = 16.dp))
                 }
             }
+        }
         }
 
         // Bottom Sheets placed outside LazyColumn for instant UI response
@@ -293,10 +300,11 @@ fun FeaturedPodcastSection(
             contentPadding = PaddingValues(horizontal = 16.dp, vertical = 4.dp),
             horizontalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            items(scholars) { scholar ->
+            items(scholars, key = { it.id }) { scholar ->
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     modifier = Modifier
+                        .animateItem()
                         .width(84.dp)
                         .bouncyClick { onScholarClick(scholar.id) }
                 ) {

@@ -17,8 +17,17 @@ import com.example.muslimvn.presentation.screens.*
 import com.example.muslimvn.presentation.screens.zakat.ZakatScreen
 import com.example.muslimvn.presentation.viewmodels.*
 
+import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.SharedTransitionLayout
+import androidx.compose.animation.SharedTransitionScope
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.staticCompositionLocalOf
+
+@OptIn(ExperimentalSharedTransitionApi::class)
+val LocalSharedTransitionScope = staticCompositionLocalOf<SharedTransitionScope?> { null }
+
 @androidx.media3.common.util.UnstableApi
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalSharedTransitionApi::class)
 @Composable
 fun MainNavigation(backStack: NavBackStack<NavKey>, modifier: Modifier = Modifier) {
     val popBack: () -> Unit = { backStack.removeLastOrNull() }
@@ -30,8 +39,10 @@ fun MainNavigation(backStack: NavBackStack<NavKey>, modifier: Modifier = Modifie
         backStack.add(destination)
     }
 
-    NavDisplay(
-        backStack = backStack, modifier = modifier, onBack = popBack,
+    SharedTransitionLayout {
+        CompositionLocalProvider(LocalSharedTransitionScope provides this) {
+            NavDisplay(
+                backStack = backStack, modifier = modifier, onBack = popBack,
         entryDecorators = listOf(
             rememberSaveableStateHolderNavEntryDecorator(),
             rememberViewModelStoreNavEntryDecorator()
@@ -189,4 +200,6 @@ fun MainNavigation(backStack: NavBackStack<NavKey>, modifier: Modifier = Modifie
             // entry<Destination.MasjidList> { MasjidListScreen(onBackClick = popBack) }
         }
     )
+        }
+    }
 }

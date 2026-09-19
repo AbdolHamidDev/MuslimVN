@@ -12,6 +12,9 @@ interface SettingsRepository {
     
     fun getAppTheme(): Flow<AppTheme>
     suspend fun updateAppTheme(theme: AppTheme)
+
+    fun useDynamicColor(): Flow<Boolean>
+    suspend fun updateUseDynamicColor(useDynamicColor: Boolean)
     
     fun getCalculationMethod(): Flow<String>
     suspend fun updateCalculationMethod(method: String)

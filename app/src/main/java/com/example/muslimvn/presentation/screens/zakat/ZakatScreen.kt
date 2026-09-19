@@ -37,6 +37,7 @@ import com.example.muslimvn.core.utils.VietnameseNumberReader
 import com.example.muslimvn.core.utils.toDotString
 import com.example.muslimvn.core.utils.toVndString
 import com.example.muslimvn.domain.models.zakat.NisabMethod
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import com.example.muslimvn.presentation.viewmodels.zakat.*
 import java.math.BigDecimal
 import java.time.LocalDate
@@ -49,11 +50,14 @@ fun ZakatScreen(
     viewModel: ZakatViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
 
     Scaffold(
+        modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
             TopAppBar(
                 title = { Text(stringResource(R.string.zakat_title)) },
+                scrollBehavior = scrollBehavior,
                 navigationIcon = {
                     IconButton(onClick = {
                         if (uiState.currentStep == ZakatStep.INTRO) {

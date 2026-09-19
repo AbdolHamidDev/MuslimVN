@@ -22,6 +22,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
@@ -72,9 +73,13 @@ fun MasjidListScreen(
         uiState.masjids.count { it.masjid.type == MasjidType.TIEU_THANG_DUONG }
     }
 
+    val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
+
     Scaffold(
+        modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
             TopAppBar(
+                scrollBehavior = scrollBehavior,
                 title = {
                     Column {
                         Text(
@@ -250,11 +255,20 @@ fun MasjidListScreen(
 
             // Content State
             if (uiState.isLoading) {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(horizontal = 16.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    CircularProgressIndicator()
+                    repeat(5) {
+                        com.example.muslimvn.presentation.components.ShimmerPlaceholder(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(110.dp),
+                            shape = RoundedCornerShape(16.dp)
+                        )
+                    }
                 }
             } else if (filteredItems.isEmpty()) {
                 Box(
@@ -281,7 +295,8 @@ fun MasjidListScreen(
                             item = item,
                             onDirectionsClick = {
                                 openGoogleMapsDirections(context, item.masjid)
-                            }
+                            },
+                            modifier = Modifier.animateItem()
                         )
                     }
                 }
@@ -294,12 +309,13 @@ fun MasjidListScreen(
 private fun MasjidScreenCardItem(
     item: MasjidItemUiState,
     onDirectionsClick: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
     val masjid = item.masjid
     val isMasjid = masjid.type == MasjidType.MASJID
 
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)

@@ -45,6 +45,7 @@ fun AzkarScreen(
     val selectedCategory by viewModel.selectedCategory.collectAsState()
     val categories by viewModel.categories.collectAsState()
     val searchQuery by viewModel.searchQuery.collectAsState()
+    val isRefreshing by viewModel.isRefreshing.collectAsState()
     
     var isSearchActive by remember { mutableStateOf(false) }
 
@@ -129,10 +130,12 @@ fun AzkarScreen(
                                             tint = MaterialTheme.colorScheme.outline
                                         )
                                     },
-                                    modifier = Modifier.clickable {
-                                        viewModel.updateSearchQuery(azkar.title)
-                                        isSearchActive = false
-                                    }
+                                    modifier = Modifier
+                                        .animateItem()
+                                        .clickable {
+                                            viewModel.updateSearchQuery(azkar.title)
+                                            isSearchActive = false
+                                        }
                                 )
                                 HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
                             }
@@ -194,16 +197,23 @@ fun AzkarScreen(
                     }
                 } else {
                     // Danh sách chính (Full Cards)
-                    LazyColumn(
-                        modifier = Modifier.fillMaxSize(),
-                        contentPadding = PaddingValues(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(16.dp)
+                    androidx.compose.material3.pulltorefresh.PullToRefreshBox(
+                        isRefreshing = isRefreshing,
+                        onRefresh = { viewModel.refresh() },
+                        modifier = Modifier.fillMaxSize()
                     ) {
-                        items(azkarList, key = { it.id }) { azkar ->
-                            AzkarItem(
-                                azkar = azkar,
-                                onFavoriteClick = { viewModel.toggleFavorite(azkar) }
-                            )
+                        LazyColumn(
+                            modifier = Modifier.fillMaxSize(),
+                            contentPadding = PaddingValues(16.dp),
+                            verticalArrangement = Arrangement.spacedBy(16.dp)
+                        ) {
+                            items(azkarList, key = { it.id }) { azkar ->
+                                AzkarItem(
+                                    azkar = azkar,
+                                    onFavoriteClick = { viewModel.toggleFavorite(azkar) },
+                                    modifier = Modifier.animateItem()
+                                )
+                            }
                         }
                     }
                 }
@@ -215,13 +225,14 @@ fun AzkarScreen(
 @Composable
 fun AzkarItem(
     azkar: AzkarEntity,
-    onFavoriteClick: () -> Unit
+    onFavoriteClick: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
     var count by remember { mutableIntStateOf(0) }
     val haptic = LocalHapticFeedback.current
 
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = modifier.fillMaxWidth(),
         shape = MaterialTheme.shapes.extraLarge,
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surface

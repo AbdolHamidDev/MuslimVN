@@ -11,6 +11,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import com.example.muslimvn.presentation.components.RoadmapSection
 import com.example.muslimvn.presentation.components.RoadmapCategory
 
@@ -21,10 +22,14 @@ fun RoadmapCategoryScreen(
     category: RoadmapCategory,
     modifier: Modifier = Modifier
 ) {
+    val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
+
     Scaffold(
+        modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
             TopAppBar(
-                title = { Text(text = title, fontWeight = FontWeight.Bold) }
+                title = { Text(text = title, fontWeight = FontWeight.Bold) },
+                scrollBehavior = scrollBehavior
             )
         },
         contentWindowInsets = WindowInsets.statusBars

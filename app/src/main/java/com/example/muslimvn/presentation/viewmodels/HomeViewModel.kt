@@ -224,4 +224,21 @@ class HomeViewModel @Inject constructor(
             }
         }
     }
+
+    private val _isRefreshing = MutableStateFlow(false)
+    val isRefreshing: StateFlow<Boolean> = _isRefreshing.asStateFlow()
+
+    fun refresh() {
+        viewModelScope.launch {
+            _isRefreshing.value = true
+            try {
+                refreshPrayerTimes()
+                loadMasjids()
+                podcastRepository.initializeData()
+            } catch (_: Exception) {
+            } finally {
+                _isRefreshing.value = false
+            }
+        }
+    }
 }

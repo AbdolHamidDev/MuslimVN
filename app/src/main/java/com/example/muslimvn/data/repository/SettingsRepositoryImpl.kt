@@ -72,6 +72,18 @@ class SettingsRepositoryImpl @Inject constructor(
         }
     }
 
+    override fun useDynamicColor(): Flow<Boolean> {
+        return dataStore.data.map { preferences ->
+            preferences[KEY_DYNAMIC_COLOR] ?: false
+        }
+    }
+
+    override suspend fun updateUseDynamicColor(useDynamicColor: Boolean) {
+        dataStore.edit { preferences ->
+            preferences[KEY_DYNAMIC_COLOR] = useDynamicColor
+        }
+    }
+
     override fun getCalculationMethod(): Flow<String> {
         return dataStore.data.map { preferences ->
             preferences[KEY_CALCULATION_METHOD] ?: "MUSLIMVN_DEFAULT"
@@ -164,6 +176,7 @@ class SettingsRepositoryImpl @Inject constructor(
         private val KEY_LAST_LNG = doublePreferencesKey("last_lng")
         private val KEY_LAST_ADDRESS = stringPreferencesKey("last_address")
         private val KEY_APP_THEME = stringPreferencesKey("app_theme")
+        private val KEY_DYNAMIC_COLOR = booleanPreferencesKey("use_dynamic_color")
         private val KEY_CALCULATION_METHOD = stringPreferencesKey("calculation_method")
         private val KEY_ASR_METHOD = stringPreferencesKey("asr_method")
         private val KEY_ADJUST_FAJR = intPreferencesKey("adjust_fajr")

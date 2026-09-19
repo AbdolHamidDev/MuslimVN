@@ -254,7 +254,9 @@ fun DownloadedPodcastsScreen(
                             item = item,
                             onPlay = { viewModel.playEpisode(item) },
                             onDelete = { itemToDelete = item },
-                            modifier = Modifier.padding(horizontal = 16.dp)
+                            modifier = Modifier
+                                .animateItem()
+                                .padding(horizontal = 16.dp)
                         )
                     }
                 }

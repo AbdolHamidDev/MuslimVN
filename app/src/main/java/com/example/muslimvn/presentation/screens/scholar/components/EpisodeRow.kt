@@ -54,12 +54,13 @@ import com.example.muslimvn.presentation.components.formatPubDate
 fun EpisodeRow(
     episode: PodcastEpisode,
     isCurrent: Boolean,
+    modifier: Modifier = Modifier,
     isPlaying: Boolean = false,
     downloadState: PodcastDownloadState = PodcastDownloadState.Idle,
     onPlay: () -> Unit,
     onMoreClick: () -> Unit
 ) {
-    Column(modifier = Modifier.fillMaxWidth()) {
+    Column(modifier = modifier.fillMaxWidth()) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier

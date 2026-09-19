@@ -2,7 +2,8 @@ package com.example.muslimvn.presentation.screens
 
 import android.app.Activity
 import android.content.pm.ActivityInfo
-import androidx.activity.compose.BackHandler
+import androidx.activity.compose.PredictiveBackHandler
+import kotlinx.coroutines.CancellationException
 import androidx.annotation.OptIn
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
@@ -60,8 +61,12 @@ fun YoutubePlayerDetailScreen(
         }
     }
 
-    BackHandler {
-        handleBack()
+    PredictiveBackHandler { progress ->
+        try {
+            progress.collect { }
+            handleBack()
+        } catch (_: CancellationException) {
+        }
     }
 
     val lifecycleOwner = LocalLifecycleOwner.current

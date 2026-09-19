@@ -12,8 +12,10 @@ import com.example.muslimvn.domain.models.PodcastEpisode
 import com.example.muslimvn.domain.models.Scholar
 import com.example.muslimvn.domain.repository.PodcastRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -178,5 +180,23 @@ class PodcastLibraryViewModel @Inject constructor(
             startPositionMs = 0L,
             isPodcast = true
         )
+    }
+
+    private val _isRefreshing = MutableStateFlow(false)
+    val isRefreshing: StateFlow<Boolean> = _isRefreshing.asStateFlow()
+
+    fun refresh() {
+        viewModelScope.launch {
+            _isRefreshing.value = true
+            try {
+                val scholarList = scholars.value
+                for (scholar in scholarList) {
+                    podcastRepository.refreshEpisodes(scholar.id)
+                }
+            } catch (_: Exception) {
+            } finally {
+                _isRefreshing.value = false
+            }
+        }
     }
 }

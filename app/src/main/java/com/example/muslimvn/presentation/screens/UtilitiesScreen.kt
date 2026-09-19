@@ -5,6 +5,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -67,10 +68,14 @@ fun UtilitiesScreen(
         RoadmapData.getLocalCategory()
     }
 
+    val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
+
     Scaffold(
+        modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
             TopAppBar(
-                title = { Text(text = stringResource(R.string.nav_utilities), fontWeight = FontWeight.Bold) }
+                title = { Text(text = stringResource(R.string.nav_utilities), fontWeight = FontWeight.Bold) },
+                scrollBehavior = scrollBehavior
             )
         },
         contentWindowInsets = WindowInsets.statusBars

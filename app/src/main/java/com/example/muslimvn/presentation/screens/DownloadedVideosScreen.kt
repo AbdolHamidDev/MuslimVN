@@ -17,6 +17,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
@@ -42,10 +43,14 @@ fun DownloadedVideosScreen(
 
     var selectedTabIndex by remember { mutableIntStateOf(0) }
 
+    val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
+
     Scaffold(
+        modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
             TopAppBar(
                 title = { Text("Nội dung đã tải về") },
+                scrollBehavior = scrollBehavior,
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Quay lại")
@@ -100,6 +105,7 @@ fun DownloadedVideosScreen(
                             items(downloadedVideos, key = { it.id }) { video ->
                                 DownloadedVideoItem(
                                     video = video,
+                                    modifier = Modifier.animateItem(),
                                     onClick = {
                                         val fileUri = android.net.Uri.fromFile(File(video.localFilePath)).toString()
                                         onVideoClick(fileUri, video.title, video.uploaderName)
@@ -130,6 +136,7 @@ fun DownloadedVideosScreen(
                             items(downloadedAudios, key = { it.id }) { audio ->
                                 DownloadedAudioItem(
                                     audio = audio,
+                                    modifier = Modifier.animateItem(),
                                     onClick = {
                                         viewModel.playAudio(audio)
                                         onAudioPlayerClick()
@@ -149,12 +156,13 @@ fun DownloadedVideosScreen(
 fun DownloadedVideoItem(
     video: DownloadedVideoEntity,
     onClick: () -> Unit,
-    onDelete: () -> Unit
+    onDelete: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
     var showDeleteDialog by remember { mutableStateOf(false) }
 
     Card(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .clickable(onClick = onClick),
         shape = RoundedCornerShape(12.dp),
@@ -263,12 +271,13 @@ fun DownloadedVideoItem(
 fun DownloadedAudioItem(
     audio: DownloadedVideoEntity,
     onClick: () -> Unit,
-    onDelete: () -> Unit
+    onDelete: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
     var showDeleteDialog by remember { mutableStateOf(false) }
 
     Card(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .clickable(onClick = onClick),
         shape = RoundedCornerShape(12.dp),
