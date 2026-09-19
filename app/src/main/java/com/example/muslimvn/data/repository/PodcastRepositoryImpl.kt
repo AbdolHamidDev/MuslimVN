@@ -120,7 +120,9 @@ class PodcastRepositoryImpl @Inject constructor(
                     isFavorite = old?.isFavorite ?: false,
                     favoritedAt = old?.favoritedAt ?: 0L,
                     isInPlaylist = old?.isInPlaylist ?: false,
-                    addedToPlaylistAt = old?.addedToPlaylistAt ?: 0L
+                    addedToPlaylistAt = old?.addedToPlaylistAt ?: 0L,
+                    lastPlayedAt = old?.lastPlayedAt ?: 0L,
+                    playCount = old?.playCount ?: 0
                 )
             }
             episodeDao.insertEpisodes(merged)
@@ -253,12 +255,28 @@ class PodcastRepositoryImpl @Inject constructor(
     override fun getPlaylistEpisodeIds(): Flow<List<String>> =
         episodeDao.getPlaylistEpisodeIds()
 
+    override suspend fun recordPlayStarted(episodeId: String) {
+        val timestamp = System.currentTimeMillis()
+        episodeDao.updatePlayHistory(episodeId, timestamp)
+    }
+
+    override fun getRecentlyPlayedEpisodes(limit: Int): Flow<List<PodcastEpisode>> =
+        episodeDao.getRecentlyPlayedEpisodes(limit).map { list -> list.map { it.toDomain() } }
+
+    override suspend fun clearHistoryItem(episodeId: String) {
+        episodeDao.clearHistoryItem(episodeId)
+    }
+
+    override suspend fun clearAllHistory() {
+        episodeDao.clearAllHistory()
+    }
+
     private fun ScholarEntity.toDomain() = Scholar(
         id, name, title, bio, avatarPath, rssUrl, tags, featured
     )
 
     private fun PodcastEpisodeEntity.toDomain() = PodcastEpisode(
-        id, scholarId, title, audioUrl, artworkUrl, duration, pubDate, description, isDownloaded, lastPositionMs, localFilePath, downloadStatus, isFavorite, favoritedAt, isInPlaylist, addedToPlaylistAt
+        id, scholarId, title, audioUrl, artworkUrl, duration, pubDate, description, isDownloaded, lastPositionMs, localFilePath, downloadStatus, isFavorite, favoritedAt, isInPlaylist, addedToPlaylistAt, lastPlayedAt, playCount
     )
 
     companion object {

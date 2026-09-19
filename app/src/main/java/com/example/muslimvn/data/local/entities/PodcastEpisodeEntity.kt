@@ -34,5 +34,7 @@ data class PodcastEpisodeEntity(
     val isFavorite: Boolean = false,
     val favoritedAt: Long = 0L,
     val isInPlaylist: Boolean = false,
-    val addedToPlaylistAt: Long = 0L
+    val addedToPlaylistAt: Long = 0L,
+    val lastPlayedAt: Long = 0L,
+    val playCount: Int = 0
 )

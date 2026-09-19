@@ -6,7 +6,6 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -45,6 +44,7 @@ import com.example.muslimvn.presentation.screens.scholar.components.EpisodeMoreM
 import com.example.muslimvn.presentation.screens.scholar.components.EpisodeRow
 import com.example.muslimvn.presentation.screens.scholar.components.FloatingBackButton
 import com.example.muslimvn.presentation.screens.scholar.components.LibraryDetailHeader
+import com.example.muslimvn.presentation.screens.scholar.components.PodcastSearchBar
 import com.example.muslimvn.presentation.screens.scholar.components.rememberDynamicBackgroundColor
 import com.example.muslimvn.presentation.viewmodels.PodcastLibraryViewModel
 import com.example.muslimvn.presentation.viewmodels.PodcastPlayerViewModel
@@ -67,6 +67,20 @@ fun PodcastFavoritesScreen(
     val playlistEpisodeIds by viewModel.playlistEpisodeIds.collectAsStateWithLifecycle()
 
     var selectedEpisodeForMenu by remember { mutableStateOf<PodcastEpisode?>(null) }
+    var isSearchActive by remember { mutableStateOf(false) }
+    var searchQuery by remember { mutableStateOf("") }
+
+    val filteredEpisodes = remember(favoriteEpisodes, searchQuery) {
+        if (searchQuery.isBlank()) {
+            favoriteEpisodes
+        } else {
+            favoriteEpisodes.filter {
+                it.episode.title.contains(searchQuery, ignoreCase = true) ||
+                        it.scholarName.contains(searchQuery, ignoreCase = true) ||
+                        it.episode.description.contains(searchQuery, ignoreCase = true)
+            }
+        }
+    }
 
     val imagePath = "images/library/favorite.webp"
     val backgroundColor = rememberDynamicBackgroundColor(imagePath)
@@ -129,8 +143,23 @@ fun PodcastFavoritesScreen(
                         backgroundColor = backgroundColor,
                         isPlaying = isFavPlaying,
                         onPlayAllClick = viewModel::onPlayAllClicked,
-                        onShuffleClick = viewModel::onShuffleClicked
+                        onShuffleClick = viewModel::onShuffleClicked,
+                        onSearchClick = {
+                            isSearchActive = !isSearchActive
+                            if (!isSearchActive) searchQuery = ""
+                        }
                     )
+                }
+
+                // Thanh tìm kiếm hiển thị khi bấm icon Search trên Pill Header
+                item(key = "search_bar") {
+                    AnimatedVisibility(visible = isSearchActive) {
+                        PodcastSearchBar(
+                            query = searchQuery,
+                            onQueryChange = { searchQuery = it },
+                            placeholderText = "Tìm kiếm trong tập yêu thích..."
+                        )
+                    }
                 }
 
                 if (favoriteEpisodes.isEmpty()) {
@@ -140,8 +169,15 @@ fun PodcastFavoritesScreen(
                             hint = "Nhấn icon trái tim ❤️ trên trình phát hoặc mở menu tùy chọn của tập bất kỳ để thêm vào đây"
                         )
                     }
+                } else if (filteredEpisodes.isEmpty()) {
+                    item(key = "empty_search") {
+                        EmptyState(
+                            message = "Không tìm thấy kết quả cho \"$searchQuery\"",
+                            hint = "Thử tìm kiếm với từ khóa khác"
+                        )
+                    }
                 } else {
-                    items(favoriteEpisodes, key = { it.episode.id }) { item ->
+                    items(filteredEpisodes, key = { it.episode.id }) { item ->
                         val currentEpisodeId by playerViewModel.currentEpisodeId.collectAsStateWithLifecycle()
                         val isPlaying by playerViewModel.isPlaying.collectAsStateWithLifecycle()
                         val epState = downloadStates[item.episode.id]

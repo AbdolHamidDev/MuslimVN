@@ -111,6 +111,7 @@ object DatabaseModule {
             PodcastDatabase::class.java,
             PodcastDatabase.DATABASE_NAME
         )
+            .addMigrations(com.example.muslimvn.data.local.MIGRATION_6_7)
             .fallbackToDestructiveMigration()
             .build()
     }

@@ -1,6 +1,7 @@
 package com.example.muslimvn.presentation.components
 
 import androidx.compose.foundation.background
+import androidx.compose.ui.graphics.Color
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -154,7 +155,8 @@ fun EmptyState(
     message: String,
     modifier: Modifier = Modifier,
     hint: String? = null,
-    icon: ImageVector = Icons.Default.SearchOff
+    icon: ImageVector = Icons.Default.SearchOff,
+    textColor: Color = Color.White
 ) {
     Column(
         modifier = modifier.padding(32.dp),
@@ -165,13 +167,13 @@ fun EmptyState(
             modifier = Modifier
                 .size(96.dp)
                 .clip(CircleShape)
-                .background(MaterialTheme.colorScheme.surfaceVariant),
+                .background(Color.White.copy(alpha = 0.12f)),
             contentAlignment = Alignment.Center
         ) {
             Icon(
                 imageVector = icon,
                 contentDescription = null,
-                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                tint = textColor.copy(alpha = 0.85f),
                 modifier = Modifier.size(40.dp)
             )
         }
@@ -180,6 +182,7 @@ fun EmptyState(
             text = message,
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.SemiBold,
+            color = textColor,
             textAlign = TextAlign.Center
         )
         if (hint != null) {
@@ -187,7 +190,7 @@ fun EmptyState(
             Text(
                 text = hint,
                 style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                color = textColor.copy(alpha = 0.75f),
                 textAlign = TextAlign.Center
             )
         }

@@ -4,7 +4,6 @@ package com.example.muslimvn.presentation.screens
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
-import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -21,7 +20,6 @@ import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CleaningServices
@@ -70,6 +68,7 @@ import com.example.muslimvn.presentation.components.formatSpeedLabel
 import com.example.muslimvn.presentation.components.toAndroidAssetUri
 import com.example.muslimvn.presentation.screens.scholar.components.FloatingBackButton
 import com.example.muslimvn.presentation.screens.scholar.components.LibraryDetailHeader
+import com.example.muslimvn.presentation.screens.scholar.components.PodcastSearchBar
 import com.example.muslimvn.presentation.screens.scholar.components.rememberDynamicBackgroundColor
 import com.example.muslimvn.presentation.viewmodels.DownloadedPodcastItem
 import com.example.muslimvn.presentation.viewmodels.DownloadedPodcastsViewModel
@@ -95,6 +94,20 @@ fun DownloadedPodcastsScreen(
 
     var showClearAllDialog by remember { mutableStateOf(false) }
     var itemToDelete by remember { mutableStateOf<DownloadedPodcastItem?>(null) }
+    var isSearchActive by remember { mutableStateOf(false) }
+    var searchQuery by remember { mutableStateOf("") }
+
+    val filteredPodcasts = remember(downloadedPodcasts, searchQuery) {
+        if (searchQuery.isBlank()) {
+            downloadedPodcasts
+        } else {
+            downloadedPodcasts.filter {
+                it.episode.title.contains(searchQuery, ignoreCase = true) ||
+                        it.scholarName.contains(searchQuery, ignoreCase = true) ||
+                        it.episode.description.contains(searchQuery, ignoreCase = true)
+            }
+        }
+    }
 
     val imagePath = "images/library/download.webp"
     val backgroundColor = rememberDynamicBackgroundColor(imagePath)
@@ -163,6 +176,10 @@ fun DownloadedPodcastsScreen(
                                 viewModel.playEpisode(downloadedPodcasts.shuffled()[0])
                             }
                         },
+                        onSearchClick = {
+                            isSearchActive = !isSearchActive
+                            if (!isSearchActive) searchQuery = ""
+                        },
                         extraContent = if (downloadedPodcasts.isNotEmpty()) {
                             {
                                 Button(
@@ -190,6 +207,17 @@ fun DownloadedPodcastsScreen(
                     )
                 }
 
+                // Thanh tìm kiếm hiển thị khi bấm icon Search trên Pill Header
+                item(key = "search_bar") {
+                    AnimatedVisibility(visible = isSearchActive) {
+                        PodcastSearchBar(
+                            query = searchQuery,
+                            onQueryChange = { searchQuery = it },
+                            placeholderText = "Tìm kiếm podcast đã tải xuống..."
+                        )
+                    }
+                }
+
                 // Tiêu đề danh sách tập
                 if (downloadedPodcasts.isNotEmpty()) {
                     item(key = "section_title") {
@@ -197,7 +225,7 @@ fun DownloadedPodcastsScreen(
                             text = "Danh sách tập podcast offline",
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onBackground,
+                            color = Color.White,
                             modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
                         )
                     }
@@ -211,16 +239,23 @@ fun DownloadedPodcastsScreen(
                             hint = "Các tập podcast bạn tải offline sẽ xuất hiện tại đây để quản lý"
                         )
                     }
-                }
-
-                // Danh sách từng tập podcast offline
-                items(downloadedPodcasts, key = { it.episode.id }) { item ->
-                    DownloadedPodcastCardItem(
-                        item = item,
-                        onPlay = { viewModel.playEpisode(item) },
-                        onDelete = { itemToDelete = item },
-                        modifier = Modifier.padding(horizontal = 16.dp)
-                    )
+                } else if (filteredPodcasts.isEmpty()) {
+                    item(key = "empty_search") {
+                        EmptyState(
+                            message = "Không tìm thấy kết quả cho \"$searchQuery\"",
+                            hint = "Thử tìm kiếm với từ khóa khác"
+                        )
+                    }
+                } else {
+                    // Danh sách từng tập podcast offline
+                    items(filteredPodcasts, key = { it.episode.id }) { item ->
+                        DownloadedPodcastCardItem(
+                            item = item,
+                            onPlay = { viewModel.playEpisode(item) },
+                            onDelete = { itemToDelete = item },
+                            modifier = Modifier.padding(horizontal = 16.dp)
+                        )
+                    }
                 }
             }
 
@@ -242,12 +277,14 @@ fun DownloadedPodcastsScreen(
             title = {
                 Text(
                     text = "Giải phóng dung lượng Podcast?",
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White
                 )
             },
             text = {
                 Text(
-                    text = "Bạn có chắc chắn muốn xóa toàn bộ ${downloadedPodcasts.size} tập podcast đã tải về không?\n\nHành động này sẽ giải phóng ${formatFileSize(totalSizeBytes)} bộ nhớ."
+                    text = "Bạn có chắc chắn muốn xóa toàn bộ ${downloadedPodcasts.size} tập podcast đã tải về không?\n\nHành động này sẽ giải phóng ${formatFileSize(totalSizeBytes)} bộ nhớ.",
+                    color = Color.White.copy(alpha = 0.85f)
                 )
             },
             confirmButton = {
@@ -266,10 +303,10 @@ fun DownloadedPodcastsScreen(
             },
             dismissButton = {
                 TextButton(onClick = { showClearAllDialog = false }) {
-                    Text(text = "Hủy")
+                    Text(text = "Hủy", color = Color.White.copy(alpha = 0.7f))
                 }
             },
-            containerColor = Color(0xFF151E28)
+            containerColor = Color(0xFF18222C)
         )
     }
 
@@ -281,12 +318,14 @@ fun DownloadedPodcastsScreen(
             title = {
                 Text(
                     text = "Xóa bản tải xuống?",
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White
                 )
             },
             text = {
                 Text(
-                    text = "Bạn có chắc muốn xóa bản offline của tập:\n\"${targetItem.episode.title}\"?"
+                    text = "Bạn có chắc muốn xóa bản offline của tập:\n\"${targetItem.episode.title}\"?",
+                    color = Color.White.copy(alpha = 0.85f)
                 )
             },
             confirmButton = {
@@ -305,10 +344,10 @@ fun DownloadedPodcastsScreen(
             },
             dismissButton = {
                 TextButton(onClick = { itemToDelete = null }) {
-                    Text(text = "Hủy")
+                    Text(text = "Hủy", color = Color.White.copy(alpha = 0.7f))
                 }
             },
-            containerColor = Color(0xFF151E28)
+            containerColor = Color(0xFF18222C)
         )
     }
 }
@@ -327,7 +366,7 @@ private fun DownloadedPodcastCardItem(
             .bouncyClick(onClick = onPlay),
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceContainer
+            containerColor = Color.White.copy(alpha = 0.08f)
         )
     ) {
         Row(
@@ -344,7 +383,7 @@ private fun DownloadedPodcastCardItem(
                 modifier = Modifier
                     .size(56.dp)
                     .clip(RoundedCornerShape(10.dp))
-                    .background(MaterialTheme.colorScheme.surfaceVariant)
+                    .background(Color.White.copy(alpha = 0.12f))
             )
 
             Spacer(modifier = Modifier.width(12.dp))
@@ -355,7 +394,7 @@ private fun DownloadedPodcastCardItem(
                     text = item.episode.title,
                     style = MaterialTheme.typography.titleSmall,
                     fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface,
+                    color = Color.White,
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis
                 )
@@ -363,7 +402,7 @@ private fun DownloadedPodcastCardItem(
                 Text(
                     text = item.scholarName,
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    color = Color.White.copy(alpha = 0.7f),
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
@@ -375,7 +414,7 @@ private fun DownloadedPodcastCardItem(
                         append(formatDurationMs(item.episode.duration))
                     },
                     style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.primary,
+                    color = Color(0xFF4CAF50),
                     fontWeight = FontWeight.SemiBold
                 )
             }
@@ -387,7 +426,7 @@ private fun DownloadedPodcastCardItem(
                 Icon(
                     imageVector = Icons.Default.PlayArrow,
                     contentDescription = "Nghe ngay",
-                    tint = MaterialTheme.colorScheme.primary,
+                    tint = Color.White,
                     modifier = Modifier.size(28.dp)
                 )
             }
@@ -395,10 +434,11 @@ private fun DownloadedPodcastCardItem(
                 Icon(
                     imageVector = Icons.Default.Delete,
                     contentDescription = "Xóa bản tải",
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    tint = Color.White.copy(alpha = 0.6f),
                     modifier = Modifier.size(22.dp)
                 )
             }
         }
     }
 }
+

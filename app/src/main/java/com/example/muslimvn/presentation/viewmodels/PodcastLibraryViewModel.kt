@@ -62,6 +62,19 @@ class PodcastLibraryViewModel @Inject constructor(
     val playlistEpisodeIds: StateFlow<List<String>> = podcastRepository.getPlaylistEpisodeIds()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
+    val recentlyPlayedEpisodes: StateFlow<List<FavoriteEpisodeItem>> = combine(
+        podcastRepository.getRecentlyPlayedEpisodes(20),
+        scholarDao.getAllScholars()
+    ) { episodes: List<PodcastEpisode>, scholars: List<ScholarEntity> ->
+        val scholarMap = scholars.associateBy { it.id }
+        episodes.map { ep ->
+            FavoriteEpisodeItem(
+                episode = ep,
+                scholarName = scholarMap[ep.scholarId]?.name ?: "Học giả Islam"
+            )
+        }
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
     val scholars: StateFlow<List<Scholar>> = podcastRepository.getScholars()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
@@ -122,6 +135,18 @@ class PodcastLibraryViewModel @Inject constructor(
 
     fun deleteDownloadedEpisode(episode: PodcastEpisode) {
         podcastDownloadManager.deleteDownloadedFile(episode)
+    }
+
+    fun clearHistoryItem(episodeId: String) {
+        viewModelScope.launch {
+            podcastRepository.clearHistoryItem(episodeId)
+        }
+    }
+
+    fun clearAllHistory() {
+        viewModelScope.launch {
+            podcastRepository.clearAllHistory()
+        }
     }
 
     /** Phát danh sách các tập yêu thích tuần tự. */

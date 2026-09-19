@@ -66,4 +66,16 @@ interface PodcastRepository {
 
     /** Flow danh sách các episodeId nằm trong danh sách phát. */
     fun getPlaylistEpisodeIds(): Flow<List<String>>
+
+    /** Ghi nhận tập podcast bắt đầu phát thành công. */
+    suspend fun recordPlayStarted(episodeId: String)
+
+    /** Flow danh sách các tập podcast nghe gần đây (Recently Played), mới nhất xếp trước. */
+    fun getRecentlyPlayedEpisodes(limit: Int = 20): Flow<List<PodcastEpisode>>
+
+    /** Xóa 1 mục khỏi lịch sử nghe. */
+    suspend fun clearHistoryItem(episodeId: String)
+
+    /** Xóa toàn bộ lịch sử nghe. */
+    suspend fun clearAllHistory()
 }

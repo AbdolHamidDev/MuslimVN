@@ -66,4 +66,16 @@ interface PodcastEpisodeDao {
 
     @Query("SELECT COUNT(*) FROM podcast_episodes WHERE scholarId = :scholarId")
     suspend fun countByScholar(scholarId: String): Int
+
+    @Query("UPDATE podcast_episodes SET lastPlayedAt = :timestamp, playCount = playCount + 1 WHERE id = :episodeId")
+    suspend fun updatePlayHistory(episodeId: String, timestamp: Long): Int
+
+    @Query("SELECT * FROM podcast_episodes WHERE lastPlayedAt > 0 ORDER BY lastPlayedAt DESC LIMIT :limit")
+    fun getRecentlyPlayedEpisodes(limit: Int = 20): Flow<List<PodcastEpisodeEntity>>
+
+    @Query("UPDATE podcast_episodes SET lastPlayedAt = 0, playCount = 0 WHERE id = :episodeId")
+    suspend fun clearHistoryItem(episodeId: String)
+
+    @Query("UPDATE podcast_episodes SET lastPlayedAt = 0, playCount = 0 WHERE lastPlayedAt > 0")
+    suspend fun clearAllHistory()
 }

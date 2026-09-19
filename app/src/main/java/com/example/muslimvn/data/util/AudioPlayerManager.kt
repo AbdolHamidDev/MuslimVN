@@ -333,6 +333,9 @@ class AudioPlayerManager @Inject constructor(
         return url
     }
 
+    /** ID của episode podcast vừa ghi nhận lượt nghe gần nhất để tránh duplicate khi pause/resume. */
+    private var lastRecordedEpisodeId: String? = null
+
     private fun initializePlayer() {
         if (exoPlayer == null) {
             val httpDataSourceFactory = DefaultHttpDataSource.Factory()
@@ -351,11 +354,18 @@ class AudioPlayerManager @Inject constructor(
                         _nowPlayingTitle.value = mediaItem?.mediaMetadata?.title?.toString()
                         _nowPlayingArtist.value = mediaItem?.mediaMetadata?.artist?.toString()
                         _nowPlayingArtworkPath.value = mediaItem?.mediaMetadata?.artworkUri?.toString()
+                        if (_isPlaying.value) {
+                            recordPlayStartedIfNeeded()
+                        }
                     }
 
                     override fun onIsPlayingChanged(isPlaying: Boolean) {
                         _isPlaying.value = isPlaying
-                        if (!isPlaying && isPodcastSession) persistProgressNow()
+                        if (isPlaying) {
+                            recordPlayStartedIfNeeded()
+                        } else if (isPodcastSession) {
+                            persistProgressNow()
+                        }
                     }
 
                     override fun onPlaybackStateChanged(playbackState: Int) {
@@ -437,6 +447,21 @@ class AudioPlayerManager @Inject constructor(
         }
     }
 
+    /** Ghi nhận thông tin bắt đầu nghe tập podcast xuống Room. */
+    private fun recordPlayStartedIfNeeded() {
+        val episodeId = _currentMediaId.value ?: return
+        if (!isPodcastSession || episodeId.isBlank()) return
+        if (episodeId != lastRecordedEpisodeId) {
+            lastRecordedEpisodeId = episodeId
+            val timestamp = System.currentTimeMillis()
+            mainScope.launch(Dispatchers.IO) {
+                runCatching {
+                    podcastEpisodeDao.updatePlayHistory(episodeId, timestamp)
+                }.onFailure { Log.w(TAG, "Không ghi nhận được lịch sử nghe ($episodeId)", it) }
+            }
+        }
+    }
+
     private fun String.toAudioUri(): Uri {
         val trimmed = this.trim()
         return if (trimmed.startsWith("http://") || trimmed.startsWith("https://") || trimmed.startsWith("file://") || trimmed.startsWith("content://")) {
@@ -459,6 +484,7 @@ class AudioPlayerManager @Inject constructor(
         _nowPlayingArtworkPath.value = null
         onPlaybackFinished = null
         isPodcastSession = false
+        lastRecordedEpisodeId = null
     }
 
     companion object {

@@ -6,7 +6,6 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
@@ -25,6 +24,9 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
@@ -38,6 +40,7 @@ import com.example.muslimvn.presentation.components.formatSpeedLabel
 import com.example.muslimvn.presentation.screens.podcast.components.MuslimCentralScholarCard
 import com.example.muslimvn.presentation.screens.scholar.components.FloatingBackButton
 import com.example.muslimvn.presentation.screens.scholar.components.LibraryDetailHeader
+import com.example.muslimvn.presentation.screens.scholar.components.PodcastSearchBar
 import com.example.muslimvn.presentation.screens.scholar.components.rememberDynamicBackgroundColor
 import com.example.muslimvn.presentation.viewmodels.PodcastLibraryViewModel
 import com.example.muslimvn.presentation.viewmodels.PodcastPlayerViewModel
@@ -56,6 +59,21 @@ fun PodcastFollowedScreen(
 ) {
     val scholars by viewModel.scholars.collectAsStateWithLifecycle()
     val favoriteEpisodeIds by playerViewModel.favoriteEpisodeIds.collectAsStateWithLifecycle()
+
+    var isSearchActive by remember { mutableStateOf(false) }
+    var searchQuery by remember { mutableStateOf("") }
+
+    val filteredScholars = remember(scholars, searchQuery) {
+        if (searchQuery.isBlank()) {
+            scholars
+        } else {
+            scholars.filter {
+                it.name.contains(searchQuery, ignoreCase = true) ||
+                        it.title.contains(searchQuery, ignoreCase = true) ||
+                        it.bio.contains(searchQuery, ignoreCase = true)
+            }
+        }
+    }
 
     val imagePath = "images/library/Following.webp"
     val backgroundColor = rememberDynamicBackgroundColor(imagePath)
@@ -115,8 +133,23 @@ fun PodcastFollowedScreen(
                         title = "Đã theo dõi",
                         subtitle = "${scholars.size} học giả & kênh podcast",
                         imagePath = imagePath,
-                        backgroundColor = backgroundColor
+                        backgroundColor = backgroundColor,
+                        onSearchClick = {
+                            isSearchActive = !isSearchActive
+                            if (!isSearchActive) searchQuery = ""
+                        }
                     )
+                }
+
+                // Thanh tìm kiếm hiển thị khi bấm icon Search trên Pill Header
+                item(span = { GridItemSpan(2) }, key = "search_bar") {
+                    AnimatedVisibility(visible = isSearchActive) {
+                        PodcastSearchBar(
+                            query = searchQuery,
+                            onQueryChange = { searchQuery = it },
+                            placeholderText = "Tìm kiếm học giả đã theo dõi..."
+                        )
+                    }
                 }
 
                 if (scholars.isEmpty()) {
@@ -126,8 +159,15 @@ fun PodcastFollowedScreen(
                             hint = "Khám phá các học giả Islam trên trang chủ và nhấn Theo dõi để lưu vào đây"
                         )
                     }
+                } else if (filteredScholars.isEmpty()) {
+                    item(span = { GridItemSpan(2) }, key = "empty_search") {
+                        EmptyState(
+                            message = "Không tìm thấy kết quả cho \"$searchQuery\"",
+                            hint = "Thử tìm kiếm với từ khóa khác"
+                        )
+                    }
                 } else {
-                    items(scholars, key = { it.id }) { scholar ->
+                    items(filteredScholars, key = { it.id }) { scholar ->
                         MuslimCentralScholarCard(
                             scholar = scholar,
                             onClick = { onScholarClick(scholar.id) },
