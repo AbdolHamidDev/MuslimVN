@@ -1025,8 +1025,8 @@ fun HistoryStep(history: List<com.example.muslimvn.domain.models.zakat.ZakatHist
                 modifier = Modifier.fillMaxSize(),
                 contentPadding = PaddingValues(bottom = 32.dp)
             ) {
-                items(history) { record ->
-                    OutlinedCard(modifier = Modifier.fillMaxWidth()) {
+                items(history, key = { it.id }) { record ->
+                    OutlinedCard(modifier = Modifier.animateItem().fillMaxWidth()) {
                         Row(
                             modifier = Modifier.padding(16.dp),
                             horizontalArrangement = Arrangement.SpaceBetween,

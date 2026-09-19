@@ -275,7 +275,7 @@ fun NextPrayerHero(
                     AnimatedContent(
                         targetState = currentPrayerRes,
                         transitionSpec = {
-                            fadeIn(tween(400)) togetherWith fadeOut(tween(400))
+                            fadeIn(tween(com.example.muslimvn.ui.theme.MuslimVNMotion.DURATION_MEDIUM)) togetherWith fadeOut(tween(com.example.muslimvn.ui.theme.MuslimVNMotion.DURATION_MEDIUM))
                         },
                         label = "currentPrayerName"
                     ) { resId ->

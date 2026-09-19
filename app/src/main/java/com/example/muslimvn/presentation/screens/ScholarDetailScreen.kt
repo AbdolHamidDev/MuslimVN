@@ -292,6 +292,7 @@ fun ScholarDetailScreen(
                             EpisodeRow(
                                 episode = episode,
                                 isCurrent = currentEpisodeId == episode.id,
+                                modifier = Modifier.animateItem(),
                                 isPlaying = isPlaying,
                                 downloadState = epDownloadState,
                                 onPlay = { viewModel.onPlayPauseClicked(episode, state.scholar?.name) },

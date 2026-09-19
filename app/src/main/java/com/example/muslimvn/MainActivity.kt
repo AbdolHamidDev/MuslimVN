@@ -18,6 +18,7 @@ import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteScaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -64,29 +65,28 @@ fun MainScreen() {
     val currentDestination = backStack.lastOrNull()
     val showNavigationBar = currentDestination in topLevelDestinations.map { it.destination }
 
-    Scaffold(
-        contentWindowInsets = WindowInsets(0, 0, 0, 0),
-        bottomBar = {
-            if (showNavigationBar) {
-                NavigationBar(containerColor = MaterialTheme.colorScheme.surfaceContainer) {
-                    topLevelDestinations.forEach { item ->
-                        val selected = currentDestination == item.destination
-                        NavigationBarItem(
-                            selected = selected,
-                            onClick = {
-                                if (!selected) {
-                                    backStack.clear()
-                                    backStack.add(item.destination)
-                                }
-                            },
-                            icon = { Icon(item.icon, contentDescription = stringResource(item.titleResId)) },
-                            label = { Text(stringResource(item.titleResId)) }
-                        )
-                    }
+    if (showNavigationBar) {
+        NavigationSuiteScaffold(
+            navigationSuiteItems = {
+                topLevelDestinations.forEach { item ->
+                    val selected = currentDestination == item.destination
+                    item(
+                        selected = selected,
+                        onClick = {
+                            if (!selected) {
+                                backStack.clear()
+                                backStack.add(item.destination)
+                            }
+                        },
+                        icon = { Icon(item.icon, contentDescription = stringResource(item.titleResId)) },
+                        label = { Text(stringResource(item.titleResId)) }
+                    )
                 }
             }
+        ) {
+            MainNavigation(backStack = backStack, modifier = Modifier.fillMaxSize())
         }
-    ) { padding ->
-        MainNavigation(backStack = backStack, modifier = Modifier.fillMaxSize().padding(padding))
+    } else {
+        MainNavigation(backStack = backStack, modifier = Modifier.fillMaxSize())
     }
 }

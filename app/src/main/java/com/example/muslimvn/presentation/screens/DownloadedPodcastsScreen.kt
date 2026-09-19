@@ -33,6 +33,9 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.SwipeToDismissBox
+import androidx.compose.material3.SwipeToDismissBoxValue
+import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import com.example.muslimvn.ui.theme.extendedColors
@@ -250,14 +253,44 @@ fun DownloadedPodcastsScreen(
                 } else {
                     // Danh sách từng tập podcast offline
                     items(filteredPodcasts, key = { it.episode.id }) { item ->
-                        DownloadedPodcastCardItem(
-                            item = item,
-                            onPlay = { viewModel.playEpisode(item) },
-                            onDelete = { itemToDelete = item },
-                            modifier = Modifier
-                                .animateItem()
-                                .padding(horizontal = 16.dp)
+                        val dismissState = rememberSwipeToDismissBoxState(
+                            confirmValueChange = { value ->
+                                if (value == SwipeToDismissBoxValue.EndToStart) {
+                                    itemToDelete = item
+                                    true
+                                } else false
+                            }
                         )
+
+                        SwipeToDismissBox(
+                            state = dismissState,
+                            enableDismissFromStartToEnd = false,
+                            backgroundContent = {
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxSize()
+                                        .padding(horizontal = 16.dp)
+                                        .background(MaterialTheme.colorScheme.errorContainer, RoundedCornerShape(16.dp))
+                                        .padding(horizontal = 20.dp),
+                                    contentAlignment = Alignment.CenterEnd
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Delete,
+                                        contentDescription = "Xoá tệp",
+                                        tint = MaterialTheme.colorScheme.onErrorContainer
+                                    )
+                                }
+                            }
+                        ) {
+                            DownloadedPodcastCardItem(
+                                item = item,
+                                onPlay = { viewModel.playEpisode(item) },
+                                onDelete = { itemToDelete = item },
+                                modifier = Modifier
+                                    .animateItem()
+                                    .padding(horizontal = 16.dp)
+                            )
+                        }
                     }
                 }
             }

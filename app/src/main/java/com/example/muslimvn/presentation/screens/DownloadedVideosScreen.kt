@@ -103,15 +103,44 @@ fun DownloadedVideosScreen(
                             verticalArrangement = Arrangement.spacedBy(12.dp)
                         ) {
                             items(downloadedVideos, key = { it.id }) { video ->
-                                DownloadedVideoItem(
-                                    video = video,
-                                    modifier = Modifier.animateItem(),
-                                    onClick = {
-                                        val fileUri = android.net.Uri.fromFile(File(video.localFilePath)).toString()
-                                        onVideoClick(fileUri, video.title, video.uploaderName)
-                                    },
-                                    onDelete = { viewModel.deleteVideo(video.id) }
+                                val dismissState = rememberSwipeToDismissBoxState(
+                                    confirmValueChange = { value ->
+                                        if (value == SwipeToDismissBoxValue.EndToStart) {
+                                            viewModel.deleteVideo(video.id)
+                                            true
+                                        } else false
+                                    }
                                 )
+
+                                SwipeToDismissBox(
+                                    state = dismissState,
+                                    enableDismissFromStartToEnd = false,
+                                    backgroundContent = {
+                                        Box(
+                                            modifier = Modifier
+                                                .fillMaxSize()
+                                                .background(MaterialTheme.colorScheme.errorContainer, RoundedCornerShape(12.dp))
+                                                .padding(horizontal = 16.dp),
+                                            contentAlignment = Alignment.CenterEnd
+                                        ) {
+                                            Icon(
+                                                imageVector = Icons.Default.Delete,
+                                                contentDescription = "Xoá tệp",
+                                                tint = MaterialTheme.colorScheme.onErrorContainer
+                                            )
+                                        }
+                                    }
+                                ) {
+                                    DownloadedVideoItem(
+                                        video = video,
+                                        modifier = Modifier.animateItem(),
+                                        onClick = {
+                                            val fileUri = android.net.Uri.fromFile(File(video.localFilePath)).toString()
+                                            onVideoClick(fileUri, video.title, video.uploaderName)
+                                        },
+                                        onDelete = { viewModel.deleteVideo(video.id) }
+                                    )
+                                }
                             }
                         }
                     }
@@ -134,15 +163,44 @@ fun DownloadedVideosScreen(
                             verticalArrangement = Arrangement.spacedBy(12.dp)
                         ) {
                             items(downloadedAudios, key = { it.id }) { audio ->
-                                DownloadedAudioItem(
-                                    audio = audio,
-                                    modifier = Modifier.animateItem(),
-                                    onClick = {
-                                        viewModel.playAudio(audio)
-                                        onAudioPlayerClick()
-                                    },
-                                    onDelete = { viewModel.deleteVideo(audio.id) }
+                                val dismissState = rememberSwipeToDismissBoxState(
+                                    confirmValueChange = { value ->
+                                        if (value == SwipeToDismissBoxValue.EndToStart) {
+                                            viewModel.deleteVideo(audio.id)
+                                            true
+                                        } else false
+                                    }
                                 )
+
+                                SwipeToDismissBox(
+                                    state = dismissState,
+                                    enableDismissFromStartToEnd = false,
+                                    backgroundContent = {
+                                        Box(
+                                            modifier = Modifier
+                                                .fillMaxSize()
+                                                .background(MaterialTheme.colorScheme.errorContainer, RoundedCornerShape(12.dp))
+                                                .padding(horizontal = 16.dp),
+                                            contentAlignment = Alignment.CenterEnd
+                                        ) {
+                                            Icon(
+                                                imageVector = Icons.Default.Delete,
+                                                contentDescription = "Xoá tệp",
+                                                tint = MaterialTheme.colorScheme.onErrorContainer
+                                            )
+                                        }
+                                    }
+                                ) {
+                                    DownloadedAudioItem(
+                                        audio = audio,
+                                        modifier = Modifier.animateItem(),
+                                        onClick = {
+                                            viewModel.playAudio(audio)
+                                            onAudioPlayerClick()
+                                        },
+                                        onDelete = { viewModel.deleteVideo(audio.id) }
+                                    )
+                                }
                             }
                         }
                     }

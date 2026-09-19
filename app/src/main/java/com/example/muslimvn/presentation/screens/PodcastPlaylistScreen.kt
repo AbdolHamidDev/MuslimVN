@@ -186,6 +186,7 @@ fun PodcastPlaylistScreen(
                         EpisodeRow(
                             episode = item.episode,
                             isCurrent = currentEpisodeId == item.episode.id,
+                            modifier = Modifier.animateItem(),
                             isPlaying = isPlaying,
                             downloadState = epState,
                             onPlay = { viewModel.playEpisode(item.episode, item.scholarName) },

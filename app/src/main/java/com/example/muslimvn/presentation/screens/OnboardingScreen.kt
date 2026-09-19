@@ -278,8 +278,8 @@ fun OnboardingScreen(
 
             AnimatedVisibility(
                 visible = showBottomBar,
-                enter = fadeIn(animationSpec = tween(600)),
-                exit = fadeOut(animationSpec = tween(300))
+                enter = fadeIn(animationSpec = tween(com.example.muslimvn.ui.theme.MuslimVNMotion.DURATION_LONG)),
+                exit = fadeOut(animationSpec = tween(com.example.muslimvn.ui.theme.MuslimVNMotion.DURATION_MEDIUM))
             ) {
                 Column(
                     modifier = Modifier.fillMaxWidth(),
