@@ -27,6 +27,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import com.example.muslimvn.ui.theme.CategoryColors
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -102,15 +103,7 @@ fun BrandSectionTitle(
 /**
  * Trả về màu sắc đậm riêng biệt cho từng tag phân loại (Aqidah, Fiqh, Tafsir...)
  */
-private fun getCategoryBadgeColor(tag: String): Color = when (tag.lowercase()) {
-    "aqidah" -> Color(0xFF1E3A8A)       // Đậm Xanh Dương Navy
-    "fiqh" -> Color(0xFF065F46)         // Đậm Xanh Lục Emerald
-    "tafsir" -> Color(0xFF5B21B6)       // Đậm Tím Royal Purple
-    "tazkiyah" -> Color(0xFF881337)      // Đậm Đỏ Rượu Crimson
-    "contemporary" -> Color(0xFF78350F) // Đậm Nâu Amber
-    "inspiration" -> Color(0xFF0F766E)  // Đậm Xanh Ngọc Teal
-    else -> Color(0xFF334155)            // Đậm Xám Slate
-}
+private fun getCategoryBadgeColor(tag: String): Color = CategoryColors.getPodcastCategoryBadgeColor(tag)
 
 private fun getCategoryDisplayName(tag: String): String = when (tag.lowercase()) {
     "aqidah" -> "Aqidah"

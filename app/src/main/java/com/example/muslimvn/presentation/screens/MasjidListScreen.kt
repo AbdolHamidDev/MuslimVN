@@ -33,6 +33,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.muslimvn.domain.models.masjid.Masjid
 import com.example.muslimvn.domain.models.masjid.MasjidType
+import com.example.muslimvn.ui.theme.extendedColors
 import com.example.muslimvn.presentation.viewmodels.MasjidFilterType
 import com.example.muslimvn.presentation.viewmodels.MasjidItemUiState
 import com.example.muslimvn.presentation.viewmodels.MasjidViewModel
@@ -323,15 +324,15 @@ private fun MasjidScreenCardItem(
                     Surface(
                         shape = RoundedCornerShape(6.dp),
                         color = if (isMasjid)
-                            Color(0xFF2E7D32).copy(alpha = 0.15f)
+                            MaterialTheme.extendedColors.success.copy(alpha = 0.15f)
                         else
-                            Color(0xFF00796B).copy(alpha = 0.15f)
+                            MaterialTheme.colorScheme.secondaryContainer
                     ) {
                         Text(
                             text = if (isMasjid) "THÁNH ĐƯỜNG" else "TIỂU THÁNH ĐƯỜNG",
                             style = MaterialTheme.typography.labelSmall,
                             fontWeight = FontWeight.Bold,
-                            color = if (isMasjid) Color(0xFF1B5E20) else Color(0xFF004D40),
+                            color = if (isMasjid) MaterialTheme.extendedColors.success else MaterialTheme.colorScheme.secondary,
                             modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
                         )
                     }

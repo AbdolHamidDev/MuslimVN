@@ -6,11 +6,11 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
+import com.example.muslimvn.ui.theme.extendedColors
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import com.example.muslimvn.data.util.DownloadStatus
@@ -61,7 +61,7 @@ fun DownloadActionButton(
         is DownloadStatus.Idle -> Triple(Icons.Default.Download, "Tải về", MaterialTheme.colorScheme.onSurface)
         is DownloadStatus.Downloading -> Triple(Icons.Default.Pause, "${(status.progress * 100).toInt()}%", MaterialTheme.colorScheme.primary)
         is DownloadStatus.Paused -> Triple(Icons.Default.PlayArrow, "Tiếp tục", MaterialTheme.colorScheme.secondary)
-        is DownloadStatus.Completed -> Triple(Icons.Default.CheckCircle, "Đã tải", Color(0xFF2E7D32))
+        is DownloadStatus.Completed -> Triple(Icons.Default.CheckCircle, "Đã tải", MaterialTheme.extendedColors.success)
         is DownloadStatus.Failed -> Triple(Icons.Default.Error, "Thử lại", MaterialTheme.colorScheme.error)
     }
 

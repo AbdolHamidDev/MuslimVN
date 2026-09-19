@@ -26,6 +26,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import com.example.muslimvn.ui.theme.extendedColors
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
@@ -66,8 +67,7 @@ fun EpisodeMoreMenuBottomSheet(
     onDeleteDownloadClick: () -> Unit = {},
     containerColor: Color? = null
 ) {
-    // Luôn sử dụng màu nền tối chuẩn Dark Theme trong Color.kt (#151E28)
-    val darkSheetColor = Color(0xFF151E28)
+    val darkSheetColor = containerColor ?: MaterialTheme.colorScheme.surfaceContainerHigh
 
     ModalBottomSheet(
         onDismissRequest = onDismiss,
@@ -134,7 +134,7 @@ fun EpisodeMoreMenuBottomSheet(
                 icon = if (isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
                 label = if (isFavorite) "Bỏ khỏi yêu thích" else "Thêm vào yêu thích",
                 onClick = onToggleFavorite,
-                iconTint = if (isFavorite) Color(0xFFFF5252) else Color.White
+                iconTint = if (isFavorite) MaterialTheme.colorScheme.error else Color.White
             )
 
             // 2. Tải xuống / Quản lý bản tải xuống (Không đóng BottomSheet tự động khi click)
@@ -182,7 +182,7 @@ fun EpisodeMoreMenuBottomSheet(
                 icon = if (isInPlaylist) Icons.AutoMirrored.Filled.PlaylistAddCheck else Icons.AutoMirrored.Filled.PlaylistAdd,
                 label = if (isInPlaylist) "Bỏ khỏi danh sách phát" else "Thêm vào danh sách phát",
                 onClick = onTogglePlaylist,
-                iconTint = if (isInPlaylist) Color(0xFFFFD700) else Color.White
+                iconTint = if (isInPlaylist) MaterialTheme.extendedColors.warning else Color.White
             )
 
             // 4. Đánh dấu đã nghe

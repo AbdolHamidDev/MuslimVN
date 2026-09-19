@@ -35,6 +35,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import com.example.muslimvn.ui.theme.extendedColors
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
@@ -306,7 +307,7 @@ fun DownloadedPodcastsScreen(
                     Text(text = "Hủy", color = Color.White.copy(alpha = 0.7f))
                 }
             },
-            containerColor = Color(0xFF18222C)
+            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
         )
     }
 
@@ -347,7 +348,7 @@ fun DownloadedPodcastsScreen(
                     Text(text = "Hủy", color = Color.White.copy(alpha = 0.7f))
                 }
             },
-            containerColor = Color(0xFF18222C)
+            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
         )
     }
 }
@@ -414,7 +415,7 @@ private fun DownloadedPodcastCardItem(
                         append(formatDurationMs(item.episode.duration))
                     },
                     style = MaterialTheme.typography.labelSmall,
-                    color = Color(0xFF4CAF50),
+                    color = MaterialTheme.extendedColors.success,
                     fontWeight = FontWeight.SemiBold
                 )
             }

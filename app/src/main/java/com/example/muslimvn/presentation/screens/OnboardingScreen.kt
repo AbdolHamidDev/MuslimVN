@@ -64,6 +64,7 @@ import com.airbnb.lottie.compose.LottieConstants
 import com.airbnb.lottie.compose.animateLottieCompositionAsState
 import com.airbnb.lottie.compose.rememberLottieComposition
 import com.example.muslimvn.R
+import com.example.muslimvn.ui.theme.BrandGreen
 import com.google.android.gms.common.api.ResolvableApiException
 import com.google.android.gms.location.LocationRequest
 import com.google.android.gms.location.LocationSettingsRequest
@@ -73,7 +74,7 @@ import com.google.android.gms.location.SettingsClient
 import com.google.android.gms.tasks.Task
 import kotlinx.coroutines.launch
 
-private val OnboardingBgColor = Color(0xFF055136)
+private val OnboardingBgColor = BrandGreen
 
 data class OnboardingPageData(
     val title: String,

@@ -30,6 +30,7 @@ import com.example.muslimvn.R
 import com.example.muslimvn.presentation.viewmodels.*
 import com.example.muslimvn.presentation.components.ShimmerPlaceholder
 import com.example.muslimvn.ui.theme.MuslimVNTheme
+import com.example.muslimvn.ui.theme.extendedColors
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -216,7 +217,7 @@ fun WeeklyCalendarStrip(
                             .size(4.dp)
                             .clip(CircleShape)
                             .background(
-                                if (day.completionProgress >= 1f) Color(0xFF4CAF50) // Green if done
+                                if (day.completionProgress >= 1f) MaterialTheme.extendedColors.success // Green if done
                                 else MaterialTheme.colorScheme.primary
                             )
                     )

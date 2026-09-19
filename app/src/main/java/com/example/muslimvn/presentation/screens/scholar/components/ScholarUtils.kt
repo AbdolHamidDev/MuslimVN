@@ -202,7 +202,7 @@ fun rememberDynamicBackgroundColor(imagePath: String): Color {
         }
     }
 
-    val defaultBg = Color(0xFF0B1014)
+    val defaultBg = MaterialTheme.colorScheme.surface
     val backgroundColor by animateColorAsState(
         targetValue = dynamicBackgroundColor ?: defaultBg,
         animationSpec = tween(durationMillis = 600),

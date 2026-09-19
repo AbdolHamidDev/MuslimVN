@@ -22,9 +22,10 @@ import com.airbnb.lottie.compose.LottieCompositionSpec
 import com.airbnb.lottie.compose.animateLottieCompositionAsState
 import com.airbnb.lottie.compose.rememberLottieComposition
 import com.example.muslimvn.R
+import com.example.muslimvn.ui.theme.BrandGreen
 import kotlinx.coroutines.delay
 
-private val SplashBgColor = Color(0xFF055136)
+private val SplashBgColor = BrandGreen
 
 @Composable
 fun SplashScreen(

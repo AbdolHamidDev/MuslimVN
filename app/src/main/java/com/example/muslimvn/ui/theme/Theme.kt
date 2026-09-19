@@ -91,7 +91,15 @@ data class ExtendedColors(
     val success: Color,
     val onSuccess: Color,
     val successContainer: Color,
-    val onSuccessContainer: Color
+    val onSuccessContainer: Color,
+    val warning: Color,
+    val onWarning: Color,
+    val warningContainer: Color,
+    val onWarningContainer: Color,
+    val info: Color,
+    val onInfo: Color,
+    val infoContainer: Color,
+    val onInfoContainer: Color
 )
 
 private fun lightExtendedColors() = ExtendedColors(
@@ -100,7 +108,15 @@ private fun lightExtendedColors() = ExtendedColors(
     success = md_light_success,
     onSuccess = md_light_on_success,
     successContainer = md_light_success_container,
-    onSuccessContainer = md_light_on_success_container
+    onSuccessContainer = md_light_on_success_container,
+    warning = md_light_warning,
+    onWarning = md_light_on_warning,
+    warningContainer = md_light_warning_container,
+    onWarningContainer = md_light_on_warning_container,
+    info = md_light_info,
+    onInfo = md_light_on_info,
+    infoContainer = md_light_info_container,
+    onInfoContainer = md_light_on_info_container
 )
 
 private fun darkExtendedColors() = ExtendedColors(
@@ -109,7 +125,15 @@ private fun darkExtendedColors() = ExtendedColors(
     success = md_dark_success,
     onSuccess = md_dark_on_success,
     successContainer = md_dark_success_container,
-    onSuccessContainer = md_dark_on_success_container
+    onSuccessContainer = md_dark_on_success_container,
+    warning = md_dark_warning,
+    onWarning = md_dark_on_warning,
+    warningContainer = md_dark_warning_container,
+    onWarningContainer = md_dark_on_warning_container,
+    info = md_dark_info,
+    onInfo = md_dark_on_info,
+    infoContainer = md_dark_info_container,
+    onInfoContainer = md_dark_on_info_container
 )
 
 internal val LocalExtendedColors = staticCompositionLocalOf { lightExtendedColors() }

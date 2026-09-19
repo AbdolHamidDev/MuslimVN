@@ -33,6 +33,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.muslimvn.ui.theme.CategoryColors
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import coil.compose.AsyncImage
 import com.example.muslimvn.domain.models.PodcastEpisode
@@ -515,27 +516,13 @@ fun MachZenDocumentItemCard(
     modifier: Modifier = Modifier
 ) {
     val fileExt = document.fileExtension?.uppercase() ?: ""
-    val containerColor = when (fileExt) {
-        "PDF" -> Color(0xFFFCE8E6)
-        "MP3" -> Color(0xFFE8F0FE)
-        "DOCX" -> Color(0xFFEAF2F8)
-        else -> MaterialTheme.colorScheme.primaryContainer
-    }
-    val iconColor = when (fileExt) {
-        "PDF" -> Color(0xFFC5221F)
-        "MP3" -> Color(0xFF1A73E8)
-        "DOCX" -> Color(0xFF2471A3)
-        else -> MaterialTheme.colorScheme.onPrimaryContainer
-    }
+    val fileColors = CategoryColors.getDocumentFileColors(fileExt)
+    val containerColor = fileColors.containerColor
+    val iconColor = fileColors.iconColor
 
     val hasCoverPattern = remember(document.title) {
-        val idMod = (document.id % 4).toInt()
-        when (idMod) {
-            0 -> Triple(Color(0xFF1B5E20), Color(0xFFC8E6C9), "Islam")
-            1 -> Triple(Color(0xFF0D47A1), Color(0xFFBBDEFB), "Sunnah")
-            2 -> Triple(Color(0xFF4A148C), Color(0xFFE1BEE7), "Tawhid")
-            else -> Triple(Color(0xFFE65100), Color(0xFFFFE0B2), "Fiqh")
-        }
+        val topicColors = CategoryColors.getScholarTopicColors(document.id)
+        Triple(topicColors.primaryColor, topicColors.secondaryColor, topicColors.title)
     }
 
     Card(

@@ -38,6 +38,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import com.example.muslimvn.ui.theme.extendedColors
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -182,7 +183,7 @@ fun PodcastLibraryScreen(
                                 title = "Yêu thích",
                                 subtitle = "${favoriteEpisodes.size} tập",
                                 icon = Icons.Default.Favorite,
-                                iconTint = Color(0xFFFF5252),
+                                iconTint = MaterialTheme.colorScheme.error,
                                 onClick = onNavigateToFavorites,
                                 modifier = Modifier.weight(1f)
                             )
@@ -190,7 +191,7 @@ fun PodcastLibraryScreen(
                                 title = "Danh sách phát",
                                 subtitle = "${playlistEpisodes.size} tập",
                                 icon = Icons.AutoMirrored.Filled.PlaylistPlay,
-                                iconTint = Color(0xFFFFD700),
+                                iconTint = MaterialTheme.extendedColors.warning,
                                 onClick = onNavigateToPlaylist,
                                 modifier = Modifier.weight(1f)
                             )
@@ -204,7 +205,7 @@ fun PodcastLibraryScreen(
                                 title = "Đã tải xuống",
                                 subtitle = "Bản nghe offline",
                                 icon = Icons.Default.DownloadForOffline,
-                                iconTint = Color(0xFF4CAF50),
+                                iconTint = MaterialTheme.extendedColors.success,
                                 onClick = onNavigateToDownloadedPodcasts,
                                 modifier = Modifier.weight(1f)
                             )
@@ -212,7 +213,7 @@ fun PodcastLibraryScreen(
                                 title = "Đã theo dõi",
                                 subtitle = "${scholars.size} học giả",
                                 icon = Icons.Default.Bookmarks,
-                                iconTint = Color(0xFF2196F3),
+                                iconTint = MaterialTheme.extendedColors.info,
                                 onClick = onNavigateToFollowed,
                                 modifier = Modifier.weight(1f)
                             )

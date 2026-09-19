@@ -185,7 +185,7 @@ fun MiniPlayerBar(
                     Icon(
                         imageVector = if (isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
                         contentDescription = if (isFavorite) "Bỏ khỏi yêu thích" else "Thêm vào yêu thích",
-                        tint = if (isFavorite) Color(0xFFFF5252) else iconColor,
+                        tint = if (isFavorite) MaterialTheme.colorScheme.error else iconColor,
                         modifier = Modifier.size(24.dp)
                     )
                 }

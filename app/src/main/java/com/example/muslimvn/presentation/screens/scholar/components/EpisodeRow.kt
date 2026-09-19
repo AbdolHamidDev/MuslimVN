@@ -19,6 +19,7 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import com.example.muslimvn.ui.theme.extendedColors
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -149,7 +150,7 @@ fun EpisodeRow(
                             Icon(
                                 imageVector = Icons.Default.ErrorOutline,
                                 contentDescription = "Tải thất bại",
-                                tint = Color(0xFFFF5252),
+                                tint = MaterialTheme.colorScheme.error,
                                 modifier = Modifier.size(13.dp)
                             )
                         }
@@ -167,7 +168,7 @@ fun EpisodeRow(
                                 formatDurationMs(episode.lastPositionMs)
                             ),
                             style = MaterialTheme.typography.labelSmall,
-                            color = Color(0xFFFFD700),
+                            color = MaterialTheme.extendedColors.warning,
                             maxLines = 1
                         )
                     }

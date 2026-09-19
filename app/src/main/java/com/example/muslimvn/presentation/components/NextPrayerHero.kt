@@ -32,6 +32,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import com.example.muslimvn.ui.theme.extendedColors
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -263,7 +264,7 @@ fun NextPrayerHero(
                             modifier = Modifier
                                 .size(8.dp)
                                 .alpha(pulseAlpha)
-                                .background(Color(0xFF4CAF50), CircleShape)
+                                .background(MaterialTheme.extendedColors.success, CircleShape)
                         )
                         Spacer(modifier = Modifier.width(6.dp))
                         Text(

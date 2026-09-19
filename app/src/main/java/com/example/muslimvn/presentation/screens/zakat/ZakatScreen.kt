@@ -19,6 +19,7 @@ import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.MonetizationOn
 import androidx.compose.material3.*
+import com.example.muslimvn.ui.theme.extendedColors
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -901,14 +902,14 @@ fun TrendCard(uiState: ZakatUiState) {
                     Icon(
                         imageVector = if (percent >= 0) Icons.AutoMirrored.Filled.TrendingUp else Icons.AutoMirrored.Filled.TrendingDown,
                         contentDescription = null,
-                        tint = if (percent >= 0) Color(0xFF4CAF50) else Color(0xFFF44336),
+                        tint = if (percent >= 0) MaterialTheme.extendedColors.success else MaterialTheme.colorScheme.error,
                         modifier = Modifier.size(16.dp)
                     )
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(
                         text = "${if (percent >= 0) "+" else ""}$percent%",
                         style = MaterialTheme.typography.labelMedium,
-                        color = if (percent >= 0) Color(0xFF4CAF50) else Color(0xFFF44336),
+                        color = if (percent >= 0) MaterialTheme.extendedColors.success else MaterialTheme.colorScheme.error,
                         fontWeight = FontWeight.Bold
                     )
                     Text(

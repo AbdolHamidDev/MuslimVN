@@ -138,7 +138,7 @@ fun ScholarDetailScreen(
         }
     }
 
-    val defaultBg = Color(0xFF121212)
+    val defaultBg = MaterialTheme.colorScheme.surface
     val backgroundColor by animateColorAsState(
         targetValue = dynamicBackgroundColor ?: defaultBg,
         animationSpec = tween(durationMillis = 600),
@@ -392,7 +392,7 @@ fun ScholarDetailScreen(
                             Text(if (batchCount > 0) "Hủy" else "Đóng", color = Color.White.copy(alpha = 0.7f))
                         }
                     },
-                    containerColor = Color(0xFF151E28)
+                    containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
                 )
             }
 
@@ -424,7 +424,7 @@ fun ScholarDetailScreen(
                             Text("Tiếp tục tải", color = Color.White.copy(alpha = 0.7f))
                         }
                     },
-                    containerColor = Color(0xFF151E28)
+                    containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
                 )
             }
         }
