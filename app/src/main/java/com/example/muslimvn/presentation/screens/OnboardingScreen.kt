@@ -38,6 +38,7 @@ import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -198,7 +199,7 @@ fun OnboardingScreen(
                         Text(
                             text = "Bỏ qua",
                             color = Color.White.copy(alpha = 0.8f),
-                            fontSize = 15.sp,
+                            style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Medium
                         )
                     }
@@ -253,7 +254,7 @@ fun OnboardingScreen(
                         Text(
                             text = item.title,
                             color = Color.White,
-                            fontSize = 24.sp,
+                            style = MaterialTheme.typography.headlineSmall,
                             fontWeight = FontWeight.Bold,
                             textAlign = TextAlign.Center
                         )
@@ -264,8 +265,7 @@ fun OnboardingScreen(
                         Text(
                             text = item.description,
                             color = Color.White.copy(alpha = 0.85f),
-                            fontSize = 15.sp,
-                            lineHeight = 22.sp,
+                            style = MaterialTheme.typography.bodyMedium,
                             textAlign = TextAlign.Center,
                             modifier = Modifier.padding(horizontal = 12.dp)
                         )
@@ -323,7 +323,7 @@ fun OnboardingScreen(
                             ) {
                                 Text(
                                     text = "Bắt Đầu",
-                                    fontSize = 16.sp,
+                                    style = MaterialTheme.typography.titleMedium,
                                     fontWeight = FontWeight.Bold
                                 )
                                 Spacer(modifier = Modifier.width(8.dp))
@@ -373,7 +373,7 @@ fun OnboardingScreen(
                                 Spacer(modifier = Modifier.width(8.dp))
                                 Text(
                                     text = if (hasLocationPerm) "Đã cấp quyền vị trí (Tiếp tục)" else "Cấp Quyền Vị Trí",
-                                    fontSize = 16.sp,
+                                    style = MaterialTheme.typography.titleMedium,
                                     fontWeight = FontWeight.Bold
                                 )
                             }
@@ -409,7 +409,7 @@ fun OnboardingScreen(
                                 Spacer(modifier = Modifier.width(8.dp))
                                 Text(
                                     text = if (hasNotificationPerm) "Đã bật thông báo (Tiếp tục)" else "Bật Thông Báo",
-                                    fontSize = 16.sp,
+                                    style = MaterialTheme.typography.titleMedium,
                                     fontWeight = FontWeight.Bold
                                 )
                             }
@@ -429,7 +429,7 @@ fun OnboardingScreen(
                             ) {
                                 Text(
                                     text = "Bắt Đầu Trải Nghiệm",
-                                    fontSize = 16.sp,
+                                    style = MaterialTheme.typography.titleMedium,
                                     fontWeight = FontWeight.Bold
                                 )
                                 Spacer(modifier = Modifier.width(8.dp))

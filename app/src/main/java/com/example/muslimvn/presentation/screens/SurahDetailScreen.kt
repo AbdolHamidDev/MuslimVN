@@ -554,7 +554,6 @@ private fun TafsirBottomSheet(
                                     Text(
                                         text = ayah.textArabic,
                                         style = MaterialTheme.extendedTypography.arabicAyah,
-                                        fontSize = 24.sp,
                                         lineHeight = 40.sp,
                                         color = MaterialTheme.colorScheme.onSurface
                                     )
@@ -639,7 +638,6 @@ private fun TafsirBottomSheet(
                             Text(
                                 text = cleanText,
                                 style = MaterialTheme.typography.bodyLarge,
-                                fontSize = 17.sp,
                                 lineHeight = 30.sp,
                                 textAlign = TextAlign.Justify,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -715,7 +713,6 @@ fun SurahHeader(nameArabic: String, nameVietnamese: String) {
         Text(
             text = nameArabic,
             style = MaterialTheme.extendedTypography.arabicDisplay,
-            fontSize = 36.sp,
             color = MaterialTheme.colorScheme.onSurface
         )
         Text(

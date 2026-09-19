@@ -356,7 +356,7 @@ fun EnhancedPrayerItem(
                         FilterChip(
                             selected = prayer.isJamaah,
                             onClick = onToggleJamaah,
-                            label = { Text("Jama'ah", fontSize = 12.sp) },
+                            label = { Text("Jama'ah") },
                             leadingIcon = if (prayer.isJamaah) {
                                 { Icon(Icons.Default.Groups, contentDescription = null, modifier = Modifier.size(16.dp)) }
                             } else null
@@ -367,7 +367,7 @@ fun EnhancedPrayerItem(
                             FilterChip(
                                 selected = prayer.isSunnahBeforeCompleted,
                                 onClick = onToggleSunnahBefore,
-                                label = { Text("Sunnah Trước", fontSize = 12.sp) },
+                                label = { Text("Sunnah Trước") },
                                 colors = FilterChipDefaults.filterChipColors(
                                     selectedContainerColor = MaterialTheme.colorScheme.surfaceContainerHighest
                                 )
@@ -379,7 +379,7 @@ fun EnhancedPrayerItem(
                             FilterChip(
                                 selected = prayer.isSunnahAfterCompleted,
                                 onClick = onToggleSunnahAfter,
-                                label = { Text("Sunnah Sau", fontSize = 12.sp) },
+                                label = { Text("Sunnah Sau") },
                                 colors = FilterChipDefaults.filterChipColors(
                                     selectedContainerColor = MaterialTheme.colorScheme.surfaceContainerHighest
                                 )

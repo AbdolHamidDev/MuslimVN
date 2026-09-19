@@ -119,11 +119,11 @@ fun QuranScreen(
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             if (searchQuery.isNotEmpty()) {
                                 IconButton(onClick = { viewModel.onSearchQueryChange("") }) {
-                                    Icon(Icons.Default.Close, contentDescription = null)
+                                    Icon(Icons.Default.Close, contentDescription = "Xoá tìm kiếm")
                                 }
                             }
                             IconButton(onClick = onSettingsClick) {
-                                Icon(Icons.Default.Settings, contentDescription = null)
+                                Icon(Icons.Default.Settings, contentDescription = "Cài đặt")
                             }
                         }
                     },

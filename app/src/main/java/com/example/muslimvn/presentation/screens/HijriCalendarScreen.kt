@@ -214,7 +214,7 @@ private fun HijriMonthHeader(
         verticalAlignment = Alignment.CenterVertically
     ) {
         IconButton(onClick = onPreviousMonth) {
-            Icon(Icons.Default.ChevronLeft, contentDescription = null)
+            Icon(Icons.Default.ChevronLeft, contentDescription = "Tháng trước")
         }
         Column(
             modifier = Modifier.weight(1f),
@@ -242,7 +242,7 @@ private fun HijriMonthHeader(
             )
         }
         IconButton(onClick = onNextMonth) {
-            Icon(Icons.Default.ChevronRight, contentDescription = null)
+            Icon(Icons.Default.ChevronRight, contentDescription = "Tháng sau")
         }
     }
 }

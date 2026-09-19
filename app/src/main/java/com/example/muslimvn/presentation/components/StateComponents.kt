@@ -217,7 +217,7 @@ fun ComingSoonScreen(
                         IconButton(onClick = onBackClick) {
                             Icon(
                                 imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                                contentDescription = null
+                                contentDescription = "Quay lại"
                             )
                         }
                     }

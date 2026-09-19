@@ -248,7 +248,7 @@ fun AdhanList(
                 IconButton(onClick = { onPreviewClick(file) }) {
                     Icon(
                         imageVector = if (isPreviewing) Icons.Default.Stop else Icons.Default.PlayArrow,
-                        contentDescription = null,
+                        contentDescription = if (isPreviewing) "Dừng" else "Nghe thử",
                         tint = if (isPreviewing) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary
                     )
                 }

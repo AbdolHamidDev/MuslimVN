@@ -20,6 +20,13 @@ import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import coil.compose.SubcomposeAsyncImage
 
+/**
+ * Bảng màu giấy ngà chuyên dụng hiển thị trang kinh Quran Mushaf (mô phỏng trang sách giấy).
+ */
+private object MushafReaderColors {
+    val PaperBackground = Color(0xFFFBF8EF)
+}
+
 @Composable
 fun MushafView(
     initialPage: Int,
@@ -46,7 +53,7 @@ fun MushafView(
         }
     }
 
-    Box(modifier = modifier.fillMaxSize().background(Color(0xFFFBF8EF))) {
+    Box(modifier = modifier.fillMaxSize().background(MushafReaderColors.PaperBackground)) {
         CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
             HorizontalPager(
                 state = pagerState,

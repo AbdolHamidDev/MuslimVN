@@ -297,9 +297,9 @@ private fun AllahNamePagerItem(
             // Chữ Ả Rập là thành phần nổi bật nhất
             Text(
                 text = name.nameArabic,
-                style = MaterialTheme.extendedTypography.arabicDisplay.copy(
-                    fontSize = 64.sp,
-                    lineHeight = 80.sp
+                style = MaterialTheme.typography.displayLarge.copy(
+                    fontFamily = com.example.muslimvn.ui.theme.ArabicFontFamily,
+                    lineHeight = 72.sp
                 ),
                 textAlign = TextAlign.Center,
                 color = MaterialTheme.colorScheme.onSurface

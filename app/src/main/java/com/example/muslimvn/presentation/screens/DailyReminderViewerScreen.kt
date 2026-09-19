@@ -36,6 +36,19 @@ import com.example.muslimvn.domain.models.Hadith
 import com.example.muslimvn.presentation.viewmodels.DailyReminderViewModel
 import kotlinx.coroutines.launch
 
+/**
+ * Bảng màu thiết kế riêng cho màn hình trình chiếu Lời nhắc/Story (độc lập với theme hệ thống).
+ */
+private object DailyReminderStoryColors {
+    val ScreenBackground = Color(0xFF102A27)
+    val StoryGradientStart = Color(0xFF17483F)
+    val StoryGradientCenter = Color(0xFF0C201E)
+    val StoryGradientEnd = Color(0xFF12332E)
+    val ControlBackground = Color.Black.copy(alpha = 0.24f)
+    val HeaderText = Color(0xFFBDE7D2)
+    val SubtitleText = Color(0xFFD5E8DF)
+}
+
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun DailyReminderViewerScreen(initialHadithId: String, onBackClick: () -> Unit, viewModel: DailyReminderViewModel = hiltViewModel()) {
@@ -59,10 +72,10 @@ fun DailyReminderViewerScreen(initialHadithId: String, onBackClick: () -> Unit, 
     }
     LaunchedEffect(pagerState.currentPage, state.stories.size) { viewModel.preloadIfNeeded(pagerState.currentPage) }
     if (state.stories.isEmpty()) {
-        Box(Modifier.fillMaxSize().background(Color(0xFF102A27)), contentAlignment = Alignment.Center) { Text("Đang chuẩn bị lời nhắc…", color = Color.White) }
+        Box(Modifier.fillMaxSize().background(DailyReminderStoryColors.ScreenBackground), contentAlignment = Alignment.Center) { Text("Đang chuẩn bị lời nhắc…", color = Color.White) }
         return
     }
-    Box(Modifier.fillMaxSize().background(Color(0xFF102A27))) {
+    Box(Modifier.fillMaxSize().background(DailyReminderStoryColors.ScreenBackground)) {
         VerticalPager(state = pagerState, modifier = Modifier.fillMaxSize(), beyondViewportPageCount = 1) { HadithStory(state.stories[it]) }
         Row(
             Modifier.fillMaxWidth()
@@ -80,11 +93,21 @@ fun DailyReminderViewerScreen(initialHadithId: String, onBackClick: () -> Unit, 
 }
 
 @Composable private fun Control(onClick: () -> Unit, icon: ImageVector, description: String) =
-    IconButton(onClick, Modifier.background(Color.Black.copy(alpha = .24f), CircleShape).size(44.dp)) { Icon(icon, description, tint = Color.White) }
+    IconButton(onClick, Modifier.background(DailyReminderStoryColors.ControlBackground, CircleShape).size(48.dp)) { Icon(icon, description, tint = Color.White) }
 
 @Composable
 private fun HadithStory(story: Hadith) = BoxWithConstraints(
-    Modifier.fillMaxSize().background(Brush.verticalGradient(listOf(Color(0xFF17483F), Color(0xFF0C201E), Color(0xFF12332E)))).padding(horizontal = 28.dp, vertical = 76.dp)
+    Modifier.fillMaxSize()
+        .background(
+            Brush.verticalGradient(
+                listOf(
+                    DailyReminderStoryColors.StoryGradientStart,
+                    DailyReminderStoryColors.StoryGradientCenter,
+                    DailyReminderStoryColors.StoryGradientEnd
+                )
+            )
+        )
+        .padding(horizontal = 28.dp, vertical = 76.dp)
 ) {
     val length = story.text.length
     val font = when { length <= 260 -> 28.sp; length <= 520 -> 24.sp; length <= 850 -> 21.sp; else -> 18.sp }
@@ -94,7 +117,7 @@ private fun HadithStory(story: Hadith) = BoxWithConstraints(
         Text(
             "LỜI NHẮC HÔM NAY",
             modifier = Modifier.fillMaxWidth(),
-            color = Color(0xFFBDE7D2),
+            color = DailyReminderStoryColors.HeaderText,
             style = MaterialTheme.typography.labelMedium,
             fontWeight = FontWeight.Bold,
             textAlign = TextAlign.Center
@@ -105,10 +128,10 @@ private fun HadithStory(story: Hadith) = BoxWithConstraints(
             Text(story.text, readableArea, Color.White, fontSize = font, lineHeight = line, fontWeight = FontWeight.Medium, textAlign = TextAlign.Start)
         }
         Spacer(Modifier.height(if (compact) 12.dp else 24.dp))
-        story.attribution?.let { Text(it, color = Color(0xFFD5E8DF), style = MaterialTheme.typography.titleSmall, maxLines = 2) }
-        story.grade?.let { Text(it, color = Color(0xFFBDE7D2), style = MaterialTheme.typography.bodySmall, maxLines = 1) }
-        story.reference?.let { Text(it, color = Color(0xFFBDE7D2), style = MaterialTheme.typography.bodySmall, maxLines = 1) }
+        story.attribution?.let { Text(it, color = DailyReminderStoryColors.SubtitleText, style = MaterialTheme.typography.titleSmall, maxLines = 2) }
+        story.grade?.let { Text(it, color = DailyReminderStoryColors.HeaderText, style = MaterialTheme.typography.bodySmall, maxLines = 1) }
+        story.reference?.let { Text(it, color = DailyReminderStoryColors.HeaderText, style = MaterialTheme.typography.bodySmall, maxLines = 1) }
         Spacer(Modifier.height(12.dp))
-        Text("Nguồn: HadeethEnc.com", Modifier.align(Alignment.CenterHorizontally), color = Color(0xFFBDE7D2), style = MaterialTheme.typography.labelSmall)
+        Text("Nguồn: HadeethEnc.com", Modifier.align(Alignment.CenterHorizontally), color = DailyReminderStoryColors.HeaderText, style = MaterialTheme.typography.labelSmall)
     }
 }

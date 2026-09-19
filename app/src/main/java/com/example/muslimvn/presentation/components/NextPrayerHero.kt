@@ -13,7 +13,6 @@ import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -188,17 +187,12 @@ fun NextPrayerHero(
                 Column(
                     modifier = Modifier
                         .weight(1f)
-                        .clickable(
-                            interactionSource = remember { MutableInteractionSource() },
-                            indication = null,
-                            onClick = onDateClick
-                        )
+                        .clickable(onClick = onDateClick)
                 ) {
                     Text(
                         text = gregorianDate,
                         style = MaterialTheme.typography.titleSmall.copy(
                             fontWeight = FontWeight.SemiBold,
-                            fontSize = 13.sp,
                             letterSpacing = 0.2.sp
                         ),
                         color = Color.White.copy(alpha = 0.95f)
@@ -209,7 +203,6 @@ fun NextPrayerHero(
                             text = hijriLabel,
                             style = MaterialTheme.typography.bodySmall.copy(
                                 fontWeight = FontWeight.Medium,
-                                fontSize = 11.sp,
                                 letterSpacing = 0.3.sp
                             ),
                             color = Color.White.copy(alpha = 0.75f)
@@ -234,7 +227,6 @@ fun NextPrayerHero(
                                 text = userLocation,
                                 style = MaterialTheme.typography.bodySmall.copy(
                                     fontWeight = FontWeight.Normal,
-                                    fontSize = 10.sp,
                                 ),
                                 color = Color.White.copy(alpha = 0.7f),
                                 maxLines = 1
@@ -271,8 +263,7 @@ fun NextPrayerHero(
                             text = "ĐANG TRONG GIỜ",
                             style = MaterialTheme.typography.labelMedium.copy(
                                 fontWeight = FontWeight.Bold,
-                                letterSpacing = 2.sp,
-                                fontSize = 11.sp
+                                letterSpacing = 2.sp
                             ),
                             color = Color.White.copy(alpha = 0.85f)
                         )
@@ -290,8 +281,7 @@ fun NextPrayerHero(
                     ) { resId ->
                         Text(
                             text = stringResource(resId).uppercase(),
-                            style = MaterialTheme.typography.displayMedium.copy(
-                                fontSize = 38.sp,
+                            style = MaterialTheme.typography.displaySmall.copy(
                                 fontWeight = FontWeight.Bold,
                                 letterSpacing = 1.5.sp
                             ),
@@ -315,8 +305,7 @@ fun NextPrayerHero(
                                 text = "GIỜ LỄ TIẾP THEO: ",
                                 style = MaterialTheme.typography.labelSmall.copy(
                                     fontWeight = FontWeight.SemiBold,
-                                    letterSpacing = 1.2.sp,
-                                    fontSize = 11.sp
+                                    letterSpacing = 1.2.sp
                                 ),
                                 color = Color.White.copy(alpha = 0.75f)
                             )
@@ -324,8 +313,7 @@ fun NextPrayerHero(
                                 text = "${stringResource(prayerNameRes).uppercase()} · $prayerTimeStr",
                                 style = MaterialTheme.typography.labelMedium.copy(
                                     fontWeight = FontWeight.Bold,
-                                    letterSpacing = 0.5.sp,
-                                    fontSize = 12.sp
+                                    letterSpacing = 0.5.sp
                                 ),
                                 color = Color.White
                             )
@@ -342,7 +330,6 @@ fun NextPrayerHero(
                             text = "GIỜ LỄ TIẾP THEO",
                             style = MaterialTheme.typography.labelSmall.copy(
                                 letterSpacing = 2.sp,
-                                fontSize = 10.sp,
                                 fontWeight = FontWeight.Bold
                             ),
                             color = Color.White.copy(alpha = 0.9f),
@@ -354,8 +341,7 @@ fun NextPrayerHero(
 
                     Text(
                         text = "${stringResource(prayerNameRes).uppercase()} · $prayerTimeStr",
-                        style = MaterialTheme.typography.headlineMedium.copy(
-                            fontSize = 32.sp,
+                        style = MaterialTheme.typography.headlineLarge.copy(
                             fontWeight = FontWeight.Bold,
                             letterSpacing = 1.2.sp
                         ),

@@ -242,7 +242,7 @@ fun PodcastPlayerScreen(
                     },
                     actions = {
                         IconButton(onClick = { /* More options */ }) {
-                            Icon(Icons.Default.MoreVert, contentDescription = null)
+                            Icon(Icons.Default.MoreVert, contentDescription = "Thêm tuỳ chọn")
                         }
                     },
                     colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent)
@@ -344,10 +344,10 @@ fun PodcastPlayerScreen(
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     IconButton(onClick = viewModel::skipToPrevious) {
-                        Icon(Icons.Default.SkipPrevious, contentDescription = null, modifier = Modifier.size(36.dp))
+                        Icon(Icons.Default.SkipPrevious, contentDescription = "Bài trước", modifier = Modifier.size(36.dp))
                     }
                     IconButton(onClick = viewModel::seekBackward) {
-                        Icon(Icons.Rounded.Replay10, contentDescription = null, modifier = Modifier.size(32.dp))
+                        Icon(Icons.Rounded.Replay10, contentDescription = "Tua lùi 10 giây", modifier = Modifier.size(32.dp))
                     }
                     
                     Box(
@@ -378,10 +378,10 @@ fun PodcastPlayerScreen(
                     }
 
                     IconButton(onClick = viewModel::seekForward) {
-                        Icon(Icons.Rounded.Forward10, contentDescription = null, modifier = Modifier.size(32.dp))
+                        Icon(Icons.Rounded.Forward10, contentDescription = "Tua tới 10 giây", modifier = Modifier.size(32.dp))
                     }
                     IconButton(onClick = viewModel::skipToNext) {
-                        Icon(Icons.Default.SkipNext, contentDescription = null, modifier = Modifier.size(36.dp))
+                        Icon(Icons.Default.SkipNext, contentDescription = "Bài kế tiếp", modifier = Modifier.size(36.dp))
                     }
                 }
 

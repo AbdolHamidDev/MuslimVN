@@ -88,7 +88,7 @@ fun AzkarScreen(
                     trailingIcon = {
                         if (searchQuery.isNotEmpty()) {
                             IconButton(onClick = { viewModel.updateSearchQuery("") }) {
-                                Icon(Icons.Default.Close, contentDescription = null)
+                                Icon(Icons.Default.Close, contentDescription = "Xoá tìm kiếm")
                             }
                         }
                     },
@@ -244,7 +244,7 @@ fun AzkarItem(
                 IconButton(onClick = onFavoriteClick) {
                     Icon(
                         imageVector = if (azkar.isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
-                        contentDescription = null,
+                        contentDescription = if (azkar.isFavorite) "Bỏ yêu thích" else "Thêm vào yêu thích",
                         tint = if (azkar.isFavorite) Color.Red else MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
@@ -255,8 +255,7 @@ fun AzkarItem(
             CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
                 Text(
                     text = azkar.contentArabic,
-                    style = MaterialTheme.extendedTypography.arabicAyah.copy(
-                        fontSize = 28.sp,
+                    style = MaterialTheme.extendedTypography.arabicHeading.copy(
                         lineHeight = 48.sp,
                         fontWeight = FontWeight.Medium
                     ),
